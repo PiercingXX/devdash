@@ -14,8 +14,8 @@ projects:
     services:
       github:
         token: 123456789abcde12345av
-        owner: Phantas0s
-        repository: .dotfiles
+        owner: PiercingXX
+        repository: devdash
     widgets:
       - row:
           - col:

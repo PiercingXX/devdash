@@ -5,24 +5,25 @@ DevDash is a highly configurable terminal dashboard for developers and creators 
 > [!NOTE]
 > This is a maintained fork of [Phantas0s/devdash](https://github.com/Phantas0s/devdash), which was archived in 2023. Compared to the last upstream release, it:
 >
-> * Supports **Google Analytics 4** (Universal Analytics was shut down by Google). Use `property_id` instead of `view_id`; see [Google Analytics 4](#google-analytics-4).
+> * Supports **Google Analytics 4** (Universal Analytics was shut down by Google). Use `property_id` instead of `view_id`; see [Google Analytics 4](./doc/services/google-analytics.md).
 > * Uses [tcell](https://github.com/gdamore/tcell) for the terminal UI instead of the abandoned termui/termbox.
 > * Removes the Travis CI service (travis-ci.org was shut down).
 > * Is built with a current Go toolchain and up-to-date dependencies.
 >
-> See the [changelog](./CHANGELOG.md) for the details.
+> See [Upgrading from upstream DevDash](./doc/upgrading.md) and the [changelog](./CHANGELOG.md) for the details.
 
 [![google analytics example DevDash configuration](./example/img/mix-1.png)](./example/img/mix-1.png)
 
 ## Why using DevDash?
 
-* Pull and display the data in nice widgets using YAML (or JSON) config files, from: 
+* Pull and display the data in nice widgets using YAML, JSON or TOML config files, from:
     * Your own computer. From your own scripts and command lines too!
     * A remote computer via SSH.
     * Github.
-    * Google Analytics.
+    * Google Analytics 4.
     * Google Search Console.
     * Feedly.
+    * A local Git repository.
 
 * A lot of flexibility compared to other terminal dashboards:
   * Choose the widgets you want.
@@ -44,7 +45,7 @@ You can watch a [quick demo on Youtube](https://www.youtube.com/watch?v=aYQVJRuB
 * [Acknowledgement](#acknowledgement)
 * [Contribute](#contribute)
 * [Licence](#licence)
-* [Making of](#Making-of)
+* [Making of](#making-of)
 * [Showcase](#showcase)
 
 ## Installation
@@ -75,55 +76,29 @@ You need to:
 
 ## Getting started
 
-* If you run `devdash` without giving a dashboard configuration, it will:
-    * Create a config for the default dashboard (`default.yml`) in `$XDG_CONFIG_HOME/devdash`.
-    * Display this default dashboard.
-* You have [many examples here](https://thedevdash.com/getting-started/examples/) to modify this default dashboard or create your own from scratch.
-* Each dashboard need a config file. To pass this config file to DevDash, you need to use the option `-c`. For example: `devdash -c default`.
-    * If you only pass the filename of the dashboard's config, it needs to be in the working directory or in `$XDG_CONFIG_HOME/devdash`.
-    * You can also pass a relative or absolute path to the config.
-    * The dashboard's config can be written in YAML, JSON, or TOML.
+* Run `devdash`. If it doesn't exist yet, DevDash creates a default dashboard, `default.yml`, in `$XDG_CONFIG_HOME/devdash` (`~/.config/devdash` on Linux), and displays it.
+* Modify this dashboard, or create your own from the [examples](./doc/examples.md). Press `CTRL+r` to reload the dashboard after modifying it, or `CTRL+e` to edit it directly.
+* Display another dashboard with `devdash -c <name>`: DevDash looks for `<name>.yml` (or `.json`, `.toml`) in `$XDG_CONFIG_HOME/devdash`, then in the current directory. A path to the file works too.
 
-The value of `$XDG_CONFIG_HOME` depends of your OS. Here are the defaults (if you didn't modify it):
-
-* **Unix systems**: `~/.config`
-* **macOS**: `~/Library/Application Support`
-* **Windows**: `%LOCALAPPDATA%`
-
-
-## Google Analytics 4
-
-The `google_analytics` service uses the [Google Analytics Data API](https://developers.google.com/analytics/devguides/reporting/data/v1). You need:
-
-1. A service account with a JSON keyfile, with the [Google Analytics Data API](https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com) enabled for its project.
-2. The service account's email added as a *Viewer* of your GA4 property (Admin > Property access management).
-3. The ID of your GA4 property (Admin > Property details).
-
-```yaml
-services:
-  google_analytics:
-    keyfile: my-keyfile.json
-    property_id: 123456789
-```
-
-The metric and dimension aliases (`sessions`, `page_views`, `users`, `bounces`, `bounce_rate`, `page_path`, `traffic_source`, `country`...) are mapped to GA4. You can also use any [GA4 metric or dimension](https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema) directly, like `metric: "engagementRate"`. Universal Analytics names prefixed with `ga:` are converted when GA4 has an equivalent; `entrances` and `unique_page_views` don't exist anymore in GA4.
+See [Getting started](./doc/getting-started.md) for the commands, the keyboard shortcuts and the environment variables.
 
 ## Documentation
 
-[The complete DevDash documentation is here](https://thedevdash.com). It was written for the upstream project: the Travis CI service doesn't exist anymore, and the Google Analytics service now needs a `property_id` (see above).
+[The complete documentation is in the `doc` directory](./doc/README.md):
 
-You'll find in there:
+* [Getting started](./doc/getting-started.md)
+* [Examples](./doc/examples.md)
+* [Configuration reference](./doc/configuration.md): general options, projects, rows and columns, themes.
+* [Widgets and display options](./doc/widgets.md): sizes, colors, and the options of each widget type.
+* [Dates](./doc/dates.md)
+* The services: [Monitor](./doc/services/monitor.md), [Host](./doc/services/host.md), [Github](./doc/services/github.md), [Google Analytics 4](./doc/services/google-analytics.md), [Google Search Console](./doc/services/google-search-console.md), [Feedly](./doc/services/feedly.md), [Git](./doc/services/git.md), [Display](./doc/services/display.md).
+* [Upgrading from upstream DevDash](./doc/upgrading.md)
 
-* [Installation / getting started](https://thedevdash.com/getting-started/installation/)
-* [Simple examples](https://thedevdash.com/getting-started/examples/)
-* [Real-life use cases](https://thedevdash.com/getting-started/use-cases/devdash/)
-* [Complete reference of dashboard's config](https://thedevdash.com/reference/)
-
-More real-life examples are in the [dotfiles of the original author](https://github.com/Phantas0s/.dotfiles/tree/master/devdash).
+The website [thedevdash.com](https://thedevdash.com) documents the original, unmaintained version.
 
 ## Acknowledgement
 
-Thanks to [MariaLetta](https://github.com/MariaLetta/free-gophers-pack) for the awesome and beautiful Gopher pack! I used it for my logo on top.
+Thanks to [Matthieu Cneude](https://github.com/Phantas0s), who created DevDash, and to [MariaLetta](https://github.com/MariaLetta/free-gophers-pack) for the awesome and beautiful Gopher pack used for the logo on top.
 
 DevDash was inspired from other open source projects:
 
@@ -142,7 +117,7 @@ If you want to implement a new feature, let's speak about it first (by opening a
 
 ## Making Of
 
-For anybody interested how I managed to develop DevDash on side of a full time job, and how I organized my time and kept my motivation, [I wrote an article about that on my blog](https://thevaluable.dev/programming-side-project-example-devdash/).
+The original author wrote about [developing DevDash on the side of a full-time job](https://thevaluable.dev/programming-side-project-example-devdash/): how they organized their time and kept their motivation.
 
 ## Licence
 

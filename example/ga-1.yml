@@ -6,13 +6,14 @@ general:
 
 projects:
   - name: Example
-    title_options:
+    name_options:
       border_color: default
       text_color: default
       size: XXL
       bold: true
     services:
       google_analytics:
+        keyfile: goanalytics-123.json
         property_id: 123456789
       monitor:
         address: "https://www.web-techno.net"
@@ -48,6 +49,6 @@ projects:
                 - name: mon.box_availability
                 - name: ga.box_total
                   options:
-                    startDate: today
-                    endDate: today
+                    start_date: today
+                    end_date: today
                     metric: "users"

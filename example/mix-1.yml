@@ -72,7 +72,6 @@ projects:
                     title_color: yellow
                     border_color: yellow
                     text_color: green
-                    num_color: default
                 - name: ga.box_total
                   options:
                     title: "sessions/users 4 weeks ago"
@@ -80,7 +79,6 @@ projects:
                     title_color: green
                     border_color: green
                     text_color: green
-                    num_color: default
                     start_date: 4_weeks_ago
                     end_date: 4_weeks_ago
                 - name: ga.box_total
@@ -88,7 +86,6 @@ projects:
                     title: "sessions/users 3 weeks ago"
                     metric: "sessionsPerUser"
                     color: blue
-                    num_color: default
                     start_date: 3_weeks_ago
                     end_date: 3_weeks_ago
                 - name: ga.box_total
@@ -96,7 +93,6 @@ projects:
                     title: "sessions/users 2 weeks ago"
                     metric: "sessionsPerUser"
                     color: magenta
-                    num_color: default
                     start_date: 2_weeks_ago
                     end_date: 2_weeks_ago
                 - name: ga.box_total
@@ -104,7 +100,6 @@ projects:
                     title: "sessions/users 1 week ago"
                     metric: "sessionsPerUser"
                     text_color: default
-                    num_color: default
                     start_date: last_week
                     end_date: last_week
       - row:
@@ -125,8 +120,6 @@ projects:
                     filters: "google"
                     start_date: "today"
                     end_date: "today"
-                    first_color: red
-                    second_color: yellow
                     row_limit: 8
           - col:
               size: "S"

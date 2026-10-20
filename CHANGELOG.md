@@ -14,6 +14,9 @@ Maintained fork of [Phantas0s/devdash](https://github.com/Phantas0s/devdash), ar
 * New metric aliases for Google Analytics: `engaged_sessions`, `new_users`, `active_users`, `engagement_rate`. New dimension aliases: `landing_page`, `referrer`.
 * Install with `go install github.com/PiercingXX/devdash@latest`.
 * Release binaries for arm64.
+* The complete documentation in the `doc` directory, including a guide to upgrade from upstream DevDash.
+* The Google Analytics `filters` beginning with `-` exclude their value, like for Google Search Console.
+* `devdash edit` without argument edits the default dashboard.
 
 ### UPDATED
 
@@ -23,11 +26,14 @@ Maintained fork of [Phantas0s/devdash](https://github.com/Phantas0s/devdash), ar
 * The monitor widget pings on every refresh instead of once at startup, and displays ping errors.
 * Several Google Analytics filters are now combined with OR instead of only using the first one.
 * Upgrade Go and every dependency. CI now runs on GitHub Actions.
+* The box option to wrap the text is now `multiline` (it was `false`), and the option of `github.bar_commits` to count every commit is now `scope` (it was `owner`), as documented.
+* The default title of `mon.box_ping` is ` Ping `. The columns of `git.table_branches` describe the last commit of each branch.
 
 ### REMOVED
 
 * The Travis CI service (travis-ci.org was shut down).
 * The Google Analytics metrics `entrances` and `unique_page_views`, which don't exist in GA4.
+* The GitHub funding link to the original author.
 
 ### FIXED
 
@@ -37,6 +43,13 @@ Maintained fork of [Phantas0s/devdash](https://github.com/Phantas0s/devdash), ar
 * The blog template generated invalid YAML and an ignored `reload` key.
 * Google Search Console crashed on empty filters.
 * The Linux install command didn't install anything.
+* `gsc.table_pages` displayed queries instead of pages.
+* `ga.bar_bounces` added " Bounces " to the title of the widget.
+* `ga.table` without `dimension` had an empty header.
+* On Sundays, the weeks began on Saturday.
+* `end_date: this_year` and `end_date: x_years_ago` were the first day of the year instead of the last one.
+* `rh.box_disk_io` and `lh.box_disk_io` displayed values 1024 times too big.
+* The example dashboards used options that don't exist.
 
 ## [0.5.0] - 2021-04-25
 

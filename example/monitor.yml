@@ -5,10 +5,10 @@ general:
     quit: "C-c"
 
 projects:
-  - name: Default Configuration - You can modify at at $XDG_CONFIG_HOME/devdash/devdash.yml
+  - name: Monitoring
     services:
       monitor:
-        address: "https://thevaluable.dev/sdifljasflkafjsdfljfksasdflk"
+        address: "https://thevaluable.dev"
     widgets:
       - row:
           - col:
