@@ -14,7 +14,7 @@ projects:
     services:
       google_analytics:
         keyfile: goanalytics-123.json
-        view_id: 12345678
+        property_id: 123456789
       monitor:
         address: "https://www.web-techno.net"
     widgets:
@@ -62,6 +62,6 @@ projects:
                     title: "Bounces - Yesterday"
                     start_date: "yesterday"
                     end_date: "yesterday"
-                    metrics: "ga:bounces"
+                    metrics: "bounces"
                     character_limit: 10
                     row_limit: 2

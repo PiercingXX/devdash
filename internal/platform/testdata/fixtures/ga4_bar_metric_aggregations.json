@@ -1,0 +1,110 @@
+{
+  "dimensionHeaders": [
+    {
+      "name": "date"
+    },
+    {
+      "name": "pagePath"
+    }
+  ],
+  "metricHeaders": [
+    {
+      "name": "screenPageViews",
+      "type": "TYPE_INTEGER"
+    }
+  ],
+  "rows": [
+    {
+      "dimensionValues": [
+        {
+          "value": "20200301"
+        },
+        {
+          "value": "/dry-principle-explained/"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "35"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200302"
+        },
+        {
+          "value": "/dry-principle-explained/"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "38"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200302"
+        },
+        {
+          "value": "/dry-principle-explained/?fbclid=IwAR333PPV225IUD9dl10M7aYSNVJfUUB5tsEsDJPM4evU_JZdG6uUwMmcfpU"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200302"
+        },
+        {
+          "value": "/search?q=cache:bncjN9Xib_kJ:https://web-techno.net/dry-principle-explained/+&cd=22&hl=en&ct=clnk&gl=us"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200303"
+        },
+        {
+          "value": "/dry-principle-explained/"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "28"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200303"
+        },
+        {
+          "value": "/search?q=cache:bncjN9Xib_kJ:https://web-techno.net/dry-principle-explained/+&cd=21&hl=en&ct=clnk&gl=us"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "1"
+        }
+      ]
+    }
+  ],
+  "rowCount": 6,
+  "kind": "analyticsData#runReport"
+}

@@ -1,0 +1,200 @@
+{
+  "dimensionHeaders": [
+    {
+      "name": "date"
+    },
+    {
+      "name": "newVsReturning"
+    }
+  ],
+  "metricHeaders": [
+    {
+      "name": "totalUsers",
+      "type": "TYPE_INTEGER"
+    }
+  ],
+  "rows": [
+    {
+      "dimensionValues": [
+        {
+          "value": "20200304"
+        },
+        {
+          "value": "new"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "342"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200304"
+        },
+        {
+          "value": "returning"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "87"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200305"
+        },
+        {
+          "value": "new"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "382"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200305"
+        },
+        {
+          "value": "returning"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "78"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200306"
+        },
+        {
+          "value": "new"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "348"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200306"
+        },
+        {
+          "value": "returning"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "73"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200307"
+        },
+        {
+          "value": "new"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "330"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200307"
+        },
+        {
+          "value": "returning"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "58"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200308"
+        },
+        {
+          "value": "new"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "288"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200308"
+        },
+        {
+          "value": "returning"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "54"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200309"
+        },
+        {
+          "value": "new"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "58"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200309"
+        },
+        {
+          "value": "returning"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "20"
+        }
+      ]
+    }
+  ],
+  "rowCount": 12,
+  "kind": "analyticsData#runReport"
+}

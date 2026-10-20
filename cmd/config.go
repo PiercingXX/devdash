@@ -75,8 +75,10 @@ type Services struct {
 }
 
 type GoogleAnalytics struct {
-	Keyfile string `mapstructure:"keyfile"`
-	ViewID  string `mapstructure:"view_id"`
+	Keyfile    string `mapstructure:"keyfile"`
+	PropertyID string `mapstructure:"property_id"`
+	// ViewID was used by Universal Analytics, shut down by Google in favor of GA4.
+	ViewID string `mapstructure:"view_id"`
 }
 
 type SearchConsole struct {

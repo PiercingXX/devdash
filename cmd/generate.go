@@ -43,7 +43,7 @@ func createBlogDefaultConfig() string {
 	wizardIntro("a blog")
 	keyfile := askKeyfile()
 	address := askSiteAddress()
-	viewID := askViewID()
+	propertyID := askPropertyID()
 
 	ut, err := template.New("blog").Parse(internal.Blog())
 	if err != nil {
@@ -51,7 +51,7 @@ func createBlogDefaultConfig() string {
 	}
 
 	b := bytes.NewBuffer([]byte{})
-	err = ut.Execute(b, internal.CreateBlogConfig(keyfile, address, viewID))
+	err = ut.Execute(b, internal.CreateBlogConfig(keyfile, address, propertyID))
 	if err != nil {
 		panic(err)
 	}
@@ -122,17 +122,17 @@ func askSiteAddress() string {
 	return address
 }
 
-func askViewID() string {
+func askPropertyID() string {
 	fmt.Fprintln(os.Stdout, "")
-	fmt.Fprintln(os.Stdout, "The View ID is required for Google Analytics.")
-	fmt.Fprintln(os.Stdout, "See https://thedevdash.com/reference/services/google-analytics/")
+	fmt.Fprintln(os.Stdout, "The property ID of your Google Analytics 4 property is required.")
+	fmt.Fprintln(os.Stdout, "You can find it in Google Analytics, under Admin > Property details.")
 	fmt.Fprintln(os.Stdout, "")
-	fmt.Fprint(os.Stdout, "Enter the view ID for Google Analytics: ")
+	fmt.Fprint(os.Stdout, "Enter the property ID for Google Analytics: ")
 
-	var viewID string
-	fmt.Scanf("%s", &viewID)
+	var propertyID string
+	fmt.Scanf("%s", &propertyID)
 
-	return viewID
+	return propertyID
 }
 
 func askGitHubToken() string {

@@ -3,6 +3,7 @@ package cmd
 // TODO see gocket to make the command right (with possibility to use env variables)
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -136,7 +137,10 @@ func build(file string, tui *internal.Tui) {
 
 		gaService := p.Services.GoogleAnalytics
 		if !gaService.empty() {
-			gaWidget, err := internal.NewGaWidget(gaService.Keyfile, gaService.ViewID)
+			gaWidget, err := internal.NewGaWidget(gaService.Keyfile, gaService.PropertyID)
+			if gaService.PropertyID == "" {
+				err = errors.New("google_analytics: property_id is required (view_id was used by Universal Analytics, which Google shut down; use the ID of your GA4 property instead)")
+			}
 			if err != nil {
 				internal.DisplayError(tui, err)()
 			} else {

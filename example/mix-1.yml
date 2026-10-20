@@ -14,12 +14,11 @@ projects:
     services:
       google_analytics:
         keyfile: goanalytics-123.json
-        view_id: 12345678
+        property_id: 123456789
       monitor:
         address: "https://www.web-techno.net"
       google_search_console:
         keyfile: goanalytics-123.json
-        view_id: 12345678
         address: 'https://web-techno.net'
     widgets:
       - row:
@@ -77,7 +76,7 @@ projects:
                 - name: ga.box_total
                   options:
                     title: "sessions/users 4 weeks ago"
-                    metric: "ga:sessionsPerUser"
+                    metric: "sessionsPerUser"
                     title_color: green
                     border_color: green
                     text_color: green
@@ -87,7 +86,7 @@ projects:
                 - name: ga.box_total
                   options:
                     title: "sessions/users 3 weeks ago"
-                    metric: "ga:sessionsPerUser"
+                    metric: "sessionsPerUser"
                     color: blue
                     num_color: default
                     start_date: 3_weeks_ago
@@ -95,7 +94,7 @@ projects:
                 - name: ga.box_total
                   options:
                     title: "sessions/users 2 weeks ago"
-                    metric: "ga:sessionsPerUser"
+                    metric: "sessionsPerUser"
                     color: magenta
                     num_color: default
                     start_date: 2_weeks_ago
@@ -103,7 +102,7 @@ projects:
                 - name: ga.box_total
                   options:
                     title: "sessions/users 1 week ago"
-                    metric: "ga:sessionsPerUser"
+                    metric: "sessionsPerUser"
                     text_color: default
                     num_color: default
                     start_date: last_week

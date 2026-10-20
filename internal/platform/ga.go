@@ -12,13 +12,9 @@ import (
 	"github.com/adrg/xdg"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2/google"
-	"golang.org/x/oauth2/jwt"
-	gav3 "google.golang.org/api/analytics/v3"
-	ga "google.golang.org/api/analyticsreporting/v4"
+	ga "google.golang.org/api/analyticsdata/v1beta"
 	"google.golang.org/api/option"
 )
-
-const gaPrefix = "ga:"
 
 // To create fixtures in order to test the data formatting.
 // j, _ := json.Marshal(resp)
@@ -29,61 +25,84 @@ const (
 	XHeaderTime uint16 = iota
 	XHeaderOtherDim
 
-	earliestDate     = "2005-01-01" // This is the earliest date Google Analytics accepts.
-	newVisitor       = "New Visitor"
-	returningVisitor = "Returning Visitor"
+	earliestDate     = "2015-08-14" // This is the earliest date the Google Analytics Data API accepts.
+	newVisitor       = "new"
+	returningVisitor = "returning"
 )
 
-var mappingMetrics = map[string]string{
-	"sessions":                 "ga:sessions",
-	"page_views":               "ga:pageViews",
-	"bounces":                  "ga:bounces",
-	"entrances":                "ga:entrances",
-	"unique_page_views":        "ga:uniquePageviews",
-	"users":                    "ga:users",
-	"session_duration":         "ga:sessionDuration",
-	"average_session_duration": "ga:avgSessionDuration",
-	"bounce_rate":              "ga:bounceRate",
+// mappingMetrics maps devdash aliases to GA4 metrics.
+// GA4 has no equivalent for some Universal Analytics metrics; they're derived with an expression when possible.
+var mappingMetrics = map[string]ga.Metric{
+	"sessions":                 {Name: "sessions"},
+	"engaged_sessions":         {Name: "engagedSessions"},
+	"page_views":               {Name: "screenPageViews"},
+	"bounces":                  {Name: "bounces", Expression: "sessions-engagedSessions"},
+	"users":                    {Name: "totalUsers"},
+	"new_users":                {Name: "newUsers"},
+	"active_users":             {Name: "activeUsers"},
+	"session_duration":         {Name: "sessionDuration", Expression: "averageSessionDuration*sessions"},
+	"average_session_duration": {Name: "averageSessionDuration"},
+	"bounce_rate":              {Name: "bounceRate"},
+	"engagement_rate":          {Name: "engagementRate"},
 }
 
-var mappingTimePeriod = map[string][]string{
-	"day":   []string{"ga:month", "ga:day"},
-	"month": []string{"ga:year", "ga:month"},
-	"year":  []string{"ga:year"},
+// removedMetrics existed in Universal Analytics but have no GA4 equivalent.
+var removedMetrics = map[string]bool{
+	"entrances":         true,
+	"unique_page_views": true,
+	"uniquePageviews":   true,
+}
+
+var mappingTimePeriod = map[string]string{
+	"day":   "date",
+	"month": "yearMonth",
+	"year":  "year",
 }
 
 var mappingDimensions = map[string]string{
-	"page_path":       "ga:pagePath",
-	"traffic_source":  "ga:source",
-	"user_type":       "ga:userType",
-	"device_category": "ga:deviceCategory",
-	"country":         "ga:country",
+	"page_path":       "pagePath",
+	"landing_page":    "landingPage",
+	"referrer":        "pageReferrer",
+	"traffic_source":  "sessionSource",
+	"user_type":       "newVsReturning",
+	"device_category": "deviceCategory",
+	"country":         "country",
+}
+
+// mappingUANames maps Universal Analytics names (without the "ga:" prefix) to their GA4 equivalent,
+// to keep old configurations working when possible.
+var mappingUANames = map[string]string{
+	"pageViews":          "screenPageViews",
+	"pageviews":          "screenPageViews",
+	"users":              "totalUsers",
+	"avgSessionDuration": "averageSessionDuration",
+	"source":             "sessionSource",
+	"userType":           "newVsReturning",
+	"fullReferrer":       "pageReferrer",
 }
 
 var mappingHeader = map[string]string{
-	"sessions":          "Sessions",
-	"page_views":        "Page Views",
-	"entrances":         "Entrances",
-	"unique_page_views": "Unique Page Views",
+	"sessions":                 "Sessions",
+	"engaged_sessions":         "Engaged Sessions",
+	"page_views":               "Page Views",
+	"bounces":                  "Bounces",
+	"users":                    "Users",
+	"new_users":                "New Users",
+	"active_users":             "Active Users",
+	"average_session_duration": "Avg. Session Duration",
+	"bounce_rate":              "Bounce Rate",
+	"engagement_rate":          "Engagement Rate",
 }
 
-var mappingOrder = map[string]string{
-	"asc":  "ASCENDING",
-	"desc": "DESCENDING",
-}
-
-// Analytics connect to Google Analytics API.
+// Analytics connect to Google Analytics Data API (GA4).
 type Analytics struct {
-	config          *jwt.Config
-	servicev3       *gav3.Service
-	realtimeService *gav3.DataRealtimeService
-	service         *ga.Service
+	service *ga.Service
 }
 
 // AnalyticValues which can be possibly send to the Google Analytics API.
 // This is a pure value object without behavior.
 type AnalyticValues struct {
-	ViewID     string
+	PropertyID string
 	StartDate  string
 	EndDate    string
 	TimePeriod string
@@ -109,46 +128,32 @@ func NewAnalyticsClient(keyfile string) (*Analytics, error) {
 		}
 	}
 
-	an := &Analytics{}
-
-	an.config, err = google.JWTConfigFromJSON(data, ga.AnalyticsReadonlyScope)
+	config, err := google.JWTConfigFromJSON(data, ga.AnalyticsReadonlyScope)
 	if err != nil {
 		return nil, fmt.Errorf("creating JWT config from json keyfile %q failed: %v", keyfile, err)
 	}
 
-	// analytics reporting v4 service
-	an.service, err = ga.NewService(context.Background(), option.WithHTTPClient(an.config.Client(context.Background())))
+	service, err := ga.NewService(context.Background(), option.WithHTTPClient(config.Client(context.Background())))
 	if err != nil {
-		return nil, fmt.Errorf("creating the analytics reporting service v4 object failed: %v", err)
+		return nil, fmt.Errorf("creating the analytics data service failed: %v", err)
 	}
 
-	// analytics reporting v3 service object.
-	an.servicev3, err = gav3.NewService(context.Background(), option.WithHTTPClient(an.config.Client(context.Background())))
-	if err != nil {
-		return nil, fmt.Errorf("creating the analytics reporting service v3 object failed: %v", err)
-	}
-	an.realtimeService = gav3.NewDataRealtimeService(an.servicev3)
-
-	return an, nil
-
+	return &Analytics{service: service}, nil
 }
 
 // SimpleMetric get a value depending on Google Analytics metrics.
 func (c *Analytics) SimpleMetric(val AnalyticValues) (string, error) {
-	req := &ga.GetReportsRequest{
-		ReportRequests: []*ga.ReportRequest{
-			{
-				ViewId: val.ViewID,
-				DateRanges: []*ga.DateRange{
-					{StartDate: val.StartDate, EndDate: val.EndDate},
-				},
-				Metrics:          mapMetrics(val.Metrics),
-				IncludeEmptyRows: true,
-			},
-		},
+	metrics, err := mapMetrics(val.Metrics)
+	if err != nil {
+		return "", err
 	}
 
-	resp, err := c.service.Reports.BatchGet(req).Do()
+	req := &ga.RunReportRequest{
+		DateRanges: dateRanges(val),
+		Metrics:    metrics,
+	}
+
+	resp, err := c.service.Properties.RunReport(propertyName(val.PropertyID), req).Do()
 	if err != nil {
 		return "", errors.Wrapf(
 			err,
@@ -158,8 +163,8 @@ func (c *Analytics) SimpleMetric(val AnalyticValues) (string, error) {
 		)
 	}
 
-	if len(resp.Reports[0].Data.Rows) != 0 {
-		return resp.Reports[0].Data.Rows[0].Metrics[0].Values[0], nil
+	if len(resp.Rows) != 0 && len(resp.Rows[0].MetricValues) != 0 {
+		return formatValue(resp.Rows[0].MetricValues[0].Value), nil
 	}
 
 	return "0", nil
@@ -167,66 +172,35 @@ func (c *Analytics) SimpleMetric(val AnalyticValues) (string, error) {
 
 // BarMetric provides a qualitive dimension linked to a quantitative value, for example a date (dimension) with an int.
 func (c *Analytics) BarMetric(val AnalyticValues) ([]string, []int, error) {
-	// Add the time dimension to the first two indexes of the slice ga.Dimensions(index 0 and 1)
+	metrics, err := mapMetrics(val.Metrics)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// The time dimension is always the first one.
 	tm := mapTimePeriod(val.TimePeriod)
-	dim := []*ga.Dimension{}
-	for _, v := range tm {
-		dim = append(dim, &ga.Dimension{Name: v})
+	dim := append([]*ga.Dimension{{Name: tm}}, mapDimensions(val.Dimensions)...)
+
+	req := &ga.RunReportRequest{
+		DateRanges: dateRanges(val),
+		Metrics:    metrics,
+		Dimensions: dim,
+		OrderBys: []*ga.OrderBy{
+			{Dimension: &ga.DimensionOrderBy{DimensionName: tm}},
+		},
+		KeepEmptyRows: true,
 	}
 
-	formater := formatBar
-	for _, v := range val.Dimensions {
-		// Special formater - depends on a string returned by API
-		if v == "user_returning" {
-			formater = formatBarReturning
-		}
-		dim = append(dim, &ga.Dimension{Name: mapDimension(v)})
-	}
-
-	fi := []*ga.DimensionFilter{}
 	// TODO - Why this condition? is filter works only with one dimension only?
 	if len(val.Dimensions) == 1 && len(val.Filters) != 0 {
-		fi = append(fi, &ga.DimensionFilter{
-			CaseSensitive: false,
-			DimensionName: mapDimension(val.Dimensions[0]),
-			Expressions:   val.Filters,
-			Not:           false,
-			Operator:      "PARTIAL",
-		})
+		req.DimensionFilter = containsFilter(mapDimension(val.Dimensions[0]), val.Filters)
 	}
 
-	req := &ga.GetReportsRequest{
-		ReportRequests: []*ga.ReportRequest{
-			{
-				ViewId: val.ViewID,
-				DateRanges: []*ga.DateRange{
-					{StartDate: val.StartDate, EndDate: val.EndDate},
-				},
-				Metrics:    mapMetrics(val.Metrics),
-				Dimensions: dim,
-				OrderBys: []*ga.OrderBy{
-					{
-						FieldName: string(tm[0]),
-						SortOrder: "ASCENDING",
-					},
-				},
-				DimensionFilterClauses: []*ga.DimensionFilterClause{
-					{
-						Filters:  fi,
-						Operator: "AND",
-					},
-				},
-				IncludeEmptyRows: true,
-			},
-		},
-	}
-
-	resp, err := c.service.Reports.BatchGet(req).Do()
-
+	resp, err := c.service.Properties.RunReport(propertyName(val.PropertyID), req).Do()
 	if err != nil {
 		return nil, nil, errors.Wrapf(
 			err,
-			"can't get users data from google analytics with start data %s / end_date %s",
+			"can't get bar data from google analytics with start data %s / end_date %s",
 			val.StartDate,
 			val.EndDate,
 		)
@@ -234,32 +208,32 @@ func (c *Analytics) BarMetric(val AnalyticValues) ([]string, []int, error) {
 
 	// Decide of the header X-axis
 	f := func(dimValues []string) string {
-		// TODO need a mapping here instead of using an index (?) - using headers of ga response
-		if val.XHeaders == XHeaderOtherDim {
-			return dimValues[2]
+		if val.XHeaders == XHeaderOtherDim && len(dimValues) > 1 {
+			return dimValues[1]
 		}
 
-		if val.XHeaders == XHeaderTime {
-			return dimValues[0] + "-" + dimValues[1]
-		}
-
-		// By default, display the first dimension for headers X-axis
-		return dimValues[0]
+		return formatTimeLabel(tm, dimValues[0])
 	}
 
-	return formater(resp.Reports, f)
+	return formatBar(resp.Rows, f)
 }
 
 // RealTimeUsers return the number of visitor currently on the website.
-func (c *Analytics) RealTimeUsers(viewID string) (string, error) {
-	metric := "rt:activeUsers"
+func (c *Analytics) RealTimeUsers(propertyID string) (string, error) {
+	req := &ga.RunRealtimeReportRequest{
+		Metrics: []*ga.Metric{{Name: "activeUsers"}},
+	}
 
-	resp, err := c.realtimeService.Get(gaPrefix+viewID, metric).Do()
+	resp, err := c.service.Properties.RunRealtimeReport(propertyName(propertyID), req).Do()
 	if err != nil {
 		return "", err
 	}
 
-	return resp.TotalsForAllResults[metric], nil
+	if len(resp.Rows) != 0 && len(resp.Rows[0].MetricValues) != 0 {
+		return resp.Rows[0].MetricValues[0].Value, nil
+	}
+
+	return "0", nil
 }
 
 // Table display dimensions and values.
@@ -268,56 +242,40 @@ func (c *Analytics) Table(
 	an AnalyticValues,
 	firstHeader string,
 ) (headers []string, dim []string, u [][]string, err error) {
-
-	dateRange := []*ga.DateRange{
-		{StartDate: an.StartDate, EndDate: an.EndDate},
+	metrics, err := mapMetrics(an.Metrics)
+	if err != nil {
+		return nil, nil, nil, err
 	}
 
-	if an.Global {
-		dateRange = []*ga.DateRange{
-			{StartDate: earliestDate, EndDate: an.EndDate},
-		}
-	}
-
-	req := &ga.GetReportsRequest{
-		ReportRequests: []*ga.ReportRequest{
-			{
-				ViewId:           an.ViewID,
-				DateRanges:       dateRange,
-				Metrics:          mapMetrics(an.Metrics),
-				Dimensions:       mapDimensions(an.Dimensions),
-				OrderBys:         mapOrderBy(an.Orders),
-				IncludeEmptyRows: true,
-				PageSize:         an.RowLimit,
-			},
-		},
+	dimensions := mapDimensions(an.Dimensions)
+	req := &ga.RunReportRequest{
+		DateRanges:    dateRanges(an),
+		Metrics:       metrics,
+		Dimensions:    dimensions,
+		OrderBys:      mapOrderBy(an.Orders, dimensions),
+		KeepEmptyRows: true,
+		Limit:         an.RowLimit,
 	}
 
 	if len(an.Filters) > 0 {
-
 		// TODO now only one filter is possible for one dimension.
 		// If there are more than one dimension, the same set of filter is applied.
 		// Possibility to make it multiple filters for multipme dimension?
-		filters := []*ga.DimensionFilter{}
-		for _, v := range an.Dimensions {
-			filters = append(filters, &ga.DimensionFilter{
-				CaseSensitive: false,
-				DimensionName: v,
-				Expressions:   an.Filters,
-				Not:           false,
-				Operator:      "PARTIAL",
-			})
+		filters := []*ga.FilterExpression{}
+		for _, v := range dimensions {
+			if f := containsFilter(v.Name, an.Filters); f != nil {
+				filters = append(filters, f)
+			}
 		}
 
-		req.ReportRequests[0].DimensionFilterClauses = []*ga.DimensionFilterClause{
-			{
-				Filters:  filters,
-				Operator: "AND",
-			},
+		if len(filters) > 0 {
+			req.DimensionFilter = &ga.FilterExpression{
+				AndGroup: &ga.FilterExpressionList{Expressions: filters},
+			}
 		}
 	}
 
-	resp, err := c.service.Reports.BatchGet(req).Do()
+	resp, err := c.service.Properties.RunReport(propertyName(an.PropertyID), req).Do()
 	if err != nil {
 		return nil, nil, nil, errors.Wrapf(
 			err,
@@ -332,42 +290,32 @@ func (c *Analytics) Table(
 	}
 
 	headers = mapHeaders(firstHeader, an.Metrics)
-	dim, u = formatTable(resp.Reports, formater)
+	dim, u = formatTable(resp.Rows, formater)
 	return
 }
 
 // StackedBar returns one dimension set linked with multiple values.
 func (c *Analytics) StackedBar(an AnalyticValues) (dim []string, values map[string][]int, err error) {
-	d := mapDimensions(an.Dimensions)
+	metrics, err := mapMetrics(an.Metrics)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// The time dimension is always the first one, the stacked dimension the second one.
 	tm := mapTimePeriod(an.TimePeriod)
+	d := append([]*ga.Dimension{{Name: tm}}, mapDimensions(an.Dimensions)...)
 
-	// Add the time dimensions to the slice (index 1,2)
-	for _, v := range tm {
-		d = append(d, &ga.Dimension{Name: v})
-	}
-
-	req := &ga.GetReportsRequest{
-		ReportRequests: []*ga.ReportRequest{
-			{
-				ViewId: an.ViewID,
-				DateRanges: []*ga.DateRange{
-					{StartDate: an.StartDate, EndDate: an.EndDate},
-				},
-				Metrics:    mapMetrics(an.Metrics),
-				Dimensions: d,
-				OrderBys: []*ga.OrderBy{
-					{
-						FieldName: string(tm[0]),
-						SortOrder: "ASCENDING",
-					},
-				},
-				IncludeEmptyRows: true,
-			},
+	req := &ga.RunReportRequest{
+		DateRanges: dateRanges(an),
+		Metrics:    metrics,
+		Dimensions: d,
+		OrderBys: []*ga.OrderBy{
+			{Dimension: &ga.DimensionOrderBy{DimensionName: tm}},
 		},
+		KeepEmptyRows: true,
 	}
 
-	resp, err := c.service.Reports.BatchGet(req).Do()
-
+	resp, err := c.service.Properties.RunReport(propertyName(an.PropertyID), req).Do()
 	if err != nil {
 		return nil, nil, errors.Wrapf(
 			err,
@@ -379,175 +327,277 @@ func (c *Analytics) StackedBar(an AnalyticValues) (dim []string, values map[stri
 
 	// Always dates on x-axis
 	formater := func(dim []string) string {
-		return dim[1] + "-" + dim[2]
+		return formatTimeLabel(tm, dim[0])
 	}
 
-	return formatStackedBar(resp.Reports, formater)
+	return formatStackedBar(resp.Rows, formater)
 }
 
 // formatBar to return one slice of dimension which elements are all linked with the elements of another slice with the values.
-func formatBar(reps []*ga.Report, dimFormater func(dim []string) string) (dim []string, u []int, err error) {
+func formatBar(rows []*ga.Row, dimFormater func(dim []string) string) (dim []string, u []int, err error) {
 	dimVal := map[string]int{}
-	for _, v := range reps {
-		for l := 0; l < len(v.Data.Rows); l++ {
-			d := dimFormater(v.Data.Rows[l].Dimensions)
+	for _, r := range rows {
+		d := dimFormater(dimensionValues(r))
 
-			// Add the dimension only if it was not added already.
-			if _, ok := dimVal[d]; !ok {
-				dim = append(dim, d)
+		// Add the dimension only if it was not added already.
+		if _, ok := dimVal[d]; !ok {
+			dim = append(dim, d)
+			dimVal[d] = 0
+		}
+
+		for _, m := range r.MetricValues {
+			vu, err := parseMetricValue(m.Value)
+			if err != nil {
+				return nil, nil, err
 			}
-
-			for m := 0; m < len(v.Data.Rows[l].Metrics); m++ {
-				value := v.Data.Rows[l].Metrics[m].Values[0]
-
-				var vu int64
-				if strings.Contains(value, ".") {
-					f, _ := strconv.ParseFloat(value, 64)
-					vu = int64(f)
-				} else if vu, err = strconv.ParseInt(value, 0, 0); err != nil {
-					return nil, nil, err
-				}
-
-				if _, ok := dimVal[d]; ok {
-					dimVal[d] += int(vu)
-					continue
-				}
-
-				dimVal[d] = int(vu)
-				u = append(u, int(vu))
-			}
+			dimVal[d] += vu
 		}
 	}
 
-	for k, v := range dim {
-		u[k] = dimVal[v]
-	}
-
-	return dim, u, nil
-}
-
-// formatBarReturning format the special case of new / returning users for a bar vizualisation.
-func formatBarReturning(
-	reps []*ga.Report,
-	dimFormater func(dim []string) string,
-) (dim []string, u []int, err error) {
-	for _, v := range reps {
-		for l := 0; l < len(v.Data.Rows); l++ {
-			userType := v.Data.Rows[l].Dimensions[2]
-			if userType == returningVisitor {
-				dim = append(dim, dimFormater(v.Data.Rows[l].Dimensions))
-			}
-
-			for m := 0; m < len(v.Data.Rows[l].Metrics); m++ {
-				value := v.Data.Rows[l].Metrics[m].Values[0]
-
-				var vu int64
-				if vu, err = strconv.ParseInt(value, 0, 0); err != nil {
-					return nil, nil, err
-				}
-
-				if userType == returningVisitor {
-					u = append(u, int(vu))
-				}
-			}
-		}
+	for _, v := range dim {
+		u = append(u, dimVal[v])
 	}
 
 	return dim, u, nil
 }
 
 func formatTable(
-	reps []*ga.Report,
+	rows []*ga.Row,
 	dimFormater func(dim []string) string,
 ) (dim []string, u [][]string) {
-	for _, v := range reps {
-		for l := 0; l < len(v.Data.Rows); l++ {
-			dim = append(dim, dimFormater(v.Data.Rows[l].Dimensions))
+	for _, r := range rows {
+		dim = append(dim, dimFormater(dimensionValues(r)))
 
-			for m := 0; m < len(v.Data.Rows[l].Metrics); m++ {
-				var g []string
-				for p := 0; p < len(v.Data.Rows[l].Metrics[m].Values); p++ {
-					g = append(g, v.Data.Rows[l].Metrics[m].Values[p])
-				}
-				u = append(u, g)
-			}
+		var g []string
+		for _, m := range r.MetricValues {
+			g = append(g, formatValue(m.Value))
 		}
+		u = append(u, g)
 	}
 
 	return dim, u
 }
 
+// formatStackedBar returns the x-axis dimensions and, for every value of the stacked dimension,
+// the values aligned with the x-axis. A missing combination is filled with 0.
 func formatStackedBar(
-	reps []*ga.Report,
+	rows []*ga.Row,
 	dimFormater func(dim []string) string,
 ) (dim []string, values map[string][]int, err error) {
-	values = make(map[string][]int)
-	for _, v := range reps {
-		for l := 0; l < len(v.Data.Rows); l++ {
-			d := dimFormater(v.Data.Rows[l].Dimensions)
-			if !inArray(dim, d) {
-				dim = append(dim, d)
-			}
+	type point struct {
+		dim    string
+		header string
+		value  int
+	}
 
-			for m := 0; m < len(v.Data.Rows[l].Metrics); m++ {
-				value := v.Data.Rows[l].Metrics[m].Values[0]
+	points := []point{}
+	for _, r := range rows {
+		dv := dimensionValues(r)
+		if len(dv) < 2 {
+			return nil, nil, errors.New("a stacked bar needs a dimension to stack")
+		}
 
-				var vu int64
-				if vu, err = strconv.ParseInt(value, 0, 0); err != nil {
-					return nil, nil, err
-				}
-				header := v.Data.Rows[l].Dimensions[0]
-				values[header] = append(values[header], int(vu))
+		d := dimFormater(dv)
+		if !inArray(dim, d) {
+			dim = append(dim, d)
+		}
+
+		for _, m := range r.MetricValues {
+			vu, err := parseMetricValue(m.Value)
+			if err != nil {
+				return nil, nil, err
 			}
+			points = append(points, point{dim: d, header: dv[1], value: vu})
 		}
 	}
 
+	values = make(map[string][]int)
+	for _, p := range points {
+		if _, ok := values[p.header]; !ok {
+			values[p.header] = make([]int, len(dim))
+		}
+		values[p.header][slices.Index(dim, p.dim)] += p.value
+	}
+
 	return dim, values, nil
+}
+
+func dimensionValues(r *ga.Row) []string {
+	d := make([]string, len(r.DimensionValues))
+	for k, v := range r.DimensionValues {
+		d[k] = v.Value
+	}
+
+	return d
+}
+
+// parseMetricValue parses a metric value returned by the API. Decimal values are truncated.
+func parseMetricValue(value string) (int, error) {
+	if strings.Contains(value, ".") {
+		f, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return 0, err
+		}
+		return int(f), nil
+	}
+
+	vu, err := strconv.ParseInt(value, 10, 0)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(vu), nil
+}
+
+// formatValue rounds decimal values to two digits.
+func formatValue(value string) string {
+	if !strings.Contains(value, ".") {
+		return value
+	}
+
+	f, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return value
+	}
+
+	return strconv.FormatFloat(f, 'f', 2, 64)
+}
+
+// formatTimeLabel formats the value of a GA4 time dimension for the x-axis of a chart.
+func formatTimeLabel(dimension string, value string) string {
+	switch {
+	case dimension == "date" && len(value) == 8:
+		// YYYYMMDD -> MM-DD
+		return value[4:6] + "-" + value[6:]
+	case dimension == "yearMonth" && len(value) == 6:
+		// YYYYMM -> YYYY-MM
+		return value[:4] + "-" + value[4:]
+	}
+
+	return value
 }
 
 func inArray(haystack []string, needle string) bool {
 	return slices.Contains(haystack, needle)
 }
 
+func propertyName(propertyID string) string {
+	propertyID = strings.TrimSpace(propertyID)
+	if strings.HasPrefix(propertyID, "properties/") {
+		return propertyID
+	}
+
+	return "properties/" + propertyID
+}
+
+func dateRanges(val AnalyticValues) []*ga.DateRange {
+	startDate := val.StartDate
+	if val.Global {
+		startDate = earliestDate
+	}
+
+	return []*ga.DateRange{
+		{StartDate: startDate, EndDate: val.EndDate},
+	}
+}
+
+// containsFilter matches a dimension containing at least one of the expressions.
+func containsFilter(dimension string, expressions []string) *ga.FilterExpression {
+	group := []*ga.FilterExpression{}
+	for _, v := range expressions {
+		v = strings.TrimSpace(v)
+		if v == "" {
+			continue
+		}
+
+		group = append(group, &ga.FilterExpression{
+			Filter: &ga.Filter{
+				FieldName: dimension,
+				StringFilter: &ga.StringFilter{
+					MatchType: "CONTAINS",
+					Value:     v,
+				},
+			},
+		})
+	}
+
+	switch len(group) {
+	case 0:
+		return nil
+	case 1:
+		return group[0]
+	}
+
+	return &ga.FilterExpression{OrGroup: &ga.FilterExpressionList{Expressions: group}}
+}
+
 // The map functions map the properties of the application to the Google Analytics API params.
 
-func mapMetrics(m []string) []*ga.Metric {
+// normalizeName removes the Universal Analytics prefix "ga:" and maps the old names to GA4 when possible.
+func normalizeName(name string) string {
+	name = strings.TrimPrefix(strings.TrimSpace(name), "ga:")
+	if n, ok := mappingUANames[name]; ok {
+		return n
+	}
+
+	return name
+}
+
+func mapMetrics(m []string) ([]*ga.Metric, error) {
 	gam := make([]*ga.Metric, len(m))
 
 	for k, v := range m {
-		gam[k] = &ga.Metric{Expression: strings.TrimSpace(mapMetric(v))}
+		metric, err := mapMetric(v)
+		if err != nil {
+			return nil, err
+		}
+		gam[k] = metric
 	}
 
-	return gam
+	return gam, nil
 }
 
 // mapMetric will first try to search an alias for a google analytics metric,
 // send the option to GoogleAnalytics otherwise
-func mapMetric(metric string) string {
-	m, ok := mappingMetrics[metric]
-	if !ok {
-		return strings.TrimSpace(metric)
+func mapMetric(metric string) (*ga.Metric, error) {
+	metric = strings.TrimSpace(metric)
+	if m, ok := mappingMetrics[metric]; ok {
+		return &m, nil
 	}
 
-	return strings.TrimSpace(m)
+	name := normalizeName(metric)
+	if removedMetrics[name] {
+		return nil, errors.Errorf("the metric %s doesn't exist in Google Analytics 4", metric)
+	}
+
+	return &ga.Metric{Name: name}, nil
 }
 
-func mapTimePeriod(m string) []string {
-	timePeriods, ok := mappingTimePeriod[m]
-	if !ok {
-		timePeriods = strings.Split(m, ",")
+func metricName(metric string) string {
+	m, err := mapMetric(metric)
+	if err != nil {
+		return normalizeName(metric)
 	}
 
-	return timePeriods
+	return m.Name
+}
+
+func mapTimePeriod(m string) string {
+	m = strings.TrimSpace(m)
+	if timePeriod, ok := mappingTimePeriod[m]; ok {
+		return timePeriod
+	}
+
+	return normalizeName(m)
 }
 
 func mapDimension(dim string) string {
-	d, ok := mappingDimensions[dim]
-	if !ok {
-		return strings.TrimSpace(dim)
+	dim = strings.TrimSpace(dim)
+	if d, ok := mappingDimensions[dim]; ok {
+		return d
 	}
 
-	return strings.TrimSpace(d)
+	return normalizeName(dim)
 }
 
 func mapDimensions(dimensions []string) []*ga.Dimension {
@@ -559,29 +609,35 @@ func mapDimensions(dimensions []string) []*ga.Dimension {
 	return d
 }
 
-func mapOrderBy(o []string) []*ga.OrderBy {
+// mapOrderBy maps orders like "sessions desc". A field matching one of the dimensions orders the dimension;
+// the field is considered as a metric otherwise.
+func mapOrderBy(o []string, dimensions []*ga.Dimension) []*ga.OrderBy {
 	gam := make([]*ga.OrderBy, len(o))
 
 	for k, v := range o {
-		s := strings.Split(v, " ")
+		s := strings.Fields(v)
 
 		// default
 		field := "sessions"
 		order := "desc"
 
-		if len(s) == 1 {
+		if len(s) > 0 {
 			field = s[0]
 		}
 
 		if len(s) > 1 {
-			field = s[0]
 			order = strings.ToLower(s[1])
 		}
 
-		gam[k] = &ga.OrderBy{
-			FieldName: strings.TrimSpace(mapMetric(field)),
-			SortOrder: strings.TrimSpace(mappingOrder[order]),
+		desc := order != "asc"
+
+		dim := mapDimension(field)
+		if slices.ContainsFunc(dimensions, func(d *ga.Dimension) bool { return d.Name == dim }) {
+			gam[k] = &ga.OrderBy{Dimension: &ga.DimensionOrderBy{DimensionName: dim}, Desc: desc}
+			continue
 		}
+
+		gam[k] = &ga.OrderBy{Metric: &ga.MetricOrderBy{MetricName: metricName(field)}, Desc: desc}
 	}
 
 	return gam
@@ -592,16 +648,12 @@ func mapHeaders(el string, metrics []string) []string {
 	h[0] = el
 
 	for k, v := range metrics {
-		head, ok := mappingHeader[v]
+		head, ok := mappingHeader[strings.TrimSpace(v)]
 		if !ok {
-			if strings.Contains(v, "ga:") {
-				v = strings.Split(v, "ga:")[1]
-			}
-
-			h[k+1] = strings.TrimSpace(v)
+			h[k+1] = strings.TrimPrefix(strings.TrimSpace(v), "ga:")
 			continue
 		}
-		h[k+1] = strings.TrimSpace(head)
+		h[k+1] = head
 	}
 
 	return h

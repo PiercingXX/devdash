@@ -13,7 +13,7 @@ projects:
       bold: true
     services:
       google_analytics:
-        view_id: 12345678
+        property_id: 123456789
       monitor:
         address: "https://www.web-techno.net"
     widgets:

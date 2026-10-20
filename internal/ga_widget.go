@@ -2,6 +2,8 @@ package internal
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -32,21 +34,21 @@ const (
 )
 
 type gaWidget struct {
-	tui       *Tui
-	analytics *platform.Analytics
-	viewID    string
+	tui        *Tui
+	analytics  *platform.Analytics
+	propertyID string
 }
 
 // NewGaWidget including all information to connect to the Google Analytics API.
-func NewGaWidget(keyfile string, viewID string) (*gaWidget, error) {
+func NewGaWidget(keyfile string, propertyID string) (*gaWidget, error) {
 	an, err := platform.NewAnalyticsClient(keyfile)
 	if err != nil {
 		return nil, err
 	}
 
 	return &gaWidget{
-		analytics: an,
-		viewID:    viewID,
+		analytics:  an,
+		propertyID: propertyID,
 	}, nil
 }
 
@@ -111,11 +113,11 @@ func (g *gaWidget) totalMetric(widget Widget) (f func() error, err error) {
 
 	users, err := g.analytics.SimpleMetric(
 		platform.AnalyticValues{
-			ViewID:    g.viewID,
-			StartDate: startDate.Format(gaTimeFormat),
-			EndDate:   endDate.Format(gaTimeFormat),
-			Global:    global,
-			Metrics:   []string{ExtractMetric(widget.Options)},
+			PropertyID: g.propertyID,
+			StartDate:  startDate.Format(gaTimeFormat),
+			EndDate:    endDate.Format(gaTimeFormat),
+			Global:     global,
+			Metrics:    []string{ExtractMetric(widget.Options)},
 		},
 	)
 	if err != nil {
@@ -136,7 +138,7 @@ func (g *gaWidget) realTimeUser(widget Widget) (f func() error, err error) {
 		title = widget.Options[optionTitle]
 	}
 
-	users, err := g.analytics.RealTimeUsers(g.viewID)
+	users, err := g.analytics.RealTimeUsers(g.propertyID)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +172,10 @@ func (g *gaWidget) barReturning(widget Widget) (f func() error, err error) {
 
 	widget.Options[optionMetric] = "users"
 	widget.Options[optionDimensions] = "user_type"
-	widget.Options[optionTitle] = " Returning users "
+	widget.Options[optionFilters] = "returning"
+	if _, ok := widget.Options[optionTitle]; !ok {
+		widget.Options[optionTitle] = " Returning users "
+	}
 
 	return g.barMetric(widget, platform.XHeaderTime)
 }
@@ -201,7 +206,7 @@ func (g *gaWidget) barCountries(widget Widget) (f func() error, err error) {
 	widget.Options[optionMetric] = "sessions"
 
 	if _, ok := widget.Options[optionTitle]; !ok {
-		widget.Options[optionTitle] = widget.Options[optionFilters]
+		widget.Options[optionTitle] = " Sessions per country "
 	}
 
 	return g.barMetric(widget, platform.XHeaderOtherDim)
@@ -243,14 +248,14 @@ func (g *gaWidget) barMetric(widget Widget, xHeader uint16) (f func() error, err
 		timePeriod = strings.TrimSpace(widget.Options[optionTimePeriod])
 	}
 
-	title := fmt.Sprintf(" %s per %s ", strings.Title(ExtractMetric(widget.Options)), timePeriod)
+	title := fmt.Sprintf(" %s per %s ", titleize(ExtractMetric(widget.Options)), timePeriod)
 	if _, ok := widget.Options[optionTitle]; ok {
 		title = widget.Options[optionTitle]
 	}
 
 	dim, val, err := g.analytics.BarMetric(
 		platform.AnalyticValues{
-			ViewID:     g.viewID,
+			PropertyID: g.propertyID,
 			StartDate:  startDate.Format(gaTimeFormat),
 			EndDate:    endDate.Format(gaTimeFormat),
 			TimePeriod: timePeriod,
@@ -289,7 +294,7 @@ func (g *gaWidget) table(widget Widget, firstHeader string) (f func() error, err
 		}
 	}
 
-	metrics := []string{"sessions", "page_views", "entrances", "unique_page_views"}
+	metrics := []string{"sessions", "page_views", "users"}
 	if _, ok := widget.Options[optionMetrics]; ok {
 		if len(widget.Options[optionMetrics]) > 0 {
 			metrics = strings.Split(strings.TrimSpace(widget.Options[optionMetrics]), ",")
@@ -330,7 +335,7 @@ func (g *gaWidget) table(widget Widget, firstHeader string) (f func() error, err
 
 	headers, dim, val, err := g.analytics.Table(
 		platform.AnalyticValues{
-			ViewID:     g.viewID,
+			PropertyID: g.propertyID,
 			StartDate:  startDate.Format(gaTimeFormat),
 			EndDate:    endDate.Format(gaTimeFormat),
 			Global:     global,
@@ -439,7 +444,7 @@ func (g *gaWidget) stackedBar(widget Widget) (f func() error, err error) {
 
 	dim, val, err := g.analytics.StackedBar(
 		platform.AnalyticValues{
-			ViewID:     g.viewID,
+			PropertyID: g.propertyID,
 			StartDate:  startDate.Format(gaTimeFormat),
 			EndDate:    endDate.Format(gaTimeFormat),
 			TimePeriod: timePeriod,
@@ -469,18 +474,21 @@ func (g *gaWidget) stackedBar(widget Widget) (f func() error, err error) {
 		colors[4] = colorLookUp[widget.Options[optionFifthColor]]
 	}
 
+	// Sort the series to keep the same colors between refreshes.
+	series := slices.Sorted(maps.Keys(val))
+	if len(series) > len(colors) {
+		series = series[:len(colors)]
+	}
+
 	var data [8][]int
-	title := strings.Trim(strings.Title(ExtractMetric(widget.Options)), "_") + " - "
-	count := 0
-	for k, v := range val {
-		data[count] = v
+	title := titleize(ExtractMetric(widget.Options)) + " - "
+	for count, k := range series {
+		data[count] = val[k]
 
 		if count != 0 {
 			title += "/ "
 		}
 		title += fmt.Sprintf("%s (%s) ", k, colorStr(colors[count]))
-
-		count++
 	}
 	if _, ok := widget.Options[optionTitle]; ok {
 		title = widget.Options[optionTitle]
@@ -530,4 +538,14 @@ func ExtractMetric(widgetOptions map[string]string) (metric string) {
 	}
 
 	return
+}
+
+// titleize transforms a metric like "page_views" or "ga:pageViews" into a title.
+func titleize(metric string) string {
+	words := strings.Fields(strings.ReplaceAll(strings.TrimPrefix(metric, "ga:"), "_", " "))
+	for k, w := range words {
+		words[k] = strings.ToUpper(w[:1]) + w[1:]
+	}
+
+	return strings.Join(words, " ")
 }

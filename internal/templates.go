@@ -3,9 +3,9 @@ package internal
 // TODO to test all of that!
 
 type blogConfig struct {
-	Keyfile string
-	Address string
-	ViewID  string
+	Keyfile    string
+	Address    string
+	PropertyID string
 }
 
 type githubConfig struct {
@@ -14,7 +14,7 @@ type githubConfig struct {
 	Repo  string
 }
 
-func CreateBlogConfig(keyfile string, viewID string, address string) blogConfig {
+func CreateBlogConfig(keyfile string, address string, propertyID string) blogConfig {
 	bc := blogConfig{}
 	if keyfile != "" {
 		bc.Keyfile = "keyfile: " + keyfile
@@ -28,10 +28,10 @@ func CreateBlogConfig(keyfile string, viewID string, address string) blogConfig 
 		bc.Address = "# address: The value of the address is required"
 	}
 
-	if viewID != "" {
-		bc.ViewID = "view_id: " + viewID
+	if propertyID != "" {
+		bc.PropertyID = "property_id: " + propertyID
 	} else {
-		bc.ViewID = "# view_id: The value of the viewID is required"
+		bc.PropertyID = "# property_id: The ID of your Google Analytics 4 property is required"
 	}
 
 	return bc
@@ -66,8 +66,8 @@ general:
   refresh: 600
   keys:
     quit: "C-c"
-	reload: "C-r"
-	edit: "C-e"
+    reload: "C-r"
+    edit: "C-e"
 
 projects:
   - name: Your Blog
@@ -79,7 +79,7 @@ projects:
     services:
       google_analytics:
         {{ .Keyfile }}
-        {{ .ViewID }}
+        {{ .PropertyID }}
       feedly:
         {{ .Address }}
       monitor:
@@ -142,19 +142,19 @@ projects:
                 - name: ga.box_total
                   options:
                     title: "Average session duration this month"
-                    metric: "ga:avgSessionDuration"
+                    metric: "average_session_duration"
                     start_date: this_month
                     end_date: this_month
                 - name: ga.box_total
                   options:
                     title: "sessions/users 2 weeks ago"
-                    metric: "ga:sessionsPerUser"
+                    metric: "sessionsPerUser"
                     start_date: 2_weeks_ago
                     end_date: 2_weeks_ago
                 - name: ga.box_total
                   options:
                     title: "sessions/users 1 week ago"
-                    metric: "ga:sessionsPerUser"
+                    metric: "sessionsPerUser"
                     start_date: last_week
                     end_date: last_week
                 - name: ga.box_total
@@ -165,8 +165,8 @@ projects:
                     end_date: today
                 - name: ga.box_total
                   options:
-                    title: "Bounce Rate (%) this month"
-                    metric: "ga:bounceRate"
+                    title: "Bounce Rate this month"
+                    metric: "bounce_rate"
                     start_date: this_month
                     end_date: this_month
                 - name: feedly.box_subscribers
@@ -188,7 +188,7 @@ projects:
                 - name: ga.table
                   options:
                     title: " Referrers "
-                    dimension: "ga:fullReferrer"
+                    dimension: "referrer"
                     metrics: "sessions"
                     start_date: "today"
                     end_date: "today"

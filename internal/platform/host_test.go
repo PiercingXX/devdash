@@ -247,7 +247,7 @@ func Test_HostMemory(t *testing.T) {
 		{
 			name: "runner return wrong result",
 			runner: func(cmd string) (string, error) {
-				return string(ReadFixtureFile("./testdata/fixtures/ga_users.json", t)), errors.New("Error")
+				return string(ReadFixtureFile("./testdata/fixtures/ga4_users.json", t)), errors.New("Error")
 			},
 			metrics: []string{"MemTotal", "MemFree", "MemAvailable"},
 			unit:    "kb",
@@ -303,7 +303,7 @@ func Test_HostMemoryRate(t *testing.T) {
 		{
 			name: "runner return wrong result",
 			runner: func(cmd string) (string, error) {
-				return string(ReadFixtureFile("./testdata/fixtures/ga_users.json", t)), errors.New("Error")
+				return string(ReadFixtureFile("./testdata/fixtures/ga4_users.json", t)), errors.New("Error")
 			},
 			wantErr: true,
 		},
@@ -357,7 +357,7 @@ func Test_HostSwapRate(t *testing.T) {
 		{
 			name: "runner return wrong result",
 			runner: func(cmd string) (string, error) {
-				return string(ReadFixtureFile("./testdata/fixtures/ga_users.json", t)), errors.New("Error")
+				return string(ReadFixtureFile("./testdata/fixtures/ga4_users.json", t)), errors.New("Error")
 			},
 			wantErr: true,
 		},
@@ -410,7 +410,7 @@ func Test_HostCPURate(t *testing.T) {
 		{
 			name: "runner return wrong result",
 			runner: func(cmd string) (string, error) {
-				return string(ReadFixtureFile("./testdata/fixtures/ga_users.json", t)), errors.New("Error")
+				return string(ReadFixtureFile("./testdata/fixtures/ga4_users.json", t)), errors.New("Error")
 			},
 			wantErr: true,
 		},
@@ -469,7 +469,7 @@ func Test_HostNetIO(t *testing.T) {
 			name: "runner return wrong result",
 			unit: "kb",
 			runner: func(cmd string) (string, error) {
-				return string(ReadFixtureFile("./testdata/fixtures/ga_users.json", t)), errors.New("Error")
+				return string(ReadFixtureFile("./testdata/fixtures/ga4_users.json", t)), errors.New("Error")
 			},
 			wantErr: true,
 		},
@@ -598,7 +598,7 @@ func Test_HostDiskIO(t *testing.T) {
 			unit:     "kb",
 			expected: "0.00 / 0.00",
 			runner: func(cmd string) (string, error) {
-				return string(ReadFixtureFile("./testdata/fixtures/ga_users.json", t)), nil
+				return string(ReadFixtureFile("./testdata/fixtures/ga4_users.json", t)), nil
 			},
 			wantErr: false,
 		},

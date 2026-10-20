@@ -1,0 +1,65 @@
+{
+  "dimensionHeaders": [
+    {
+      "name": "date"
+    }
+  ],
+  "metricHeaders": [
+    {
+      "name": "totalUsers",
+      "type": "TYPE_INTEGER"
+    }
+  ],
+  "rows": [
+    {
+      "dimensionValues": [
+        {
+          "value": "20200205"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "370"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200206"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "414"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200207"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "387"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "20200208"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "202"
+        }
+      ]
+    }
+  ],
+  "rowCount": 4,
+  "kind": "analyticsData#runReport"
+}
