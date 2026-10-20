@@ -26,7 +26,6 @@ type project struct {
 	monitorWidget    service
 	gscWidget        service
 	githubWidget     service
-	travisCIWidget   service
 	feedlyWidget     service
 	gitWidget        service
 	remoteHostWidget service
@@ -67,10 +66,6 @@ func (p *project) WithGoogleSearchConsole(gsc *gscWidget) {
 
 func (p *project) WithGithub(github *githubWidget) {
 	p.githubWidget = github
-}
-
-func (p *project) WithTravisCI(travisCI *travisCIWidget) {
-	p.travisCIWidget = travisCI
 }
 
 func (p *project) WithFeedly(feedly *feedlyWidget) {
@@ -124,7 +119,6 @@ func (p *project) mapServiceID(serviceID string) (service, error) {
 		"mon":     p.monitorWidget,
 		"gsc":     p.gscWidget,
 		"github":  p.githubWidget,
-		"travis":  p.travisCIWidget,
 		"feedly":  p.feedlyWidget,
 		"git":     p.gitWidget,
 		"rh":      p.remoteHostWidget,
@@ -145,7 +139,6 @@ func mapServiceName(serviceID string) (string, error) {
 		"mon":     "Monitor",
 		"gsc":     "Google Search Console",
 		"github":  "Github",
-		"travis":  "Travis",
 		"feedly":  "Feedly",
 		"git":     "Git",
 		"rh":      "Remote Host",

@@ -6,7 +6,6 @@ import (
 	"bufio"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -61,17 +60,17 @@ func runList() {
 	}
 }
 
-func getConfigFiles() []fs.FileInfo {
-	homeFiles, err := ioutil.ReadDir(dashPath())
+func getConfigFiles() []fs.DirEntry {
+	homeFiles, err := os.ReadDir(dashPath())
 	if err != nil {
 		log.Fatal(err)
 	}
-	currentFiles, err := ioutil.ReadDir(".")
+	currentFiles, err := os.ReadDir(".")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fs := []fs.FileInfo{}
+	fs := []fs.DirEntry{}
 	for _, v := range homeFiles {
 		f, isDash := isDashboard(v, dashPath())
 		if isDash {
@@ -89,8 +88,8 @@ func getConfigFiles() []fs.FileInfo {
 	return fs
 }
 
-func isDashboard(fileInfo fs.FileInfo, path string) (fs.FileInfo, bool) {
-	file, err := os.Open(path + string(filepath.Separator) + fileInfo.Name())
+func isDashboard(entry fs.DirEntry, path string) (fs.DirEntry, bool) {
+	file, err := os.Open(path + string(filepath.Separator) + entry.Name())
 	if err != nil {
 		panic(err)
 	}
@@ -103,7 +102,7 @@ func isDashboard(fileInfo fs.FileInfo, path string) (fs.FileInfo, bool) {
 
 	for scanner.Scan() {
 		if strings.Contains(scanner.Text(), "projects:") {
-			return fileInfo, true
+			return entry, true
 		}
 	}
 

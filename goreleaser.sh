@@ -1,3 +1,3 @@
 #!/bin/bash
 
-goreleaser && rm -rf dist/
+goreleaser release --clean && rm -rf dist/

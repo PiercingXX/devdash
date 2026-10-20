@@ -3,8 +3,9 @@ package platform
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -98,11 +99,11 @@ type AnalyticValues struct {
 // NewAnalyticsClient to connect to Google Analytics APIs.
 func NewAnalyticsClient(keyfile string) (*Analytics, error) {
 	// Verify first in the current directory if there is the JSON key, then in XDG_CONFIG_HOME.
-	data, err := ioutil.ReadFile(keyfile)
+	data, err := os.ReadFile(keyfile)
 	if err != nil {
 		home := filepath.Join(xdg.ConfigHome, "devdash")
 		var noFound error
-		data, noFound = ioutil.ReadFile(home + string(filepath.Separator) + keyfile)
+		data, noFound = os.ReadFile(home + string(filepath.Separator) + keyfile)
 		if noFound != nil {
 			return nil, fmt.Errorf("reading keyfile %q failed: %v", keyfile, err)
 		}
@@ -505,12 +506,7 @@ func formatStackedBar(
 }
 
 func inArray(haystack []string, needle string) bool {
-	for _, v := range haystack {
-		if v == needle {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(haystack, needle)
 }
 
 // The map functions map the properties of the application to the Google Analytics API params.

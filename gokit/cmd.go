@@ -10,8 +10,8 @@ import (
 // Example: "/bin/df -x devtmpfs -x tmpfs -x debugfs | sed -n '1!p'"
 func ExecCmd(command string) (out, errs []byte, pipeLineError error) {
 	cmds := []*exec.Cmd{}
-	piped := strings.Split(command, "|")
-	for _, v := range piped {
+	piped := strings.SplitSeq(command, "|")
+	for v := range piped {
 		c := strings.Split(strings.TrimSpace(v), " ")
 		for k, v := range c[1:] {
 			c[k+1] = strings.Replace(v, "'", "", -1)

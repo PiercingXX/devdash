@@ -4,7 +4,7 @@ package platform
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -33,11 +33,11 @@ type SearchConsoleResponse struct {
 
 // NewSearchConsoleClient create a SearchConsole.
 func NewSearchConsoleClient(keyfile string) (*SearchConsole, error) {
-	data, err := ioutil.ReadFile(keyfile)
+	data, err := os.ReadFile(keyfile)
 	if err != nil {
 		home := filepath.Join(xdg.ConfigHome, "devdash")
 		var noFound error
-		data, noFound = ioutil.ReadFile(home + string(filepath.Separator) + keyfile)
+		data, noFound = os.ReadFile(home + string(filepath.Separator) + keyfile)
 		if noFound != nil {
 			return nil, fmt.Errorf("reading keyfile %q failed: %v", keyfile, err)
 		}
@@ -95,8 +95,8 @@ func (w *SearchConsole) Table(
 func filtersFromString(filters string, dimension string) []*sc.ApiDimensionFilter {
 	fg := []*sc.ApiDimensionFilter{}
 	if filters != "" {
-		f := strings.Split(filters, ",")
-		for _, v := range f {
+		f := strings.SplitSeq(filters, ",")
+		for v := range f {
 			v = strings.TrimSpace(v)
 			dim := dimension
 			if strings.Contains(v, " ") {

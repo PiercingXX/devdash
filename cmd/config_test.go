@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Phantas0s/devdash/internal"
+	"github.com/PiercingXX/devdash/internal"
 )
 
 // Each slice dimension represent row, col or widgets.

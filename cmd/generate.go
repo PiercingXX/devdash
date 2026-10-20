@@ -8,7 +8,7 @@ import (
 	"html/template"
 	"os"
 
-	"github.com/Phantas0s/devdash/internal"
+	"github.com/PiercingXX/devdash/internal"
 	"github.com/spf13/cobra"
 )
 
@@ -37,8 +37,6 @@ func generate(args []string) string {
 	default:
 		return createBlogDefaultConfig()
 	}
-
-	return "oops"
 }
 
 func createBlogDefaultConfig() string {

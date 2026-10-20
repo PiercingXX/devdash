@@ -1,6 +1,6 @@
 package main
 
-import "github.com/Phantas0s/devdash/cmd"
+import "github.com/PiercingXX/devdash/cmd"
 
 func main() {
 	cmd.Execute()

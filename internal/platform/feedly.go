@@ -3,7 +3,7 @@ package platform
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -17,7 +17,7 @@ type Feedly struct {
 }
 
 type FeedlyResponse struct {
-	Results []map[string]interface{} `json:"results"`
+	Results []map[string]any `json:"results"`
 }
 
 const (
@@ -41,7 +41,7 @@ func (f *Feedly) Subscribers() (string, error) {
 	}
 
 	defer resp.Body.Close()
-	c, err := ioutil.ReadAll(resp.Body)
+	c, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", errors.Wrap(err, "error while readling feedly API response")
 	}

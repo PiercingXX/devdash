@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
-	goping "github.com/go-ping/ping"
 	"github.com/pkg/errors"
+	probing "github.com/prometheus-community/pro-bing"
 )
 
 const (
@@ -54,22 +55,25 @@ func (m *monitorWidget) pingWidget(widget Widget) (f func() error, err error) {
 		return nil, err
 	}
 
-	pinger, err := goping.NewPinger(URL.Host)
-	if err != nil {
-		return nil, err
-	}
-	pinger.Count = 1
-	pinger.Run()                 // blocks until finished
-	stats := pinger.Statistics() // get send/receive/rtt stats
-
 	title := " Availability "
 	if _, ok := widget.Options[optionTitle]; ok {
 		title = widget.Options[optionTitle]
 	}
 
 	f = func() error {
+		pinger, err := probing.NewPinger(URL.Host)
+		if err != nil {
+			return err
+		}
+		pinger.Count = 1
+		pinger.Timeout = 5 * time.Second
+		if err := pinger.Run(); err != nil { // blocks until finished
+			return err
+		}
+		stats := pinger.Statistics() // get send/receive/rtt stats
+
 		return m.tui.AddTextBox(
-			fmt.Sprintf("Sent: %d / Received: %d / Time: %d", stats.PacketsSent, stats.PacketsRecv, stats.AvgRtt),
+			fmt.Sprintf("Sent: %d / Received: %d / Time: %s", stats.PacketsSent, stats.PacketsRecv, stats.AvgRtt),
 			title,
 			widget.Options,
 		)

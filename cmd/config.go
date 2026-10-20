@@ -3,13 +3,12 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"strings"
 
-	"github.com/Phantas0s/devdash/internal"
+	"github.com/PiercingXX/devdash/internal"
 	"github.com/adrg/xdg"
 	"github.com/spf13/viper"
 )
@@ -69,7 +68,6 @@ type Services struct {
 	GoogleSearchConsole SearchConsole   `mapstructure:"google_search_console"`
 	Monitor             Monitor         `mapstructure:"monitor"`
 	Github              Github          `mapstructure:"github"`
-	TravisCI            TravisCI        `mapstructure:"travis"`
 	Feedly              Feedly          `mapstructure:"feedly"`
 	Git                 Git             `mapstructure:"git"`
 	RemoteHost          RemoteHost      `mapstructure:"remote_host"`
@@ -94,10 +92,6 @@ type Github struct {
 	Token      string `mapstructure:"token"`
 	Owner      string `mapstructure:"owner"`
 	Repository string `mapstructure:"repository"`
-}
-
-type TravisCI struct {
-	Token string `mapstructure:"token"`
 }
 
 type Feedly struct {
@@ -126,10 +120,6 @@ func (s SearchConsole) empty() bool {
 
 func (g Github) empty() bool {
 	return g == Github{}
-}
-
-func (t TravisCI) empty() bool {
-	return t == TravisCI{}
 }
 
 func (f Feedly) empty() bool {
@@ -246,7 +236,7 @@ func tryReadFile(cfgFile string) {
 		panic(fmt.Errorf("config %s doesnt exists", cfgFile))
 	}
 
-	f, err := ioutil.ReadFile(cfgFile)
+	f, err := os.ReadFile(cfgFile)
 	if err != nil {
 		panic(fmt.Errorf("could not read file %s", cfgFile))
 	}

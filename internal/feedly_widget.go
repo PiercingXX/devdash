@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"github.com/Phantas0s/devdash/internal/platform"
+	"github.com/PiercingXX/devdash/internal/platform"
 	"github.com/pkg/errors"
 )
 

@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Phantas0s/devdash/internal/platform"
+	"github.com/PiercingXX/devdash/internal/platform"
 )
 
 func Test_formatText(t *testing.T) {

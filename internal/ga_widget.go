@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Phantas0s/devdash/internal/platform"
+	"github.com/PiercingXX/devdash/internal/platform"
 	"github.com/pkg/errors"
 )
 
@@ -470,7 +470,7 @@ func (g *gaWidget) stackedBar(widget Widget) (f func() error, err error) {
 	}
 
 	var data [8][]int
-	title := fmt.Sprintf(strings.Trim(strings.Title(ExtractMetric(widget.Options)), "_")) + " - "
+	title := strings.Trim(strings.Title(ExtractMetric(widget.Options)), "_") + " - "
 	count := 0
 	for k, v := range val {
 		data[count] = v

@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/Phantas0s/devdash/internal"
-	"github.com/Phantas0s/devdash/internal/platform"
+	"github.com/PiercingXX/devdash/internal"
+	"github.com/PiercingXX/devdash/internal/platform"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +22,7 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   "devdash",
 		Short: "DevDash is a highly configurable terminal dashboard for developers and creators",
-		Long:  `DevDash is a highly flexible terminal dashboard for developers and creators, which allows you to gather and refresh the data you really need from Google Analytics, Google Search Console, Github, TravisCI, and more.`,
+		Long:  `DevDash is a highly flexible terminal dashboard for developers and creators, which allows you to gather and refresh the data you really need from Google Analytics, Google Search Console, Github, and more.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			run()
 		},
@@ -177,12 +177,6 @@ func build(file string, tui *internal.Tui) {
 			} else {
 				project.WithGithub(githubWidget)
 			}
-		}
-
-		travisService := p.Services.TravisCI
-		if !travisService.empty() {
-			travisWidget := internal.NewTravisCIWidget(travisService.Token)
-			project.WithTravisCI(travisWidget)
 		}
 
 		feedlyService := p.Services.Feedly

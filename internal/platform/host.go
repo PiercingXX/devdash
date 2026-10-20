@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Phantas0s/devdash/gokit"
+	"github.com/PiercingXX/devdash/gokit"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 )
@@ -158,7 +158,7 @@ func HostMemory(runner runnerFunc, metrics []string, unit string) (val []int, er
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(lines))
-	var data string
+	var data strings.Builder
 	for scanner.Scan() {
 		line := scanner.Text()
 		parts := strings.Fields(line)
@@ -174,12 +174,12 @@ func HostMemory(runner runnerFunc, metrics []string, unit string) (val []int, er
 
 		for _, v := range metrics {
 			if strings.Trim(parts[0], ":") == v {
-				data += strconv.FormatUint(val, 10) + ","
+				data.WriteString(strconv.FormatUint(val, 10) + ",")
 			}
 		}
 	}
 
-	values := formatToBar(data)
+	values := formatToBar(data.String())
 	result := []int{}
 	for _, v := range values {
 		result = append(result, int(gokit.ConvertBinUnit(float64(v), "kb", unit)))
@@ -461,18 +461,18 @@ func HostBar(runner runnerFunc, command string) (data []int, err error) {
 
 	scanner := bufio.NewScanner(strings.NewReader(lines))
 	lineNumber := 0
-	str := ""
+	var str strings.Builder
 	for scanner.Scan() {
 		line := scanner.Text()
-		parts := strings.Fields(line)
+		parts := strings.FieldsSeq(line)
 
-		for _, v := range parts {
-			str += v + ","
+		for v := range parts {
+			str.WriteString(v + ",")
 		}
 		lineNumber++
 	}
 
-	f := formatToBar(str)
+	f := formatToBar(str.String())
 	result := []int{}
 	for _, f := range f {
 		result = append(result, int(f))

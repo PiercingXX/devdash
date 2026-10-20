@@ -6,6 +6,7 @@ package platform
 
 import (
 	"context"
+	"slices"
 	"sort"
 	"strconv"
 	"sync"
@@ -607,13 +608,7 @@ func (g *Github) fetchAllRepo(order string) ([]*github.Repository, error) {
 }
 
 func contains(slice []string, value string) bool {
-	for _, v := range slice {
-		if v == value {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(slice, value)
 }
 
 // fillMissingDays add the missing dates between two dates and add 0 values

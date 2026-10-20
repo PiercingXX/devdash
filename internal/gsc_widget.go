@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Phantas0s/devdash/internal/platform"
+	"github.com/PiercingXX/devdash/internal/platform"
 	"github.com/pkg/errors"
 )
 

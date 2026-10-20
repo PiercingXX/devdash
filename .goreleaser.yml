@@ -1,32 +1,32 @@
----
+version: 2
+
 before:
   hooks:
     - go mod download
 builds:
   - id: main
-    ldflags: -s -w -X github.com/Phantas0s/devdash/cmd.current={{.Version}} -X github.com/Phantas0s/devdash/cmd.buildDate={{.Date}}
+    ldflags: -s -w -X github.com/PiercingXX/devdash/cmd.current={{.Version}} -X github.com/PiercingXX/devdash/cmd.buildDate={{.Date}}
     goos:
       - windows
       - darwin
       - linux
+    goarch:
+      - amd64
+      - arm64
     env:
       - CGO_ENABLED=0
 archives:
-  - builds:
+  - ids:
       - main
-    replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: x86
-      amd64: x86_64
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ title .Os }}_{{ if eq .Arch "amd64" }}x86_64{{ else }}{{ .Arch }}{{ end }}
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ .Tag }}-next"
 changelog:
-    # Keep a manual, simpler changelog for now
-    skip: true
+  # Keep a manual, simpler changelog for now
+  disable: true

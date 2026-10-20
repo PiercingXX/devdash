@@ -2,7 +2,7 @@ package platform
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"reflect"
 	"testing"
 
@@ -256,7 +256,7 @@ func Test_formatTable(t *testing.T) {
 }
 
 func ReadFixtureFile(file string, t *testing.T) (data []byte) {
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		t.Error(errors.Wrapf(err, "can't read file %s", file))
 	}
