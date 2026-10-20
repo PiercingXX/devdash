@@ -66,7 +66,7 @@ general:
   refresh: 600
   keys:
     quit: "C-c"
-    reload: "C-r"
+    hot_reload: "C-r"
     edit: "C-e"
 
 projects:

@@ -49,13 +49,14 @@ func Execute() {
 
 // run the dashboard.
 func run() {
-	termui, err := platform.NewTermUI(debug)
+	terminal, err := platform.NewTerminal(debug)
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	// Create the TUI.
-	tui := internal.NewTUI(termui)
+	tui := internal.NewTUI(terminal)
 	defer tui.Close()
 
 	// Map dashboard config to a struct Config.
