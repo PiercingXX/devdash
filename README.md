@@ -1,10 +1,18 @@
-![travis CLI](https://travis-ci.org/Phantas0s/devdash.svg?branch=master&style=for-the-badge) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/ec1e19b08f3b40d19f3acaf93e3e186b)](https://www.codacy.com/app/Phantas0s/devdash?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Phantas0s/devdash&amp;utm_campaign=Badge_Grade)  [![Go Report Card](https://goreportcard.com/badge/github.com/Phantas0s/devdash)](https://goreportcard.com/report/github.com/Phantas0s/devdash) [![Hits-of-Code](https://hitsofcode.com/github/phantas0s/devdash)](https://hitsofcode.com/view/github/phantas0s/devdash) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) ![Documentation](https://img.shields.io/website?url=https%3A%2F%2Fthedevdash.com&label=documentation)
+[![CI](https://github.com/PiercingXX/devdash/actions/workflows/ci.yml/badge.svg)](https://github.com/PiercingXX/devdash/actions/workflows/ci.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/PiercingXX/devdash)](https://goreportcard.com/report/github.com/PiercingXX/devdash) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![logo of devdash with a gopher](./doc/img/logo.jpg) 
-[![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=DevDash%20-%20Highly%20Configurable%20Terminal%20Dashboard%20For%20Developers:&url=https%3A%2F%2Fgithub.com%2Fphantas0s%2Fdevdash&hashtags=developers,dashboard,terminal,CLI,golang)
-
 DevDash is a highly configurable terminal dashboard for developers and creators who want to choose and display the most up-to-date metrics they need, at one place.
 
-[![google analytics example DevDash configuration](./example/img/mix-1.png)](https://raw.githubusercontent.com/Phantas0s/devdash/master/example/img/mix-1.png)
+> [!NOTE]
+> This is a maintained fork of [Phantas0s/devdash](https://github.com/Phantas0s/devdash), which was archived in 2023. Compared to the last upstream release, it:
+>
+> * Supports **Google Analytics 4** (Universal Analytics was shut down by Google). Use `property_id` instead of `view_id`; see [Google Analytics 4](#google-analytics-4).
+> * Uses [tcell](https://github.com/gdamore/tcell) for the terminal UI instead of the abandoned termui/termbox.
+> * Removes the Travis CI service (travis-ci.org was shut down).
+> * Is built with a current Go toolchain and up-to-date dependencies.
+>
+> See the [changelog](./CHANGELOG.md) for the details.
+
+[![google analytics example DevDash configuration](./example/img/mix-1.png)](./example/img/mix-1.png)
 
 ## Why using DevDash?
 
@@ -12,7 +20,6 @@ DevDash is a highly configurable terminal dashboard for developers and creators 
     * Your own computer. From your own scripts and command lines too!
     * A remote computer via SSH.
     * Github.
-    * Travis.
     * Google Analytics.
     * Google Search Console.
     * Feedly.
@@ -42,31 +49,29 @@ You can watch a [quick demo on Youtube](https://www.youtube.com/watch?v=aYQVJRuB
 
 ## Installation
 
-You can simply grab the [latest released binary file](https://github.com/Phantas0s/devdash/releases/latest) and download the version you need, depending on your OS.
+You can simply grab the [latest released binary file](https://github.com/PiercingXX/devdash/releases/latest) and download the version you need, depending on your OS.
 
 ### Linux script
 
 To download DevDash in `/usr/local/bin`, run the following in a terminal:
 
 ```shell
-curl -LO https://raw.githubusercontent.com/Phantas0s/devdash/master/install/linux.sh | bash
+curl -fsSL https://raw.githubusercontent.com/PiercingXX/devdash/master/install/linux.sh | bash
 ```
 
-### macOS
+### With Go
 
-On macOS, DevDash can also be installed via [MacPorts](https://www.macports.org):
+With Go 1.26 or later:
 
 ```shell
-sudo port install devdash
+go install github.com/PiercingXX/devdash@latest
 ```
-
-More information [here](https://ports.macports.org/port/devdash/).
 
 ### Manual installation
 
 You need to: 
 1. Clone this repository 
-2. In your terminal, run in the root directory of the project `go build devdash.go`
+2. In your terminal, run in the root directory of the project `go build .`
 
 ## Getting started
 
@@ -86,9 +91,26 @@ The value of `$XDG_CONFIG_HOME` depends of your OS. Here are the defaults (if yo
 * **Windows**: `%LOCALAPPDATA%`
 
 
+## Google Analytics 4
+
+The `google_analytics` service uses the [Google Analytics Data API](https://developers.google.com/analytics/devguides/reporting/data/v1). You need:
+
+1. A service account with a JSON keyfile, with the [Google Analytics Data API](https://console.cloud.google.com/apis/library/analyticsdata.googleapis.com) enabled for its project.
+2. The service account's email added as a *Viewer* of your GA4 property (Admin > Property access management).
+3. The ID of your GA4 property (Admin > Property details).
+
+```yaml
+services:
+  google_analytics:
+    keyfile: my-keyfile.json
+    property_id: 123456789
+```
+
+The metric and dimension aliases (`sessions`, `page_views`, `users`, `bounces`, `bounce_rate`, `page_path`, `traffic_source`, `country`...) are mapped to GA4. You can also use any [GA4 metric or dimension](https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema) directly, like `metric: "engagementRate"`. Universal Analytics names prefixed with `ga:` are converted when GA4 has an equivalent; `entrances` and `unique_page_views` don't exist anymore in GA4.
+
 ## Documentation
 
-[The complete DevDash documentation is here](https://thedevdash.com)
+[The complete DevDash documentation is here](https://thedevdash.com). It was written for the upstream project: the Travis CI service doesn't exist anymore, and the Google Analytics service now needs a `property_id` (see above).
 
 You'll find in there:
 
@@ -97,7 +119,7 @@ You'll find in there:
 * [Real-life use cases](https://thedevdash.com/getting-started/use-cases/devdash/)
 * [Complete reference of dashboard's config](https://thedevdash.com/reference/)
 
-If you want to see even more real life examples, I've [all of them in my dotfiles](https://github.com/Phantas0s/.dotfiles/tree/master/devdash).
+More real-life examples are in the [dotfiles of the original author](https://github.com/Phantas0s/.dotfiles/tree/master/devdash).
 
 ## Acknowledgement
 

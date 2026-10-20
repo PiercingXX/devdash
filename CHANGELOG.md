@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Maintained fork of [Phantas0s/devdash](https://github.com/Phantas0s/devdash), archived upstream in 2023.
+
+### ADDED
+
+* Google Analytics 4 support, with the Google Analytics Data API. The service `google_analytics` needs a `property_id` instead of a `view_id`.
+* New metric aliases for Google Analytics: `engaged_sessions`, `new_users`, `active_users`, `engagement_rate`. New dimension aliases: `landing_page`, `referrer`.
+* Install with `go install github.com/PiercingXX/devdash@latest`.
+* Release binaries for arm64.
+
+### UPDATED
+
+* Replace the unmaintained termui/termbox with tcell. The size option of the project title is now honored.
+* The terminal is given to the editor while editing a dashboard with `CTRL+e`.
+* Port Google Search Console to the Search Console API, and Github to a current API client.
+* The monitor widget pings on every refresh instead of once at startup, and displays ping errors.
+* Several Google Analytics filters are now combined with OR instead of only using the first one.
+* Upgrade Go and every dependency. CI now runs on GitHub Actions.
+
+### REMOVED
+
+* The Travis CI service (travis-ci.org was shut down).
+* The Google Analytics metrics `entrances` and `unique_page_views`, which don't exist in GA4.
+
+### FIXED
+
+* `ga.bar_returning` displayed every user instead of the returning ones.
+* Stacked bars changed colors on every refresh, and could crash with more than 5 values.
+* The config generator swapped the address and the Google Analytics ID.
+* The blog template generated invalid YAML and an ignored `reload` key.
+* Google Search Console crashed on empty filters.
+* The Linux install command didn't install anything.
+
 ## [0.5.0] - 2021-04-25
 
 ### ADDED
