@@ -43,10 +43,9 @@ const (
 
 	// Repository
 	optionRepository = "repository"
-	optionOwner      = "owner"
 
-	// Owner / all
-	optionScope = ownerScope
+	// Commits of the owner or of everybody
+	optionScope = "scope"
 	ownerScope  = "owner"
 )
 

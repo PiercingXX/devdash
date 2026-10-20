@@ -569,7 +569,7 @@ func Test_HostDiskIO(t *testing.T) {
 	}{
 		{
 			name:     "happy case",
-			expected: "4170343424.00 / 5843349504.00",
+			expected: "4072601.00 / 5706396.00",
 			unit:     "kb",
 			runner: func(cmd string) (string, error) {
 				return string(ReadFixtureFile("./testdata/fixtures/host_disk_io", t)), nil

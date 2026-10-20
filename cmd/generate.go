@@ -23,8 +23,8 @@ func generateCmd() *cobra.Command {
 		},
 	}
 
-	generateCmd.Flags().StringVarP(&configType, "type", "t", "", "Debug Mode - doesn't display graph")
-	generateCmd.Flags().StringVarP(&templateFile, "file", "f", "", "Save the template into a file ($XDG_CONFIG_HOME/<name_of_file>")
+	generateCmd.Flags().StringVarP(&configType, "type", "t", "", "Type of template: blog or project")
+	generateCmd.Flags().StringVarP(&templateFile, "file", "f", "", "Save the template into $XDG_CONFIG_HOME/devdash/<file>.yml")
 	return generateCmd
 }
 
@@ -102,7 +102,7 @@ func wizardIntro(name string) {
 func askKeyfile() string {
 	fmt.Fprintln(os.Stdout, "")
 	fmt.Fprintln(os.Stdout, "The Keyfile is required to connect to Google Analytics and Google Search Console")
-	fmt.Fprintln(os.Stdout, "See: https://thedevdash.com/reference/services/google-analytics/")
+	fmt.Fprintln(os.Stdout, "See: https://github.com/PiercingXX/devdash/blob/master/doc/services/google-analytics.md")
 	fmt.Fprintln(os.Stdout, "")
 	fmt.Fprint(os.Stdout, "Enter the keyfile path for Google Analytics and Google Search Console: ")
 
@@ -138,7 +138,7 @@ func askPropertyID() string {
 func askGitHubToken() string {
 	fmt.Fprintln(os.Stdout, "")
 	fmt.Fprintln(os.Stdout, "A token is required for GitHub.")
-	fmt.Fprintln(os.Stdout, "See https://thedevdash.com/reference/services/github/")
+	fmt.Fprintln(os.Stdout, "See: https://github.com/PiercingXX/devdash/blob/master/doc/services/github.md")
 	fmt.Fprintln(os.Stdout, "")
 	fmt.Fprint(os.Stdout, "Enter the GitHub token: ")
 

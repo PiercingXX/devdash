@@ -55,7 +55,7 @@ func (m *monitorWidget) pingWidget(widget Widget) (f func() error, err error) {
 		return nil, err
 	}
 
-	title := " Availability "
+	title := " Ping "
 	if _, ok := widget.Options[optionTitle]; ok {
 		title = widget.Options[optionTitle]
 	}

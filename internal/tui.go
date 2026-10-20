@@ -32,7 +32,7 @@ const (
 
 	optionBold = "bold"
 
-	optionMultiline = "false"
+	optionMultiline = "multiline"
 
 	optionFirstColor  = "first_color"
 	optionSecondColor = "second_color"

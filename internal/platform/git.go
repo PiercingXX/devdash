@@ -45,7 +45,7 @@ func (g *Git) Branches() ([][]string, error) {
 func formatBranches(data string) [][]string {
 	data = strings.Replace(data, "<", "", -1)
 	data = strings.Replace(data, ">", "", -1)
-	result := [][]string{{"Branch", "Last Commit By", "Creator email", "Creation date"}}
+	result := [][]string{{"Branch", "Last commit by", "Email", "Last commit date"}}
 	d := strings.Split(data, "\n")
 	for i := 0; i < len(d)-1; i++ {
 		result = append(result, strings.Split(d[i], ","))

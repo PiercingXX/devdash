@@ -501,16 +501,11 @@ func dateRanges(val AnalyticValues) []*ga.DateRange {
 	}
 }
 
-// containsFilter matches a dimension containing at least one of the expressions.
+// containsFilter matches a dimension containing at least one of the expressions,
+// and none of the expressions prefixed with "-".
 func containsFilter(dimension string, expressions []string) *ga.FilterExpression {
-	group := []*ga.FilterExpression{}
-	for _, v := range expressions {
-		v = strings.TrimSpace(v)
-		if v == "" {
-			continue
-		}
-
-		group = append(group, &ga.FilterExpression{
+	contains := func(v string) *ga.FilterExpression {
+		return &ga.FilterExpression{
 			Filter: &ga.Filter{
 				FieldName: dimension,
 				StringFilter: &ga.StringFilter{
@@ -518,7 +513,30 @@ func containsFilter(dimension string, expressions []string) *ga.FilterExpression
 					Value:     v,
 				},
 			},
-		})
+		}
+	}
+
+	included, excluded := []*ga.FilterExpression{}, []*ga.FilterExpression{}
+	for _, v := range expressions {
+		v = strings.TrimSpace(v)
+		if after, ok := strings.CutPrefix(v, "-"); ok {
+			if after = strings.TrimSpace(after); after != "" {
+				excluded = append(excluded, &ga.FilterExpression{NotExpression: contains(after)})
+			}
+			continue
+		}
+		if v != "" {
+			included = append(included, contains(v))
+		}
+	}
+
+	group := excluded
+	switch len(included) {
+	case 0:
+	case 1:
+		group = append(group, included[0])
+	default:
+		group = append(group, &ga.FilterExpression{OrGroup: &ga.FilterExpressionList{Expressions: included}})
 	}
 
 	switch len(group) {
@@ -528,7 +546,7 @@ func containsFilter(dimension string, expressions []string) *ga.FilterExpression
 		return group[0]
 	}
 
-	return &ga.FilterExpression{OrGroup: &ga.FilterExpressionList{Expressions: group}}
+	return &ga.FilterExpression{AndGroup: &ga.FilterExpressionList{Expressions: group}}
 }
 
 // The map functions map the properties of the application to the Google Analytics API params.

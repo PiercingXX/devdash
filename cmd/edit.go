@@ -13,8 +13,8 @@ var editor string
 
 func editCmd() *cobra.Command {
 	editCmd := &cobra.Command{
-		Use:   "edit",
-		Short: "Edit your dashboard with an shell editor",
+		Use:   "edit [dashboard]",
+		Short: "Edit a dashboard with a shell editor (default: the default dashboard)",
 		Run: func(cmd *cobra.Command, args []string) {
 			edit(args)
 		},
@@ -26,13 +26,13 @@ func editCmd() *cobra.Command {
 }
 
 func edit(args []string) {
-	if len(args) == 0 {
-		fmt.Fprintf(os.Stdout, "You need to specify a config file as first argument")
-		return
+	name := "default"
+	if len(args) > 0 {
+		name = args[0]
 	}
-	file := findConfigFile(args[0])
+	file := findConfigFile(name)
 	if file == "" {
-		fmt.Fprintf(os.Stdout, "The config %s doesn't exist", args[0])
+		fmt.Fprintf(os.Stdout, "The config %s doesn't exist in %s\n", name, dashPath())
 		return
 	} else {
 		editDashboard(os.ExpandEnv(editor), filepath.Join(dashPath(), file))

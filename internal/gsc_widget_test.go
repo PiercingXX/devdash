@@ -71,6 +71,18 @@ func Test_formatNumerics(t *testing.T) {
 			metrics:   []string{"clicks", "impressions", "ctr", "position"},
 			dimension: "query",
 		},
+		{
+			name: "dimension without header",
+			expected: [][]string{
+				{"Country", "clicks"},
+				{"fra", "3"},
+			},
+			results: []platform.SearchConsoleResponse{
+				{Dimension: "fra", Clicks: 3},
+			},
+			metrics:   []string{"clicks"},
+			dimension: "country",
+		},
 	}
 
 	for _, tc := range testCases {

@@ -217,7 +217,9 @@ func (g *gaWidget) barBounces(widget Widget) (f func() error, err error) {
 		widget.Options = map[string]string{}
 	}
 	widget.Options[optionMetric] = "bounces"
-	widget.Options[optionTitle] += " Bounces "
+	if _, ok := widget.Options[optionTitle]; !ok {
+		widget.Options[optionTitle] = " Bounces "
+	}
 
 	return g.barMetric(widget, platform.XHeaderTime)
 }
@@ -292,6 +294,9 @@ func (g *gaWidget) table(widget Widget, firstHeader string) (f func() error, err
 		if len(widget.Options[optionDimension]) > 0 {
 			dimension = widget.Options[optionDimension]
 		}
+	}
+	if firstHeader == "" {
+		firstHeader = titleize(dimension)
 	}
 
 	metrics := []string{"sessions", "page_views", "users"}

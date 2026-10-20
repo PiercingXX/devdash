@@ -66,7 +66,7 @@ func (s *gscWidget) pages(widget Widget) (f func() error, err error) {
 		widget.Options = map[string]string{}
 	}
 
-	widget.Options[optionMetric] = "page"
+	widget.Options[optionDimension] = "page"
 
 	return s.table(widget)
 }
@@ -156,8 +156,13 @@ func (s *gscWidget) table(widget Widget) (f func() error, err error) {
 }
 
 func formatNumerics(results []platform.SearchConsoleResponse, dimension string, metrics []string) [][]string {
+	header, ok := mappingGscHeader[dimension]
+	if !ok {
+		header = titleize(dimension)
+	}
+
 	table := make([][]string, len(results)+1)
-	table[0] = []string{mappingGscHeader[dimension]}
+	table[0] = []string{header}
 	table[0] = append(table[0], metrics...)
 
 	for k, v := range results {

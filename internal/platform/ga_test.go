@@ -499,6 +499,25 @@ func Test_containsFilter(t *testing.T) {
 	if multiple.OrGroup == nil || len(multiple.OrGroup.Expressions) != 2 {
 		t.Errorf("Expected an OR group of 2 filters, actual %v", multiple)
 	}
+
+	excluded := containsFilter("pagePath", []string{"-/tag/"})
+	if excluded.NotExpression == nil || excluded.NotExpression.Filter.StringFilter.Value != "/tag/" {
+		t.Errorf("Expected a NOT filter on /tag/, actual %v", excluded)
+	}
+
+	// Every excluded value and at least one of the included values.
+	mixed := containsFilter("pagePath", []string{"/a", "-/tag/", "/b", "-/draft/"})
+	if mixed.AndGroup == nil || len(mixed.AndGroup.Expressions) != 3 {
+		t.Fatalf("Expected an AND group of 3 filters, actual %v", mixed)
+	}
+	e := mixed.AndGroup.Expressions
+	if e[0].NotExpression == nil || e[1].NotExpression == nil || e[2].OrGroup == nil || len(e[2].OrGroup.Expressions) != 2 {
+		t.Errorf("Expected 2 NOT filters and an OR group of 2 filters, actual %v", mixed)
+	}
+
+	if f := containsFilter("pagePath", []string{"-", " - "}); f != nil {
+		t.Errorf("Expected nil filter for empty exclusions, actual %v", f)
+	}
 }
 
 func Test_propertyName(t *testing.T) {

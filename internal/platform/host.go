@@ -440,8 +440,8 @@ func HostDiskIO(runner runnerFunc, unit string) (string, error) {
 		write += w * 512
 	}
 
-	fr := gokit.ConvertBinUnit(float64(read), "kb", unit)
-	fw := gokit.ConvertBinUnit(float64(write), "kb", unit)
+	fr := gokit.ConvertBinUnit(float64(read), "b", unit)
+	fw := gokit.ConvertBinUnit(float64(write), "b", unit)
 
 	return strconv.FormatFloat(fr, 'f', 2, strconv.IntSize) + " / " + strconv.FormatFloat(fw, 'f', 2, strconv.IntSize), nil
 }

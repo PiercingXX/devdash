@@ -162,7 +162,7 @@ func convertEndDate(base time.Time, endDate string) (time.Time, error) {
 	}
 
 	if strings.Contains(endDate, thisYear) {
-		endDate, _ := totime.ThisYear(base)
+		_, endDate := totime.ThisYear(base)
 		return endDate, nil
 	}
 
@@ -172,7 +172,7 @@ func convertEndDate(base time.Time, endDate string) (time.Time, error) {
 			return time.Time{}, err
 		}
 
-		endDate, _ := totime.PrevYears(base, int(years))
+		_, endDate := totime.PrevYears(base, int(years))
 
 		return endDate, nil
 	}
