@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -67,7 +66,7 @@ func (s *Host) Runner(command string) (string, error) {
 		return "", errors.Wrapf(err, "can't run command %s on remote server", command)
 	}
 
-	return string(buf.Bytes()), nil
+	return buf.String(), nil
 }
 
 func runLocalhost(command string) (string, error) {
@@ -374,12 +373,6 @@ func HostDisk(runner runnerFunc, headers []string, unit string) ([][]string, err
 	scanner := bufio.NewScanner(strings.NewReader(lines))
 	data := ""
 	count := 0
-
-	regex, err := regexp.Compile("\n\n")
-	if err != nil {
-		return nil, nil
-	}
-	lines = regex.ReplaceAllString(lines, "\n")
 
 	for scanner.Scan() {
 		line := scanner.Text()

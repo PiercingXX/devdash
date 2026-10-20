@@ -12,9 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v28/github"
+	"github.com/google/go-github/v80/github"
 	"github.com/pkg/errors"
-	"golang.org/x/oauth2"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -40,14 +39,7 @@ type Github struct {
 
 // GithubClient to fetch Github related data.
 func NewGithubClient(token string, owner string, repoName string) (*Github, error) {
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-
-	// get go-github client
-	client := github.NewClient(tc)
+	client := github.NewClient(nil).WithAuthToken(token)
 
 	return &Github{
 		client:   client,
@@ -328,13 +320,10 @@ func formatCountCommits(
 		c[i], c[opp] = c[opp], c[i]
 	}
 
-	counts := []int{}
-	for _, v := range c {
-		counts = append(counts, v)
-	}
+	counts := append([]int{}, c...)
 
 	dimension := []string{}
-	for k, _ := range c {
+	for k := range c {
 		startWeekDay := int(startDate.Weekday())
 		beginningOfWeek := -(startWeekDay)
 		weekBefore := (7 * k)
@@ -544,7 +533,7 @@ func (g *Github) fetchBranches(repository string, limit int) ([]*github.Branch, 
 		return nil, errors.New("you need to specify a repository in the github service or in the widget")
 	}
 
-	opt := github.ListOptions{PerPage: limit}
+	opt := github.BranchListOptions{ListOptions: github.ListOptions{PerPage: limit}}
 	bs, _, err := g.client.Repositories.ListBranches(context.Background(), g.owner, repo, &opt)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can't find branches of owner %s for repo %s", g.owner, repo)
@@ -599,7 +588,7 @@ func (g *Github) fetchPullRequests(repository string, limit int) ([]*github.Pull
 func (g *Github) fetchAllRepo(order string) ([]*github.Repository, error) {
 	ctx := context.Background()
 
-	r, _, err := g.client.Repositories.List(ctx, g.owner, &github.RepositoryListOptions{Sort: order})
+	r, _, err := g.client.Repositories.ListByUser(ctx, g.owner, &github.RepositoryListByUserOptions{Sort: order})
 	if err != nil {
 		return nil, errors.Wrapf(err, "can't find all repo of owner %s", g.owner)
 	}
@@ -625,7 +614,7 @@ func fillMissingDays(dates []time.Time, values []int) ([]time.Time, []int) {
 
 		nextDate := dates[k+1]
 		mg := missingDays(v, nextDate)
-		for _, _ = range mg {
+		for range mg {
 			val = append(val, 0)
 		}
 		d = append(d, mg...)

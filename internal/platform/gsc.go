@@ -13,7 +13,7 @@ import (
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/option"
-	sc "google.golang.org/api/webmasters/v3"
+	sc "google.golang.org/api/searchconsole/v1"
 )
 
 // SearchConsole connect to the Google Search Console API.
@@ -43,7 +43,6 @@ func NewSearchConsoleClient(keyfile string) (*SearchConsole, error) {
 		}
 	}
 
-	// webmaster tools
 	web := &SearchConsole{}
 
 	web.config, err = google.JWTConfigFromJSON(data, sc.WebmastersReadonlyScope)
@@ -56,7 +55,7 @@ func NewSearchConsoleClient(keyfile string) (*SearchConsole, error) {
 		option.WithHTTPClient(web.config.Client(context.Background())),
 	)
 	if err != nil {
-		return nil, errors.Errorf("can't get webmaster service: %v", err)
+		return nil, errors.Errorf("can't get search console service: %v", err)
 	}
 
 	return web, nil
@@ -98,6 +97,9 @@ func filtersFromString(filters string, dimension string) []*sc.ApiDimensionFilte
 		f := strings.SplitSeq(filters, ",")
 		for v := range f {
 			v = strings.TrimSpace(v)
+			if v == "" {
+				continue
+			}
 			dim := dimension
 			if strings.Contains(v, " ") {
 				t := strings.Split(v, " ")

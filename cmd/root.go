@@ -16,7 +16,6 @@ import (
 var (
 	// Used for flags
 	cfgName string
-	logpath string
 	debug   bool
 
 	rootCmd = &cobra.Command{

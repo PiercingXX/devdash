@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-github/v28/github"
+	"github.com/google/go-github/v80/github"
 )
 
 // StartDate is normally the current date

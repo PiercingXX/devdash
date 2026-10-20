@@ -402,7 +402,7 @@ func formatBar(reps []*ga.Report, dimFormater func(dim []string) string) (dim []
 
 				var vu int64
 				if strings.Contains(value, ".") {
-					f, _ := strconv.ParseFloat(value, 0)
+					f, _ := strconv.ParseFloat(value, 64)
 					vu = int64(f)
 				} else if vu, err = strconv.ParseInt(value, 0, 0); err != nil {
 					return nil, nil, err

@@ -52,6 +52,9 @@ func createBlogDefaultConfig() string {
 
 	b := bytes.NewBuffer([]byte{})
 	err = ut.Execute(b, internal.CreateBlogConfig(keyfile, address, viewID))
+	if err != nil {
+		panic(err)
+	}
 
 	return createOrDisplayTemplate(b.String())
 }
@@ -69,6 +72,9 @@ func createGitHubDefaultConfig() string {
 
 	b := bytes.NewBuffer([]byte{})
 	err = ut.Execute(b, internal.CreateGitHubProjectConfig(token, owner, repo))
+	if err != nil {
+		panic(err)
+	}
 
 	return createOrDisplayTemplate(b.String())
 }

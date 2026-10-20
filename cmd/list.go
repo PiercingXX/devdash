@@ -32,18 +32,8 @@ func listCmd() *cobra.Command {
 }
 
 func runList() {
-	var err error
-	path := dashPath()
-	d, err := os.Lstat(path)
-	if err != nil {
+	if _, err := os.Stat(dashPath()); err != nil {
 		log.Fatal(err)
-	}
-
-	if d.Mode()&os.ModeSymlink == os.ModeSymlink {
-		path, err = os.Readlink(path)
-		if err != nil {
-			log.Fatal(err)
-		}
 	}
 
 	fs := getConfigFiles()

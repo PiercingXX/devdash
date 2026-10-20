@@ -184,7 +184,7 @@ func mapConfig(cfgFile string) (config, string) {
 	}
 
 	prefix := "DEVDASH"
-	for k, _ := range cfg.Projects {
+	for k := range cfg.Projects {
 		if cfg.Projects[k].Services.GoogleAnalytics.Keyfile == "" {
 			cfg.Projects[k].Services.GoogleAnalytics.Keyfile = os.Getenv(prefix + "_GA_KEYFILE")
 		}

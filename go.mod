@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/Phantas0s/termui v0.0.0-20200606131028-e1801ece841d
 	github.com/adrg/xdg v0.5.3
-	github.com/google/go-github/v28 v28.1.1
+	github.com/google/go-github/v80 v80.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-community/pro-bing v0.9.1
 	github.com/spf13/cobra v1.10.2

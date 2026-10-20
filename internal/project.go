@@ -194,8 +194,8 @@ func (p *project) CreateWidgets() [][][]func() error {
 	}
 
 	funcs := make([][][]func() error, len(chs))
-	for r, _ := range chs {
-		for c, _ := range chs[r] {
+	for r := range chs {
+		for c := range chs[r] {
 			funcs[r] = append(funcs[r], []func() error{})
 			for _, chann := range chs[r][c] {
 				f, ok := <-chann
