@@ -28,15 +28,6 @@ type col struct {
 	widgets []widget
 }
 
-func (c col) height(width int) int {
-	h := 0
-	for _, w := range c.widgets {
-		h += w.height(width)
-	}
-
-	return h
-}
-
 type row struct {
 	cols []col
 }
