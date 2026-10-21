@@ -27,7 +27,6 @@ First release of the maintained fork of [Phantas0s/devdash](https://github.com/P
 * The Github Actions widgets `github.table_workflow_runs` and `github.box_last_run`.
 * The option `rate` of `box_net_io` and `box_disk_io`: the throughput per second.
 * The option `known_hosts` of the service `remote_host`.
-* Packages for Homebrew and the AUR, built by the release workflow.
 
 ### UPDATED
 
