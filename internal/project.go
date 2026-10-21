@@ -109,6 +109,7 @@ func (p *project) addDefaultTheme(w Widget) Widget {
 func (p *project) mapServiceID(serviceID string) (service, error) {
 	services := map[string]service{
 		"display": NewDisplayWidget(),
+		"json":    NewJSONWidget(),
 		"ga":      p.gaWidget,
 		"mon":     p.monitorWidget,
 		"gsc":     p.gscWidget,
@@ -129,6 +130,7 @@ func (p *project) mapServiceID(serviceID string) (service, error) {
 func mapServiceName(serviceID string) (string, error) {
 	services := map[string]string{
 		"display": "Display",
+		"json":    "JSON",
 		"ga":      "Google Analytics",
 		"mon":     "Monitor",
 		"gsc":     "Google Search Console",
