@@ -1,26 +1,25 @@
 package cmd
 
-// TODO to test
-
 import (
 	"bufio"
 	"fmt"
-	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
+
+// dashboardExts are the extensions of the dashboard configurations.
+var dashboardExts = []string{".yml", ".yaml", ".json", ".toml"}
 
 var extension bool
 
 func listCmd() *cobra.Command {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List your devdash boards",
-		// TODO write some help
+		Short: "List the dashboards of $XDG_CONFIG_HOME/devdash and of the current directory",
 		Run: func(cmd *cobra.Command, args []string) {
 			runList()
 		},
@@ -32,69 +31,49 @@ func listCmd() *cobra.Command {
 }
 
 func runList() {
-	if _, err := os.Stat(dashPath()); err != nil {
-		log.Fatal(err)
+	for _, f := range dashboards() {
+		name := filepath.Base(f)
+		if !extension {
+			name = removeExt(name)
+		}
+		fmt.Fprintln(os.Stdout, name)
 	}
+}
 
-	fs := getConfigFiles()
-	for _, f := range fs {
-		s := strings.Split(f.Name(), ".")
-		// TODO erk to refactor
-		if !f.IsDir() && len(s) > 1 && (s[1] == "json" || s[1] == "toml" || s[1] == "yaml" || s[1] == "yml") {
-			if extension {
-				fmt.Fprintln(os.Stdout, f.Name())
-			} else {
-				fmt.Fprintln(os.Stdout, s[0])
+// dashboards returns the paths of the dashboards in the config directory, then in the current directory.
+func dashboards() []string {
+	paths := []string{}
+	for _, dir := range []string{dashPath(), "."} {
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			continue
+		}
+
+		for _, e := range entries {
+			p := filepath.Join(dir, e.Name())
+			if !e.IsDir() && slices.Contains(dashboardExts, filepath.Ext(e.Name())) && isDashboard(p) {
+				paths = append(paths, p)
 			}
 		}
 	}
+
+	return paths
 }
 
-func getConfigFiles() []fs.DirEntry {
-	homeFiles, err := os.ReadDir(dashPath())
+// isDashboard if the file has a "projects" key.
+func isDashboard(path string) bool {
+	file, err := os.Open(path)
 	if err != nil {
-		log.Fatal(err)
+		return false
 	}
-	currentFiles, err := os.ReadDir(".")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fs := []fs.DirEntry{}
-	for _, v := range homeFiles {
-		f, isDash := isDashboard(v, dashPath())
-		if isDash {
-			fs = append(fs, f)
-		}
-	}
-
-	for _, v := range currentFiles {
-		f, isDash := isDashboard(v, ".")
-		if isDash {
-			fs = append(fs, f)
-		}
-	}
-
-	return fs
-}
-
-func isDashboard(entry fs.DirEntry, path string) (fs.DirEntry, bool) {
-	file, err := os.Open(path + string(filepath.Separator) + entry.Name())
-	if err != nil {
-		panic(err)
-	}
-
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-
-	scanner.Split(bufio.ScanLines)
-
 	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), "projects:") {
-			return entry, true
+		if strings.Contains(scanner.Text(), "projects") {
+			return true
 		}
 	}
 
-	return nil, false
+	return false
 }

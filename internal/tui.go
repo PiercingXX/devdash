@@ -39,7 +39,6 @@ const (
 	optionThirdColor  = "third_color"
 	optionFourthColor = "fourth_color"
 	optionFifthColor  = "fifth_color"
-	optionSixthColor  = "sixth_color"
 
 	optionHeight = "height"
 
@@ -175,17 +174,12 @@ type reloader interface {
 	HotReload()
 }
 
-type aligner interface {
-	Align()
-}
-
 type manager interface {
 	keyManager
 	renderer
 	drawer
 	looper
 	reloader
-	aligner
 }
 
 type coloredElements struct {
@@ -539,10 +533,6 @@ func (t *Tui) AddKEdit(
 // Loop the TUI to receive events.
 func (t *Tui) Loop() {
 	t.instance.Loop()
-}
-
-func (t *Tui) Align() {
-	t.instance.Align()
 }
 
 // Clean and reinitialize the TUI.

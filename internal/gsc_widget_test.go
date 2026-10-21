@@ -17,7 +17,7 @@ func Test_formatText(t *testing.T) {
 	}{
 		{
 			name:       "happy case",
-			trimPrefix: "https://web-techno.net",
+			trimPrefix: "https://example.com",
 			expected: [][]string{
 				{"query", "clicks", "impressions", "ctr", "position"},
 				{"This", "13", "230", "1"},
@@ -29,7 +29,24 @@ func Test_formatText(t *testing.T) {
 				{"query", "clicks", "impressions", "ctr", "position"},
 				{"This is the first element", "13", "230", "1"},
 				{"Wowwoupi is the second element", "13", "230", "1"},
-				{"https://web-techno.net/Wowwoupi/youp", "13", "230", "1"},
+				{"https://example.com/Wowwoupi/youp", "13", "230", "1"},
+			},
+		},
+		{
+			name:       "address with a trailing slash, home page, and multi-byte characters",
+			trimPrefix: "https://example.com/",
+			expected: [][]string{
+				{"page"},
+				{"/"},
+				{"/blo"},
+				{"été "},
+			},
+			charLimit: 4,
+			table: [][]string{
+				{"page"},
+				{"https://example.com/"},
+				{"https://example.com/blog/"},
+				{"été 2026"},
 			},
 		},
 	}

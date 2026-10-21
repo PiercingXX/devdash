@@ -37,6 +37,15 @@ func fillStyle(bg uint16) tcell.Style {
 	return tcell.StyleDefault.Background(toColor(bg))
 }
 
+// onBarStyle of a text displayed on a bar. A text with the default color is black on a colored bar, to be readable.
+func onBarStyle(bg uint16, fg uint16) tcell.Style {
+	if fg == defaultColor && bg != defaultColor {
+		fg = blackColor
+	}
+
+	return fillStyle(bg).Foreground(toColor(fg))
+}
+
 // put a string, cut to the given width. Return the width used.
 func put(s surface, x int, y int, str string, maxWidth int, st tcell.Style) int {
 	if maxWidth <= 0 {
@@ -109,21 +118,33 @@ type textBox struct {
 }
 
 // lines of the text, wrapped to the given width.
+// The lines are wrapped between words; a word longer than the width is cut.
 func (t *textBox) lines(width int) []string {
 	lines := []string{}
 	for l := range strings.SplitSeq(t.text, "\n") {
-		line, w := strings.Builder{}, 0
-		g := displaywidth.StringGraphemes(l)
-		for g.Next() {
-			if w+g.Width() > width && w > 0 {
-				lines = append(lines, line.String())
-				line.Reset()
-				w = 0
+		line, w := "", 0
+		// Splitting on every space keeps the spaces between the words.
+		for i, word := range strings.Split(l, " ") {
+			if i > 0 {
+				if w+1+displaywidth.String(word) <= width {
+					line, w = line+" ", w+1
+				} else {
+					lines = append(lines, line)
+					line, w = "", 0
+				}
 			}
-			line.WriteString(g.Value())
-			w += g.Width()
+
+			g := displaywidth.StringGraphemes(word)
+			for g.Next() {
+				if w+g.Width() > width && w > 0 {
+					lines = append(lines, line)
+					line, w = "", 0
+				}
+				line += g.Value()
+				w += g.Width()
+			}
 		}
-		lines = append(lines, line.String())
+		lines = append(lines, line)
 	}
 
 	return lines
@@ -181,7 +202,7 @@ func (g *gauge) draw(s surface, x int, y int, width int) {
 
 		st := style(g.numColor)
 		if pos+i < filled {
-			st = fillStyle(g.barColor).Foreground(toColor(g.numColor))
+			st = onBarStyle(g.barColor, g.numColor)
 		}
 		s.PutStrStyled(ix+pos+i, ly, string(r), st)
 	}
@@ -211,10 +232,12 @@ func (b *barChart) draw(s surface, x int, y int, width int) {
 	}
 
 	// The last line of the chart is for the labels.
+	// The bars are mostly time series: the last ones are displayed when they don't all fit.
 	barsHeight := ih - 1
-	numBar := iw / (b.barGap + b.barWidth)
-	for i := 0; i < numBar && i < len(b.data) && i < len(b.labels); i++ {
-		bx := ix + i*(b.barWidth+b.barGap)
+	numValues := min(len(b.data), len(b.labels))
+	first := max(numValues-iw/(b.barGap+b.barWidth), 0)
+	for i := first; i < numValues; i++ {
+		bx := ix + (i-first)*(b.barWidth+b.barGap)
 
 		h := 0
 		if maxValue > 0 {
@@ -225,7 +248,7 @@ func (b *barChart) draw(s surface, x int, y int, width int) {
 		put(s, bx, iy+ih-1, b.labels[i], b.barWidth, style(b.textColor))
 
 		num := displaywidth.TruncateString(strconv.Itoa(b.data[i]), b.barWidth, "")
-		numStyle := fillStyle(b.barColor).Foreground(toColor(b.numColor))
+		numStyle := onBarStyle(b.barColor, b.numColor)
 		if h == 0 {
 			numStyle = style(b.emptyNumColor)
 		}
@@ -274,10 +297,11 @@ func (b *stackedBarChart) draw(s surface, x int, y int, width int) {
 	}
 
 	// The last line of the chart is for the labels.
+	// The bars are time series: the last ones are displayed when they don't all fit.
 	barsHeight := ih - 1
-	numBar := iw / (b.barGap + b.barWidth)
-	for i := 0; i < numBar && i < numValues; i++ {
-		bx := ix + i*(b.barWidth+b.barGap)
+	first := max(numValues-iw/(b.barGap+b.barWidth), 0)
+	for i := first; i < numValues; i++ {
+		bx := ix + (i-first)*(b.barWidth+b.barGap)
 
 		stacked := 0
 		for serie, d := range b.data {
@@ -293,7 +317,7 @@ func (b *stackedBarChart) draw(s surface, x int, y int, width int) {
 			fill(s, bx, iy+barsHeight-stacked-h, b.barWidth, h, barStyle)
 
 			num := displaywidth.TruncateString(strconv.Itoa(d[i]), b.barWidth, "")
-			put(s, bx+(b.barWidth-displaywidth.String(num))/2, iy+barsHeight-stacked-1, num, b.barWidth, barStyle.Foreground(toColor(b.numColor)))
+			put(s, bx+(b.barWidth-displaywidth.String(num))/2, iy+barsHeight-stacked-1, num, b.barWidth, onBarStyle(b.color(serie), b.numColor))
 
 			stacked += h
 		}
@@ -320,14 +344,7 @@ func (t *table) draw(s surface, x int, y int, width int) {
 		return
 	}
 
-	cellWidths := make([]int, len(t.rows[0]))
-	for _, r := range t.rows {
-		for c, cell := range r {
-			if c < len(cellWidths) {
-				cellWidths[c] = max(cellWidths[c], displaywidth.String(cell))
-			}
-		}
-	}
+	cellWidths := t.cellWidths(iw)
 
 	for r, cells := range t.rows {
 		ry := iy + r*2
@@ -343,11 +360,44 @@ func (t *table) draw(s surface, x int, y int, width int) {
 				}
 				s.PutStrStyled(cellStart, ry, "|", t.style)
 			}
-			put(s, cellStart+2, ry, cell, ix+iw-cellStart-2, t.style)
+			put(s, cellStart+2, ry, displaywidth.TruncateString(cell, cellWidths[c], "…"), ix+iw-cellStart-2, t.style)
 		}
 
 		if r != len(t.rows)-1 {
 			s.PutStrStyled(ix, ry+1, strings.Repeat("─", iw), t.style)
 		}
 	}
+}
+
+// cellWidths of the columns. When the table is too wide, the widest columns are shrunk to fit.
+func (t *table) cellWidths(width int) []int {
+	widths := make([]int, len(t.rows[0]))
+	for _, r := range t.rows {
+		for c, cell := range r {
+			if c < len(widths) {
+				widths[c] = max(widths[c], displaywidth.String(cell))
+			}
+		}
+	}
+
+	// Each column is preceded by 2 characters, the next ones by a separator too.
+	total := 2 + 3*(len(widths)-1)
+	for _, w := range widths {
+		total += w
+	}
+
+	for ; total > width; total-- {
+		widest := 0
+		for c, w := range widths {
+			if w > widths[widest] {
+				widest = c
+			}
+		}
+		if widths[widest] <= 4 {
+			break
+		}
+		widths[widest]--
+	}
+
+	return widths
 }

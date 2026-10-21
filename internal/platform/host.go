@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -229,7 +230,6 @@ func HostMemoryRate(runner runnerFunc) (float64, error) {
 	return gokit.Round(float64(memUsed)*100/float64(memTotal), 2), nil
 }
 
-// TODO to refactor - DRY
 func HostSwapRate(runner runnerFunc) (float64, error) {
 	lines, err := runner("/bin/cat /proc/meminfo")
 	if err != nil {
@@ -410,40 +410,70 @@ func HostDisk(runner runnerFunc, headers []string, unit string) ([][]string, err
 
 	return c, nil
 }
+
+// HostDiskIO read and written on the physical disks since the boot.
 func HostDiskIO(runner runnerFunc, unit string) (string, error) {
-	// GetIOStat returns io stat
 	lines, err := runner("/bin/cat /proc/diskstats")
 	if err != nil {
 		return "", err
 	}
 
+	type stat struct {
+		name        string
+		read, write uint64
+	}
+	stats := []stat{}
 	scanner := bufio.NewScanner(strings.NewReader(lines))
-	var read uint64 = 0
-	var write uint64 = 0
-
 	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.Fields(line)
-
-		if len(parts) < 9 {
+		parts := strings.Fields(scanner.Text())
+		if len(parts) < 10 || parts[3] == "0" {
 			continue
 		}
 
-		if parts[3] == "0" {
-			continue
+		// The sectors are always 512 bytes.
+		r, _ := strconv.ParseUint(parts[5], 10, 64)
+		w, _ := strconv.ParseUint(parts[9], 10, 64)
+		stats = append(stats, stat{name: parts[2], read: r * 512, write: w * 512})
+	}
+
+	names := []string{}
+	for _, s := range stats {
+		names = append(names, s.name)
+	}
+
+	var read, write uint64
+	for _, s := range stats {
+		if isPhysicalDisk(s.name, names) {
+			read += s.read
+			write += s.write
 		}
-
-		r, _ := strconv.ParseUint(parts[5], 10, strconv.IntSize)
-		w, _ := strconv.ParseUint(parts[9], 10, strconv.IntSize)
-
-		read += r * 512
-		write += w * 512
 	}
 
 	fr := gokit.ConvertBinUnit(float64(read), "b", unit)
 	fw := gokit.ConvertBinUnit(float64(write), "b", unit)
 
 	return strconv.FormatFloat(fr, 'f', 2, strconv.IntSize) + " / " + strconv.FormatFloat(fw, 'f', 2, strconv.IntSize), nil
+}
+
+// partitionSuffix of a partition's name after its disk's name, like "1" for sda1 or "p2" for nvme0n1p2.
+var partitionSuffix = regexp.MustCompile(`^p?[0-9]+$`)
+
+// isPhysicalDisk excludes the partitions, which would count the I/O of their disk twice,
+// and the virtual devices (device mapper, RAID, loop, RAM disks...) which count the I/O of other disks, or none.
+func isPhysicalDisk(name string, devices []string) bool {
+	for _, prefix := range []string{"loop", "ram", "zram", "dm-", "md", "sr", "fd", "nbd"} {
+		if strings.HasPrefix(name, prefix) {
+			return false
+		}
+	}
+
+	for _, d := range devices {
+		if d != name && strings.HasPrefix(name, d) && partitionSuffix.MatchString(strings.TrimPrefix(name, d)) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func HostBar(runner runnerFunc, command string) (data []int, err error) {
@@ -541,11 +571,7 @@ func formatToBar(data string) (val []uint64) {
 	return
 }
 
-// formatToTable display.
-// The string needs to have this:
-// Info needs to be splitted with comma
-// Depending on number of columns (headers)
-// TODO improve this comment :D
+// formatToTable splits comma separated values into rows of col cells. An incomplete last row is dropped.
 func formatToTable(col int, data string) (cells [][]string) {
 	c := strings.Split(data, ",")
 	lenCells := len(c)

@@ -1,7 +1,5 @@
 package cmd
 
-// TODO need to test all of that!
-
 import (
 	"bytes"
 	"fmt"

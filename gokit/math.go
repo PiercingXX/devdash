@@ -1,9 +1,9 @@
 package gokit
 
-import "math"
-
-// ONLY very general abstractions
-// which doesn't change with the messy world
+import (
+	"math"
+	"strings"
+)
 
 func Round(n float64, precision int) (r float64) {
 	pow := math.Pow(10, float64(precision))
@@ -21,29 +21,22 @@ func Round(n float64, precision int) (r float64) {
 	return r / pow
 }
 
-func ConvertBinUnit(val float64, base, to string) (tv float64) {
+// ConvertBinUnit converts a value from a binary unit to another: b, kb, mb, gb, tb, pb or eb (powers of 1024).
+// An unknown unit is considered as bytes.
+func ConvertBinUnit(val float64, base, to string) float64 {
 	convert := map[string]int{
-		"b":  6,
-		"kb": 5,
-		"mb": 4,
+		"b":  0,
+		"kb": 1,
+		"mb": 2,
 		"gb": 3,
-		"tb": 2,
-		"pb": 1,
-		"eb": 0,
+		"tb": 4,
+		"pb": 5,
+		"eb": 6,
 	}
 
-	r := convert[base] - convert[to]
+	r := convert[strings.ToLower(to)] - convert[strings.ToLower(base)]
 
-	if r >= 0 {
-		return Round(val/(math.Pow(float64(1024), float64(r))), 2)
-	}
-
-	// TODO to test
-	if r < 0 {
-		tv = Round(val*(math.Pow(float64(1024), float64(r))), 2)
-	}
-
-	return
+	return Round(val/math.Pow(1024, float64(r)), 2)
 }
 
 func Min(a, b int) int {

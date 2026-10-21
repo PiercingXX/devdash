@@ -1,10 +1,6 @@
 package internal
 
-// Dispatch the different widgets from the config to their widget managers and get back the render functions.
-
-// TODO it's a mess in there between concurrent / non concurrent ways of getting widget render functions.
-// TODO Initially it was made to go around the limitation of concurrent connection for Google Analytics.
-// TODO I feel the absence of generics here...  To refactor somehow (using reflection?).
+// Dispatch the different widgets from the config to their services, and get back the render functions.
 
 import (
 	"github.com/pkg/errors"
@@ -155,7 +151,6 @@ func mapServiceName(serviceID string) (string, error) {
 // Create all the widgets and populate them with data.
 // Return channels with render functions
 func (p *project) CreateWidgets() [][][]func() error {
-	// TODO: use display.box instead of this shortcut
 	err := p.addTitle(p.tui)
 	if err != nil {
 		err = errors.Wrapf(err, "can't add project title %s", p.name)

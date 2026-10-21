@@ -51,10 +51,9 @@ const (
 
 // A widget is a representation of a set of data in the screen.
 type Widget struct {
-	Name    string            `mapstructures:"name"`
-	Size    string            `mapstructures:"size"`
-	Options map[string]string `mapstructures:"options"`
-	Theme   string            `mapstructures:"theme"`
+	Name    string            `mapstructure:"name"`
+	Options map[string]string `mapstructure:"options"`
+	Theme   string            `mapstructure:"theme"`
 }
 
 func (w *Widget) typeID() string {
@@ -64,4 +63,13 @@ func (w *Widget) typeID() string {
 
 func (w *Widget) serviceID() string {
 	return strings.Split(w.Name, ".")[0]
+}
+
+// truncate a text to a number of characters.
+func truncate(text string, limit int) string {
+	if r := []rune(text); limit >= 0 && len(r) > limit {
+		return string(r[:limit])
+	}
+
+	return text
 }

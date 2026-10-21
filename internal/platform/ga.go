@@ -191,7 +191,7 @@ func (c *Analytics) BarMetric(val AnalyticValues) ([]string, []int, error) {
 		KeepEmptyRows: true,
 	}
 
-	// TODO - Why this condition? is filter works only with one dimension only?
+	// The filters apply to the dimension: they are ambiguous with more than one.
 	if len(val.Dimensions) == 1 && len(val.Filters) != 0 {
 		req.DimensionFilter = containsFilter(mapDimension(val.Dimensions[0]), val.Filters)
 	}
@@ -258,9 +258,7 @@ func (c *Analytics) Table(
 	}
 
 	if len(an.Filters) > 0 {
-		// TODO now only one filter is possible for one dimension.
-		// If there are more than one dimension, the same set of filter is applied.
-		// Possibility to make it multiple filters for multipme dimension?
+		// The same filters apply to every dimension.
 		filters := []*ga.FilterExpression{}
 		for _, v := range dimensions {
 			if f := containsFilter(v.Name, an.Filters); f != nil {

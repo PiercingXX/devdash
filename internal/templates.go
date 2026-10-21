@@ -1,7 +1,5 @@
 package internal
 
-// TODO to test all of that!
-
 type blogConfig struct {
 	Keyfile    string
 	Address    string
@@ -71,7 +69,7 @@ general:
 
 projects:
   - name: Your Blog
-    title_options:
+    name_options:
       border_color: default
       text_color: default
       size: XXL
@@ -135,10 +133,7 @@ projects:
               size: "XS"
               elements:
                 - name: ga.box_real_time
-                  options:
                 - name: mon.box_availability
-                  options:
-                    num_color: default
                 - name: ga.box_total
                   options:
                     title: "Average session duration this month"

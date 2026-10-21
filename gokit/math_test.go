@@ -34,6 +34,20 @@ func Test_ConvertUnit(t *testing.T) {
 			base:     "kb",
 			to:       "kb",
 		},
+		{
+			name:     "kb->b",
+			expected: 2048,
+			input:    2,
+			base:     "kb",
+			to:       "b",
+		},
+		{
+			name:     "uppercase unit",
+			expected: 1.5,
+			input:    1536,
+			base:     "b",
+			to:       "KB",
+		},
 	}
 
 	for _, tc := range testCases {

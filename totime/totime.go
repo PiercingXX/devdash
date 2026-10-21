@@ -41,19 +41,6 @@ func PrevWeeks(base time.Time, count int) (startDate time.Time, endDate time.Tim
 	return
 }
 
-func NextWeeks(base time.Time, count int) (startDate time.Time, endDate time.Time) {
-	// 1 = Monday
-	weekDay := int(base.Weekday())
-	startDate = base.AddDate(0, 0, (-(weekDay - 1) + (7 * count)))
-	if weekDay == int(time.Sunday) {
-		startDate = base.AddDate(0, 0, (-(weekDay + 1) + (7 * count)))
-	}
-
-	endDate = startDate.AddDate(0, 0, 6)
-
-	return
-}
-
 func ThisMonth(base time.Time) (startDate time.Time, endDate time.Time) {
 	currentLocation := base.Location()
 
@@ -73,16 +60,6 @@ func PrevMonths(base time.Time, count int) (startDate time.Time, endDate time.Ti
 	return
 }
 
-func NextMonths(base time.Time, count int) (startDate time.Time, endDate time.Time) {
-	currentLocation := base.Location()
-
-	SearchedMonth := base.AddDate(0, count, 0)
-	startDate = time.Date(SearchedMonth.Year(), SearchedMonth.Month(), 1, 0, 0, 0, 0, currentLocation)
-	endDate = startDate.AddDate(0, 1, -1)
-
-	return
-}
-
 func ThisYear(base time.Time) (startDate time.Time, endDate time.Time) {
 	currentLocation := base.Location()
 
@@ -96,16 +73,6 @@ func PrevYears(base time.Time, count int) (startDate time.Time, endDate time.Tim
 	currentLocation := base.Location()
 
 	SearchedYear := base.AddDate(-count, 0, 0)
-	startDate = time.Date(SearchedYear.Year(), 1, 1, 0, 0, 0, 0, currentLocation)
-	endDate = startDate.AddDate(1, 0, -1)
-
-	return
-}
-
-func NextYears(base time.Time, count int) (startDate time.Time, endDate time.Time) {
-	currentLocation := base.Location()
-
-	SearchedYear := base.AddDate(count, 0, 0)
 	startDate = time.Date(SearchedYear.Year(), 1, 1, 0, 0, 0, 0, currentLocation)
 	endDate = startDate.AddDate(1, 0, -1)
 

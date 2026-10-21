@@ -569,7 +569,7 @@ func Test_HostDiskIO(t *testing.T) {
 	}{
 		{
 			name:     "happy case",
-			expected: "4072601.00 / 5706396.00",
+			expected: "2036903.00 / 2853198.00",
 			unit:     "kb",
 			runner: func(cmd string) (string, error) {
 				return string(ReadFixtureFile("./testdata/fixtures/host_disk_io", t)), nil
@@ -787,5 +787,18 @@ func Test_HostBar(t *testing.T) {
 				t.Errorf("Expected %v, actual %v", tc.expected, actual)
 			}
 		})
+	}
+}
+
+func Test_isPhysicalDisk(t *testing.T) {
+	devices := []string{"sda", "sda1", "nvme0n1", "nvme0n1p2", "dm-0", "zram0", "loop3", "mmcblk0", "mmcblk0p1", "vdb"}
+	expected := map[string]bool{
+		"sda": true, "sda1": false, "nvme0n1": true, "nvme0n1p2": false, "dm-0": false,
+		"zram0": false, "loop3": false, "mmcblk0": true, "mmcblk0p1": false, "vdb": true,
+	}
+	for _, d := range devices {
+		if actual := isPhysicalDisk(d, devices); actual != expected[d] {
+			t.Errorf("isPhysicalDisk(%q): expected %t, actual %t", d, expected[d], actual)
+		}
 	}
 }

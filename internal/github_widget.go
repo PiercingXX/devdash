@@ -227,7 +227,6 @@ func (g *githubWidget) tableBranches(widget Widget) (f func() error, err error) 
 	return
 }
 
-// TODO can filter by open or close issue?
 func (g *githubWidget) tableIssues(widget Widget) (f func() error, err error) {
 	var repo string
 	if _, ok := widget.Options[optionRepository]; ok {
@@ -313,7 +312,7 @@ func (g *githubWidget) barViews(widget Widget) (f func() error, err error) {
 	return
 }
 
-// TODO to refactor - transforming any date statement (weeks_ago, month_ago) into days weeks_ago in platform.date, and plugt it in.
+// barCommits per week. The participation API only gives the last 52 weeks, so the dates need to be "x_weeks_ago".
 func (g *githubWidget) barCommits(widget Widget) (f func() error, err error) {
 	var repo string
 	if _, ok := widget.Options[optionRepository]; ok {

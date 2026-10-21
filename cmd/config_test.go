@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/PiercingXX/devdash/internal"
+	"github.com/spf13/viper"
 )
 
 // Each slice dimension represent row, col or widgets.
@@ -33,16 +35,15 @@ func Test_OrderWidgets(t *testing.T) {
 					},
 				},
 				Widgets: []Row{
-					Row{
+					{
 						Row: []Column{
-							Column{
+							{
 								Col: []Widgets{
-									Widgets{
+									{
 										Size: "XL",
 										Elements: []internal.Widget{
-											internal.Widget{
+											{
 												Name: "row_1_col_1_widget1",
-												Size: "XL",
 												Options: map[string]string{
 													"start_date": "7_days_ago",
 													"end_date":   "today",
@@ -50,25 +51,23 @@ func Test_OrderWidgets(t *testing.T) {
 											},
 										},
 									},
-									Widgets{
+									{
 										Size: "L",
 										Elements: []internal.Widget{
-											internal.Widget{
+											{
 												Name: "row_1_col_1_widget2",
-												Size: "L",
 											},
 										},
 									},
 								},
 							},
-							Column{
+							{
 								Col: []Widgets{
-									Widgets{
+									{
 										Size: "M",
 										Elements: []internal.Widget{
-											internal.Widget{
+											{
 												Name: "row_1_col_2_widget1",
-												Size: "M",
 											},
 										},
 									},
@@ -79,32 +78,29 @@ func Test_OrderWidgets(t *testing.T) {
 				},
 			},
 			expectedSizes: [][]string{
-				[]string{ // row 1
+				{ // row 1
 					"XL",
 					"L",
 					"M",
 				},
 			},
 			expectedRows: [][][]internal.Widget{
-				[][]internal.Widget{ // row 1
-					[]internal.Widget{ // column 1
-						internal.Widget{
+				{ // row 1
+					{ // column 1
+						{
 							Name: "row_1_col_1_widget1",
-							Size: "XL",
 							Options: map[string]string{
 								"start_date": "7_days_ago",
 								"end_date":   "today",
 							},
 						},
-						internal.Widget{
+						{
 							Name: "row_1_col_1_widget2",
-							Size: "L",
 						},
 					},
-					[]internal.Widget{ //column 2
-						internal.Widget{
+					{ //column 2
+						{
 							Name: "row_1_col_2_widget1",
-							Size: "M",
 						},
 					},
 				},
@@ -115,38 +111,35 @@ func Test_OrderWidgets(t *testing.T) {
 			project: Project{
 				Name: "test",
 				Widgets: []Row{
-					Row{
+					{
 						Row: []Column{
-							Column{
+							{
 								Col: []Widgets{
-									Widgets{
+									{
 										Size: "S",
 										Elements: []internal.Widget{
-											internal.Widget{
+											{
 												Name: "row_1_col_1_widget1",
-												Size: "S",
 											},
 										},
 									},
-									Widgets{
+									{
 										Size: "XS",
 										Elements: []internal.Widget{
-											internal.Widget{
+											{
 												Name: "row_1_col_1_widget2",
-												Size: "XS",
 											},
 										},
 									},
 								},
 							},
-							Column{
+							{
 								Col: []Widgets{
-									Widgets{
+									{
 										Size: "M",
 										Elements: []internal.Widget{
-											internal.Widget{
+											{
 												Name: "row_1_col_2_widget1",
-												Size: "M",
 											},
 										},
 									},
@@ -154,38 +147,35 @@ func Test_OrderWidgets(t *testing.T) {
 							},
 						},
 					},
-					Row{
+					{
 						Row: []Column{
-							Column{
+							{
 								Col: []Widgets{
-									Widgets{
+									{
 										Size: "S",
 										Elements: []internal.Widget{
-											internal.Widget{
+											{
 												Name: "row_2_col_1_widget1",
-												Size: "S",
 											},
 										},
 									},
 								},
 							},
-							Column{
+							{
 								Col: []Widgets{
-									Widgets{
+									{
 										Size: "L",
 										Elements: []internal.Widget{
-											internal.Widget{
+											{
 												Name: "row_2_col_2_widget1",
-												Size: "L",
 											},
 										},
 									},
-									Widgets{
+									{
 										Size: "XL",
 										Elements: []internal.Widget{
-											internal.Widget{
+											{
 												Name: "row_2_col_2_widget2",
-												Size: "XL",
 											},
 										},
 									},
@@ -196,51 +186,45 @@ func Test_OrderWidgets(t *testing.T) {
 				},
 			},
 			expectedSizes: [][]string{
-				[]string{ // row 1
+				{ // row 1
 					"S",
 					"XS",
 					"M",
 				},
-				[]string{
+				{
 					"S",
 					"L",
 					"XL",
 				},
 			},
 			expectedRows: [][][]internal.Widget{
-				[][]internal.Widget{ // row 1
-					[]internal.Widget{ // column 1
-						internal.Widget{
+				{ // row 1
+					{ // column 1
+						{
 							Name: "row_1_col_1_widget1",
-							Size: "S",
 						},
-						internal.Widget{
+						{
 							Name: "row_1_col_1_widget2",
-							Size: "XS",
 						},
 					},
-					[]internal.Widget{ //column 2
-						internal.Widget{
+					{ //column 2
+						{
 							Name: "row_1_col_2_widget1",
-							Size: "M",
 						},
 					},
 				},
-				[][]internal.Widget{ // row 2
-					[]internal.Widget{ // column 1
-						internal.Widget{
+				{ // row 2
+					{ // column 1
+						{
 							Name: "row_2_col_1_widget1",
-							Size: "S",
 						},
 					},
-					[]internal.Widget{ // column 1
-						internal.Widget{
+					{ // column 1
+						{
 							Name: "row_2_col_2_widget1",
-							Size: "L",
 						},
-						internal.Widget{
+						{
 							Name: "row_2_col_2_widget2",
-							Size: "XL",
 						},
 					},
 				},
@@ -261,5 +245,25 @@ func Test_OrderWidgets(t *testing.T) {
 			}
 
 		})
+	}
+}
+
+func Test_defaultConfig(t *testing.T) {
+	v := viper.New()
+	v.SetConfigType("yaml")
+	if err := v.ReadConfig(strings.NewReader(defaultConfig("/home/me/.config/devdash"))); err != nil {
+		t.Fatal(err)
+	}
+
+	var cfg config
+	if err := v.Unmarshal(&cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(cfg.Projects) != 1 || len(cfg.Projects[0].Widgets) == 0 {
+		t.Fatalf("Expected 1 project with widgets, actual %+v", cfg.Projects)
+	}
+	if cfg.KEdit() != "C-e" || cfg.Projects[0].Services.Monitor.Address == "" {
+		t.Errorf("Expected the edit key and the monitor service, actual %+v", cfg)
 	}
 }

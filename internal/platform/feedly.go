@@ -43,7 +43,7 @@ func (f *Feedly) Subscribers() (string, error) {
 	defer resp.Body.Close()
 	c, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", errors.Wrap(err, "error while readling feedly API response")
+		return "", errors.Wrap(err, "error while reading feedly API response")
 	}
 
 	subscribers, err := extractSubscribers(c)

@@ -289,11 +289,8 @@ func (g *gaWidget) table(widget Widget, firstHeader string) (f func() error, err
 	}
 
 	dimension := "page_path"
-	if _, ok := widget.Options[optionDimension]; ok {
-		// TODO is the condition useful?
-		if len(widget.Options[optionDimension]) > 0 {
-			dimension = widget.Options[optionDimension]
-		}
+	if d := widget.Options[optionDimension]; d != "" {
+		dimension = d
 	}
 	if firstHeader == "" {
 		firstHeader = titleize(dimension)
@@ -391,10 +388,7 @@ func formatTable(
 			break
 		}
 
-		p := strings.Trim(dim[k], " ")
-		if len(p) > int(charLimit) {
-			p = p[:charLimit]
-		}
+		p := truncate(strings.TrimSpace(dim[k]), int(charLimit))
 
 		// Add dimension header
 		row := []string{p}
@@ -486,7 +480,7 @@ func (g *gaWidget) stackedBar(widget Widget) (f func() error, err error) {
 	}
 
 	var data [8][]int
-	title := titleize(ExtractMetric(widget.Options)) + " - "
+	title := " " + titleize(ExtractMetric(widget.Options)) + " - "
 	for count, k := range series {
 		data[count] = val[k]
 

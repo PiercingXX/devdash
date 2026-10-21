@@ -1,7 +1,3 @@
-// To get fixtures in order to write tests
-// j, _ := json.Marshal(is)
-// fmt.Println(string(j))
-
 package platform
 
 import (
@@ -32,7 +28,6 @@ const (
 // Github structure connects to the Github API.
 type Github struct {
 	client   *github.Client
-	repo     *github.Repository
 	repoName string
 	owner    string
 }
@@ -219,47 +214,19 @@ func formatListPullRequests(is []*github.PullRequest, limit int) [][]string {
 		limit = len(is)
 	}
 
-	headers := []string{"title", "state", "created at", "merged", "commits"}
-
-	defaultHeader := "unknown"
-	prs := make([][]string, limit+1)
-	prs[0] = headers
-	for k, v := range is {
-		n := defaultHeader
-		if v.Title != nil {
-			n = *v.Title
+	prs := [][]string{{"title", "state", "author", "created at"}}
+	for _, v := range is[:limit] {
+		state := v.GetState()
+		if v.MergedAt != nil {
+			state = "merged"
 		}
 
-		state := defaultHeader
-		if v.State != nil {
-			state = *v.State
-		}
-
-		createdAt := defaultHeader
+		createdAt := "unknown"
 		if v.CreatedAt != nil {
-			t := *v.CreatedAt
-			createdAt = t.String()
+			createdAt = v.CreatedAt.Format("2006-01-02")
 		}
 
-		merged := defaultHeader
-		if v.Merged != nil {
-			m := *v.Merged
-			merged = strconv.FormatBool(m)
-		}
-
-		commits := defaultHeader
-		if v.Commits != nil {
-			c := *v.Commits
-			commits = strconv.FormatInt(int64(c), 10)
-		}
-
-		if k < limit {
-			prs[k+1] = append(prs[k+1], n)
-			prs[k+1] = append(prs[k+1], state)
-			prs[k+1] = append(prs[k+1], createdAt)
-			prs[k+1] = append(prs[k+1], merged)
-			prs[k+1] = append(prs[k+1], commits)
-		}
+		prs = append(prs, []string{v.GetTitle(), state, v.GetUser().GetLogin(), createdAt})
 	}
 
 	return prs
@@ -359,7 +326,6 @@ func (g *Github) CountStars(repository string, startDate, endDate time.Time) (di
 		return nil, nil, err
 	}
 
-	// TODO do something with the missing day (day with 0 as value) algorithm? Make that available via config?
 	dim, val = formatCountStars(se, "01-02", startDate, endDate, false)
 	return dim, val, nil
 }
@@ -434,7 +400,7 @@ func (g *Github) fetchStars(repository string) (s []*github.Stargazer, err error
 	var eg errgroup.Group
 	sem := make(chan bool, 4)
 
-	// TODO See if it can be improved
+	// At most 4 pages are fetched at the same time.
 	for i := 1; i <= pages; i++ {
 		sem <- true
 		page := i
@@ -463,11 +429,6 @@ func (g *Github) fetchStars(repository string) (s []*github.Stargazer, err error
 }
 
 func (g *Github) fetchRepo(repository string) (*github.Repository, error) {
-	// TODO add a TTL
-	if g.repo != nil {
-		return g.repo, nil
-	}
-
 	repo := g.repoName
 	if repository != "" {
 		repo = repository
@@ -486,7 +447,6 @@ func (g *Github) fetchRepo(repository string) (*github.Repository, error) {
 
 }
 
-// TODO possibility to filter by ALL or OWNER
 func (g *Github) fetchCommitCount(repository string) (*github.RepositoryParticipation, error) {
 	repo := g.repoName
 	if repository != "" {
@@ -559,13 +519,12 @@ func (g *Github) fetchIssues(repository string, limit int) ([]*github.Issue, err
 	}
 	is, _, err := g.client.Issues.ListByRepo(context.Background(), g.owner, repo, &opt)
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find branches of owner %s for repo %s", g.owner, repo)
+		return nil, errors.Wrapf(err, "can't find the issues of owner %s for repo %s", g.owner, repo)
 	}
 
 	return is, nil
 }
 
-// TODO add sorting
 func (g *Github) fetchPullRequests(repository string, limit int) ([]*github.PullRequest, error) {
 	ctx := context.Background()
 	repo := g.repoName
@@ -573,18 +532,21 @@ func (g *Github) fetchPullRequests(repository string, limit int) ([]*github.Pull
 		repo = repository
 	}
 
+	if repo == "" {
+		return nil, errors.New("you need to specify a repository in the github service or in the widget")
+	}
+
 	prs, _, err := g.client.PullRequests.List(ctx, g.owner, repo, &github.PullRequestListOptions{
 		State:       "all",
 		ListOptions: github.ListOptions{PerPage: limit},
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find all repo of owner %s", g.owner)
+		return nil, errors.Wrapf(err, "can't find the pull requests of owner %s for repo %s", g.owner, repo)
 	}
 
 	return prs, nil
 }
 
-// TODO possibility to add filters / ordering
 func (g *Github) fetchAllRepo(order string) ([]*github.Repository, error) {
 	ctx := context.Background()
 

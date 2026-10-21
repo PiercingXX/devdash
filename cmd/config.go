@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
+	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/PiercingXX/devdash/internal"
@@ -48,12 +49,12 @@ type Project struct {
 	Widgets     []Row                        `mapstructure:"widgets"`
 }
 
-// Row is constitued of columns
+// Row is constituted of columns
 type Row struct {
 	Row []Column `mapstructure:"row"`
 }
 
-// Col is constitued of widgets
+// Column is constituted of widgets
 type Column struct {
 	Col []Widgets `mapstructure:"col"`
 }
@@ -71,7 +72,6 @@ type Services struct {
 	Feedly              Feedly          `mapstructure:"feedly"`
 	Git                 Git             `mapstructure:"git"`
 	RemoteHost          RemoteHost      `mapstructure:"remote_host"`
-	Localhost           RemoteHost      `mapstructure:"local_host"`
 }
 
 type GoogleAnalytics struct {
@@ -203,13 +203,13 @@ func mapConfig(cfgFile string) (config, string) {
 	return cfg, viper.ConfigFileUsed()
 }
 
-func removeExt(filepath string) string {
-	ext := []string{".json", ".yml", ".yaml", ".toml"}
-	for _, v := range ext {
-		filepath = strings.Replace(filepath, v, "", -1)
+// removeExt of a dashboard's file name.
+func removeExt(file string) string {
+	if slices.Contains(dashboardExts, filepath.Ext(file)) {
+		return strings.TrimSuffix(file, filepath.Ext(file))
 	}
 
-	return filepath
+	return file
 }
 
 func createConfig(path string, filename string, template string) string {
@@ -235,7 +235,7 @@ func createConfig(path string, filename string, template string) string {
 
 func tryReadFile(cfgFile string) {
 	if _, err := os.Stat(cfgFile); os.IsNotExist(err) {
-		panic(fmt.Errorf("config %s doesnt exists", cfgFile))
+		panic(fmt.Errorf("config %s doesn't exist", cfgFile))
 	}
 
 	f, err := os.ReadFile(cfgFile)
@@ -275,27 +275,64 @@ func (c config) KEdit() string {
 	return kEdit
 }
 
+// defaultConfig is the dashboard created on the first run. The host widgets need Linux.
 func defaultConfig(dashPath string) string {
+	host := ""
+	if runtime.GOOS == "linux" {
+		host = `
+          - col:
+              size: 4
+              elements:
+                - name: lh.gauge_cpu_rate
+                  options:
+                    title: " CPU (since boot) "
+                    bar_color: green
+                - name: lh.gauge_memory_rate
+                  options:
+                    bar_color: yellow
+                - name: lh.gauge_swap_rate
+                  options:
+                    bar_color: red
+          - col:
+              size: 4
+              elements:
+                - name: lh.box_uptime
+                - name: lh.box_load
+                - name: lh.box_processes
+      - row:
+          - col:
+              size: 12
+              elements:
+                - name: lh.table_disk`
+	}
+
 	return fmt.Sprintf(`---
 general:
   refresh: 600
   keys:
     quit: "C-c"
     hot_reload: "C-r"
-
+    edit: "C-e"
 
 projects:
-  - name: Default dashboard located at %s
+  - name: Default dashboard - %s
     services:
       monitor:
-        address: "https://thevaluable.dev"
+        address: "https://github.com"
     widgets:
       - row:
           - col:
-              size: "M"
+              size: 4
               elements:
+                - name: display.box
+                  options:
+                    title: " Welcome to DevDash "
+                    content: "CTRL+e edits this dashboard, CTRL+r reloads it, CTRL+c quits.\n\nDocumentation and examples:\ngithub.com/PiercingXX/devdash"
+                    multiline: true
+                    color: cyan
                 - name: mon.box_availability
                   options:
-                    title: " thevaluable.dev status "
-                    color: yellow`, filepath.Join(dashPath, "default.yml"))
+                    title: " github.com "
+                    color: green%s
+`, filepath.Join(dashPath, "default.yml"), host)
 }

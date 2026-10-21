@@ -30,31 +30,33 @@ func edit(args []string) {
 	if len(args) > 0 {
 		name = args[0]
 	}
-	file := findConfigFile(name)
+
+	file := findDashboard(name)
 	if file == "" {
-		fmt.Fprintf(os.Stdout, "The config %s doesn't exist in %s\n", name, dashPath())
+		fmt.Fprintf(os.Stdout, "The dashboard %s doesn't exist in %s or in the current directory\n", name, dashPath())
 		return
-	} else {
-		editDashboard(os.ExpandEnv(editor), filepath.Join(dashPath(), file))
 	}
+
+	editDashboard(os.ExpandEnv(editor), file)
 }
 
-// TODO add that to the gokit/cmd.
+// editDashboard opens the dashboard's configuration in the editor, and waits for the editor to exit.
 func editDashboard(editor string, config string) {
 	cmd := exec.Command(editor, config)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
-	err := cmd.Run()
-	if err != nil {
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
 		fmt.Println(err)
 	}
 }
 
-func findConfigFile(search string) string {
-	fs := getConfigFiles()
-	for _, v := range fs {
-		if search == removeExt(v.Name()) || search == v.Name() {
-			return v.Name()
+// findDashboard returns the path of a dashboard, given with or without its extension.
+func findDashboard(name string) string {
+	for _, f := range dashboards() {
+		base := filepath.Base(f)
+		if name == base || name == removeExt(base) {
+			return f
 		}
 	}
 

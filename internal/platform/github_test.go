@@ -143,20 +143,8 @@ func Test_FomatListPullRequest(t *testing.T) {
 		{
 			name: "happy case",
 			expected: [][]string{
-				{
-					"title",
-					"state",
-					"created at",
-					"merged",
-					"commits",
-				},
-				{
-					"super pull request",
-					"closed",
-					"2018-10-19 21:12:25 +0000 UTC",
-					"unknown",
-					"unknown",
-				},
+				{"title", "state", "author", "created at"},
+				{"super pull request", "merged", "", "2018-10-19"},
 			},
 			fixtureFile: "./testdata/fixtures/github_list_pull_request.json",
 			limit:       1000000,

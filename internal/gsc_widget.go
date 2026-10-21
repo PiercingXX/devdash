@@ -186,16 +186,20 @@ func formatNumerics(results []platform.SearchConsoleResponse, dimension string, 
 	return table
 }
 
-func formatText(table [][]string, charLimit int, trimPrefix string) [][]string {
+// formatText removes the address of the website from the pages, and truncates the first column.
+func formatText(table [][]string, charLimit int, address string) [][]string {
+	address = strings.TrimSuffix(address, "/")
 	// Begins the loop to 1 not to shorten the headers.
 	for i := 1; i < len(table); i++ {
-		text := strings.TrimPrefix(table[i][0], trimPrefix)
-
-		if charLimit < len(text) {
-			text = text[:charLimit]
+		text := table[i][0]
+		if address != "" && strings.HasPrefix(text, address) {
+			text = strings.TrimPrefix(text, address)
+			if text == "" {
+				text = "/"
+			}
 		}
 
-		table[i][0] = text
+		table[i][0] = truncate(text, charLimit)
 	}
 
 	return table

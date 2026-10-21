@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -105,6 +106,29 @@ func Test_textBoxMultiline(t *testing.T) {
 	})
 }
 
+func Test_textBoxLines(t *testing.T) {
+	testCases := []struct {
+		text     string
+		width    int
+		expected []string
+	}{
+		{"wrap between words", 10, []string{"wrap", "between", "words"}},
+		{"a b c", 3, []string{"a b", "c"}},
+		{"a  b", 10, []string{"a  b"}},
+		{"cut averylongword", 6, []string{"cut", "averyl", "ongwor", "d"}},
+		{"one\ntwo", 10, []string{"one", "two"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.text, func(t *testing.T) {
+			tb := &textBox{text: tc.text}
+			if actual := tb.lines(tc.width); !slices.Equal(actual, tc.expected) {
+				t.Errorf("expected %q, actual %q", tc.expected, actual)
+			}
+		})
+	}
+}
+
 func Test_barChart(t *testing.T) {
 	s := newFakeSurface(14, 7)
 	bc := &barChart{
@@ -200,6 +224,33 @@ func Test_table(t *testing.T) {
 	})
 }
 
+func Test_tableTooWide(t *testing.T) {
+	s := newFakeSurface(24, 6)
+	ta := &table{block: newBlock("", 0, 0, 0), rows: [][]string{{"title", "state"}, {"a very long pull request", "open"}}}
+	ta.draw(s, 0, 0, 24)
+
+	// The widest column is shrunk to keep the others.
+	assertLines(t, s, []string{
+		"┌──────────────────────┐",
+		"│  title        | state│",
+		"│──────────────────────│",
+		"│  a very long… | open │",
+	})
+}
+
+func Test_barChartTooManyBars(t *testing.T) {
+	s := newFakeSurface(10, 4)
+	bc := &barChart{block: newBlock("", 0, 0, 4), data: []int{1, 2, 3}, labels: []string{"a", "b", "c"}, barWidth: 3, barGap: 1}
+	bc.draw(s, 0, 0, 10)
+
+	// Two bars fit: the last ones are displayed.
+	assertLines(t, s, []string{
+		"┌────────┐",
+		"│ 2   3  │",
+		"│b   c   │",
+	})
+}
+
 func Test_gauge(t *testing.T) {
 	s := newFakeSurface(12, 3)
 	g := &gauge{block: newBlock("", 0, 0, 3), percent: 50, barColor: 3}
@@ -212,6 +263,11 @@ func Test_gauge(t *testing.T) {
 	})
 	if s.styles[1][1].GetBackground() != color.PaletteColor(2) || s.styles[1][8].GetBackground() == color.PaletteColor(2) {
 		t.Errorf("expected half of the gauge to be filled")
+	}
+
+	// The default text color is black on the colored bar, and the default color elsewhere.
+	if s.styles[1][3].GetForeground() != color.PaletteColor(0) || s.styles[1][7].GetForeground() != color.Default {
+		t.Errorf("expected a black text on the bar only, actual %v and %v", s.styles[1][3].GetForeground(), s.styles[1][7].GetForeground())
 	}
 }
 

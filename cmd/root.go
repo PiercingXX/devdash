@@ -1,11 +1,8 @@
 package cmd
 
-// TODO see gocket to make the command right (with possibility to use env variables)
-
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -31,9 +28,7 @@ var (
 
 func init() {
 	rootCmd.Flags().StringVarP(&cfgName, "config", "c", "", "A valid dashboard configuration")
-	// TODO logger
-	// rootCmd.Flags().StringVarP(&logpath, "logpath", "l", "", "Path for logging")
-	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Debug Mode - doesn't display graph")
+	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Debug mode: fetch the data without displaying the widgets")
 	rootCmd.AddCommand(listCmd())
 	rootCmd.AddCommand(versionCmd())
 	rootCmd.AddCommand(editCmd())
@@ -49,7 +44,7 @@ func Execute() {
 
 // run the dashboard.
 func run() {
-	terminal, err := platform.NewTerminal(debug)
+	terminal, err := platform.NewTerminal()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -221,18 +216,4 @@ func build(file string, tui *internal.Tui) {
 			project.Render(renderFuncs)
 		}
 	}
-}
-
-// TODO - Wrap logger. If logger nil, drop the message
-func InitLoggerFile(logpath string) *log.Logger {
-	if logpath == "" {
-		return nil
-	}
-
-	file, err := os.OpenFile(logpath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return log.New(file, "", 0)
 }

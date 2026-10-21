@@ -77,8 +77,8 @@ type terminal struct {
 	quit chan struct{}
 }
 
-// NewTerminal initializes the terminal and returns the Terminal Interface.
-func NewTerminal(debug bool) (*terminal, error) {
+// NewTerminal initializes the terminal.
+func NewTerminal() (*terminal, error) {
 	s, err := tcell.NewScreen()
 	if err != nil {
 		return nil, err
@@ -127,9 +127,6 @@ func (t *terminal) addWidget(w widget) {
 	t.widgets = append(t.widgets, w)
 }
 
-// Align the grid to the size of the terminal. The grid is aligned when rendered.
-func (t *terminal) Align() {}
-
 // TextBox widget type.
 func (t *terminal) TextBox(
 	data string,
@@ -167,8 +164,7 @@ func (t *terminal) Gauge(
 	})
 }
 
-// Title is a special TextBox widget type, displayed in its own row.
-// TODO Should be replace with regular TextBox
+// Title is a TextBox displayed in its own row.
 func (t *terminal) Title(
 	title string,
 	textColor uint16,
@@ -280,7 +276,6 @@ func (t *terminal) KQuit(key string) {
 func (t *terminal) KHotReload(key string, c chan<- time.Time) {
 	t.handle(key, func() {
 		go func() {
-			// TODO wrap that into a function and pass it till here
 			c <- time.Now()
 		}()
 	})
