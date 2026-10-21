@@ -36,7 +36,7 @@ type Github struct {
 
 // GithubClient to fetch Github related data.
 func NewGithubClient(token string, owner string, repoName string) (*Github, error) {
-	client := github.NewClient(nil).WithAuthToken(token)
+	client := github.NewClient(NewHTTPClient()).WithAuthToken(token)
 
 	return &Github{
 		client:   client,

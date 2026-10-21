@@ -7,8 +7,11 @@ package platform
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
+	"os/exec"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -16,46 +19,43 @@ import (
 	"errors"
 
 	"github.com/PiercingXX/devdash/internal/gokit"
-	"golang.org/x/crypto/ssh"
 )
 
-const (
-	sshAgentEnv = "SSH_AUTH_SOCK"
-)
-
+// Host runs the commands of the widgets, on the local host or through SSH.
 type Host struct {
-	sshClient *ssh.Client
-	localhost bool
+	username, addr, knownHosts string
+	localhost                  bool
 }
 
 // syntactic sugar
 type runnerFunc func(cmd string) (string, error)
 
-func NewHost(username, addr string) (*Host, error) {
+// NewHost connects to a remote host through SSH. The username and address "localhost" are the local host.
+func NewHost(username, addr, knownHosts string) (*Host, error) {
 	if username == "localhost" && addr == "localhost" {
-		return &Host{
-			sshClient: nil,
-			localhost: true,
-		}, nil
+		return &Host{localhost: true}, nil
 	}
 
-	sshClient, err := sshAgentAuth(username, addr)
-	if err != nil {
+	h := &Host{username: username, addr: addr, knownHosts: knownHosts}
+	if _, err := sshClient(username, addr, knownHosts); err != nil {
 		return nil, err
 	}
-	return &Host{
-		sshClient: sshClient,
-		localhost: false,
-	}, nil
+
+	return h, nil
 }
 
-// Run a command on remote server via SSH or on localhost
+// Runner runs a command on the remote server through SSH, or on the local host.
 func (s *Host) Runner(command string) (string, error) {
 	if s.localhost {
 		return runLocalhost(command)
 	}
 
-	session, err := s.sshClient.NewSession()
+	client, err := sshClient(s.username, s.addr, s.knownHosts)
+	if err != nil {
+		return "", err
+	}
+
+	session, err := client.NewSession()
 	if err != nil {
 		return "", fmt.Errorf("can't create session with SSH client for command %s: %w", command, err)
 	}
@@ -63,25 +63,46 @@ func (s *Host) Runner(command string) (string, error) {
 
 	var buf bytes.Buffer
 	session.Stdout = &buf
-	err = session.Run(command)
-	if err != nil {
-		return "", fmt.Errorf("can't run command %s on remote server: %w", command, err)
+
+	done := make(chan error, 1)
+	go func() { done <- session.Run(command) }()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			return "", fmt.Errorf("can't run command %s on remote server: %w", command, err)
+		}
+	case <-time.After(sshCommandTimeout):
+		return "", fmt.Errorf("the command %s on the remote server didn't finish after %s", command, sshCommandTimeout)
 	}
 
 	return buf.String(), nil
 }
 
+// runLocalhost runs a command with the shell of the system.
 func runLocalhost(command string) (string, error) {
-	out, errs, err := gokit.ExecCmd(command)
+	ctx, cancel := context.WithTimeout(context.Background(), sshCommandTimeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "sh", "-c", command)
+	if runtime.GOOS == "windows" {
+		cmd = exec.CommandContext(ctx, "cmd", "/C", command)
+	}
+
+	var out, errs bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &errs
+	err := cmd.Run()
+	if ctx.Err() != nil {
+		return "", fmt.Errorf("the command %s didn't finish after %s", command, sshCommandTimeout)
+	}
+	if errs.Len() > 0 {
+		return "", errors.New(strings.TrimSpace(errs.String()))
+	}
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("the command %s failed: %w", command, err)
 	}
 
-	if string(errs) != "" {
-		return "", errors.New(string(errs))
-	}
-
-	return string(out), nil
+	return out.String(), nil
 }
 
 func HostUptime(runner runnerFunc) (int64, error) {
@@ -510,7 +531,8 @@ func HostBox(runner runnerFunc, command string) (string, error) {
 		return "", err
 	}
 
-	return lines, nil
+	// The last new line of the output would be an empty line in the box.
+	return strings.TrimRight(lines, "\n"), nil
 }
 
 func HostGauge(runner runnerFunc, command string) (float64, error) {

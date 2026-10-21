@@ -276,6 +276,7 @@ func build(path string, tui *internal.Tui) {
 			remoteHostWidget, err := internal.NewHostWidget(
 				remoteHostService.Username,
 				remoteHostService.Address,
+				remoteHostService.KnownHosts,
 			)
 			if err != nil {
 				internal.DisplayError(tui, err)()
@@ -284,7 +285,7 @@ func build(path string, tui *internal.Tui) {
 			}
 		}
 
-		localhost, err := internal.NewHostWidget("localhost", "localhost")
+		localhost, err := internal.NewHostWidget("localhost", "localhost", "")
 		if err != nil {
 			internal.DisplayError(tui, err)()
 		}

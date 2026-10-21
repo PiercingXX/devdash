@@ -35,8 +35,8 @@ type HostWidget struct {
 	service *platform.Host
 }
 
-func NewHostWidget(username, addr string) (*HostWidget, error) {
-	service, err := platform.NewHost(username, addr)
+func NewHostWidget(username, addr, knownHosts string) (*HostWidget, error) {
+	service, err := platform.NewHost(username, addr, knownHosts)
 	if err != nil {
 		return nil, err
 	}

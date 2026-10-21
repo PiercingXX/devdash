@@ -102,8 +102,9 @@ type Feedly struct {
 }
 
 type RemoteHost struct {
-	Username string `mapstructure:"username"`
-	Address  string `mapstructure:"address"`
+	Username   string `mapstructure:"username"`
+	Address    string `mapstructure:"address"`
+	KnownHosts string `mapstructure:"known_hosts"`
 }
 
 type Git struct {

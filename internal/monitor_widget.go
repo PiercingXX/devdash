@@ -8,6 +8,7 @@ import (
 
 	"errors"
 
+	"github.com/PiercingXX/devdash/internal/platform"
 	probing "github.com/prometheus-community/pro-bing"
 )
 
@@ -94,7 +95,7 @@ func (m *monitorWidget) availabilityWidget(widget Widget) (f func() error, err e
 		return nil, err
 	}
 
-	client := &http.Client{}
+	client := platform.NewHTTPClient()
 	res, err := client.Do(req)
 
 	status := "online"

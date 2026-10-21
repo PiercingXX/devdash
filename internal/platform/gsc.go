@@ -4,20 +4,13 @@ package platform
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
-	"github.com/adrg/xdg"
-	"golang.org/x/oauth2/google"
-	"golang.org/x/oauth2/jwt"
-	"google.golang.org/api/option"
 	sc "google.golang.org/api/searchconsole/v1"
 )
 
 // SearchConsole connect to the Google Search Console API.
 type SearchConsole struct {
-	config  *jwt.Config
 	service *sc.Service
 }
 
@@ -32,32 +25,17 @@ type SearchConsoleResponse struct {
 
 // NewSearchConsoleClient create a SearchConsole.
 func NewSearchConsoleClient(keyfile string) (*SearchConsole, error) {
-	data, err := os.ReadFile(keyfile)
+	opts, err := googleClientOptions(keyfile, sc.WebmastersReadonlyScope)
 	if err != nil {
-		home := filepath.Join(xdg.ConfigHome, "devdash")
-		var noFound error
-		data, noFound = os.ReadFile(home + string(filepath.Separator) + keyfile)
-		if noFound != nil {
-			return nil, fmt.Errorf("reading keyfile %q failed: %v", keyfile, err)
-		}
+		return nil, err
 	}
 
-	web := &SearchConsole{}
-
-	web.config, err = google.JWTConfigFromJSON(data, sc.WebmastersReadonlyScope)
+	service, err := sc.NewService(context.Background(), opts...)
 	if err != nil {
-		return nil, fmt.Errorf("creating JWT config from json keyfile %q failed: %v", keyfile, err)
+		return nil, fmt.Errorf("can't get search console service: %w", err)
 	}
 
-	web.service, err = sc.NewService(
-		context.Background(),
-		option.WithHTTPClient(web.config.Client(context.Background())),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("can't get search console service: %v", err)
-	}
-
-	return web, nil
+	return &SearchConsole{service: service}, nil
 }
 
 // Table of Google Search Console with a dimension and its values.
@@ -83,7 +61,7 @@ func (w *SearchConsole) Table(
 
 	resp, err := w.service.Searchanalytics.Query(address, req).Do()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("can't get data from Google Search Console for %s: %w", address, googleError(err))
 	}
 
 	return formatSearchTable(resp.Rows), nil

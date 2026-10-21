@@ -2,6 +2,7 @@ package platform
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -20,7 +21,11 @@ func NewGit(path string) *Git {
 }
 
 func (g *Git) Branches() ([][]string, error) {
-	cmd := exec.Command(
+	ctx, cancel := context.WithTimeout(context.Background(), RequestTimeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(
+		ctx,
 		git,
 		"for-each-ref",
 		"--sort=committerdate",

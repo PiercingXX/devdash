@@ -3,18 +3,13 @@ package platform
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
 
 	"errors"
 
-	"github.com/adrg/xdg"
-	"golang.org/x/oauth2/google"
 	ga "google.golang.org/api/analyticsdata/v1beta"
-	"google.golang.org/api/option"
 )
 
 // To create fixtures in order to test the data formatting.
@@ -118,25 +113,14 @@ type AnalyticValues struct {
 
 // NewAnalyticsClient to connect to Google Analytics APIs.
 func NewAnalyticsClient(keyfile string) (*Analytics, error) {
-	// Verify first in the current directory if there is the JSON key, then in XDG_CONFIG_HOME.
-	data, err := os.ReadFile(keyfile)
+	opts, err := googleClientOptions(keyfile, ga.AnalyticsReadonlyScope)
 	if err != nil {
-		home := filepath.Join(xdg.ConfigHome, "devdash")
-		var noFound error
-		data, noFound = os.ReadFile(home + string(filepath.Separator) + keyfile)
-		if noFound != nil {
-			return nil, fmt.Errorf("reading keyfile %q failed: %v", keyfile, err)
-		}
+		return nil, err
 	}
 
-	config, err := google.JWTConfigFromJSON(data, ga.AnalyticsReadonlyScope)
+	service, err := ga.NewService(context.Background(), opts...)
 	if err != nil {
-		return nil, fmt.Errorf("creating JWT config from json keyfile %q failed: %v", keyfile, err)
-	}
-
-	service, err := ga.NewService(context.Background(), option.WithHTTPClient(config.Client(context.Background())))
-	if err != nil {
-		return nil, fmt.Errorf("creating the analytics data service failed: %v", err)
+		return nil, fmt.Errorf("creating the analytics data service failed: %w", err)
 	}
 
 	return &Analytics{service: service}, nil
@@ -156,7 +140,7 @@ func (c *Analytics) SimpleMetric(val AnalyticValues) (string, error) {
 
 	resp, err := c.service.Properties.RunReport(propertyName(val.PropertyID), req).Do()
 	if err != nil {
-		return "", fmt.Errorf("can't get total metric data from google analytics with start data %s / end_date %s: %w", val.StartDate, val.EndDate, err)
+		return "", fmt.Errorf("can't get total metric data from Google Analytics from %s to %s: %w", val.StartDate, val.EndDate, googleError(err))
 	}
 
 	if len(resp.Rows) != 0 && len(resp.Rows[0].MetricValues) != 0 {
@@ -194,7 +178,7 @@ func (c *Analytics) BarMetric(val AnalyticValues) ([]string, []int, error) {
 
 	resp, err := c.service.Properties.RunReport(propertyName(val.PropertyID), req).Do()
 	if err != nil {
-		return nil, nil, fmt.Errorf("can't get bar data from google analytics with start data %s / end_date %s: %w", val.StartDate, val.EndDate, err)
+		return nil, nil, fmt.Errorf("can't get bar data from Google Analytics from %s to %s: %w", val.StartDate, val.EndDate, googleError(err))
 	}
 
 	// Decide of the header X-axis
@@ -217,7 +201,7 @@ func (c *Analytics) RealTimeUsers(propertyID string) (string, error) {
 
 	resp, err := c.service.Properties.RunRealtimeReport(propertyName(propertyID), req).Do()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("can't get real time data from Google Analytics: %w", googleError(err))
 	}
 
 	if len(resp.Rows) != 0 && len(resp.Rows[0].MetricValues) != 0 {
@@ -266,7 +250,7 @@ func (c *Analytics) Table(
 
 	resp, err := c.service.Properties.RunReport(propertyName(an.PropertyID), req).Do()
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("can't get table data from google analytics with start data %s / end_date %s: %w", an.StartDate, an.EndDate, err)
+		return nil, nil, nil, fmt.Errorf("can't get table data from Google Analytics from %s to %s: %w", an.StartDate, an.EndDate, googleError(err))
 	}
 
 	formater := func(dim []string) string {
@@ -301,7 +285,7 @@ func (c *Analytics) StackedBar(an AnalyticValues) (dim []string, values map[stri
 
 	resp, err := c.service.Properties.RunReport(propertyName(an.PropertyID), req).Do()
 	if err != nil {
-		return nil, nil, fmt.Errorf("can't get stacked bar data from google analytics with start data %s / end_date %s: %w", an.StartDate, an.EndDate, err)
+		return nil, nil, fmt.Errorf("can't get stacked bar data from Google Analytics from %s to %s: %w", an.StartDate, an.EndDate, googleError(err))
 	}
 
 	// Always dates on x-axis

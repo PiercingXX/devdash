@@ -29,7 +29,7 @@ const (
 func NewFeedly(address string) *Feedly {
 	return &Feedly{
 		Address: address,
-		Client:  &http.Client{},
+		Client:  NewHTTPClient(),
 	}
 }
 

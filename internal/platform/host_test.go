@@ -628,6 +628,14 @@ func Test_HostBox(t *testing.T) {
 		wantErr  bool
 	}{
 		{
+			name:     "trailing new line",
+			expected: "hello\nworld",
+			runner: func(cmd string) (string, error) {
+				return "hello\nworld\n\n", nil
+			},
+			wantErr: false,
+		},
+		{
 			name:     "happy case",
 			expected: "hello",
 			runner: func(cmd string) (string, error) {
@@ -800,5 +808,31 @@ func Test_isPhysicalDisk(t *testing.T) {
 		if actual := isPhysicalDisk(d, devices); actual != expected[d] {
 			t.Errorf("isPhysicalDisk(%q): expected %t, actual %t", d, expected[d], actual)
 		}
+	}
+}
+
+func Test_runLocalhost(t *testing.T) {
+	testCases := []struct {
+		name     string
+		command  string
+		expected string
+		wantErr  bool
+	}{
+		{"pipes and quotes", `printf 'a b\nc d\n' | tail -n 1`, "c d\n", false},
+		{"variables", `x=42; echo "$x"`, "42\n", false},
+		{"error output", "echo oops >&2", "", true},
+		{"failure", "exit 3", "", true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, err := runLocalhost(tc.command)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("Error '%v' even if wantErr is %t", err, tc.wantErr)
+			}
+			if actual != tc.expected {
+				t.Errorf("Expected %q, actual %q", tc.expected, actual)
+			}
+		})
 	}
 }
