@@ -48,6 +48,7 @@ const (
 
 	// Repository
 	optionRepository = "repository"
+	optionBranch     = "branch"
 
 	// Commits of the owner or of everybody
 	optionScope = "scope"

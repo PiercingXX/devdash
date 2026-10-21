@@ -7,6 +7,7 @@ import (
 	"slices"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"errors"
@@ -570,4 +571,86 @@ func fillMissingDays(dates []time.Time, values []int) ([]time.Time, []int) {
 	}
 
 	return d, val
+}
+
+// WorkflowRuns of the Github Actions of a repository, from the most recent, with a header.
+func (g *Github) WorkflowRuns(repository string, branch string, limit int) ([][]string, error) {
+	runs, err := g.fetchWorkflowRuns(repository, branch, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return formatWorkflowRuns(runs, limit), nil
+}
+
+// LastWorkflowRun of the Github Actions of a repository, like "✔ success - CI #12 on main".
+func (g *Github) LastWorkflowRun(repository string, branch string) (string, error) {
+	runs, err := g.fetchWorkflowRuns(repository, branch, 1)
+	if err != nil {
+		return "", err
+	}
+
+	if len(runs) == 0 {
+		return "No workflow run", nil
+	}
+
+	r := runs[0]
+	return fmt.Sprintf("%s - %s #%d on %s", runState(r), r.GetName(), r.GetRunNumber(), r.GetHeadBranch()), nil
+}
+
+func formatWorkflowRuns(runs []*github.WorkflowRun, limit int) [][]string {
+	table := [][]string{{"workflow", "branch", "state", "event", "date"}}
+	for _, r := range runs[:min(limit, len(runs))] {
+		date := ""
+		if r.CreatedAt != nil {
+			date = r.CreatedAt.Format("2006-01-02 15:04")
+		}
+
+		table = append(table, []string{
+			fmt.Sprintf("%s #%d", r.GetName(), r.GetRunNumber()),
+			r.GetHeadBranch(),
+			runState(r),
+			r.GetEvent(),
+			date,
+		})
+	}
+
+	return table
+}
+
+// runState is the conclusion of a finished run, its status otherwise, with a symbol.
+func runState(r *github.WorkflowRun) string {
+	if r.GetStatus() != "completed" {
+		return "… " + strings.ReplaceAll(r.GetStatus(), "_", " ")
+	}
+
+	switch c := r.GetConclusion(); c {
+	case "success":
+		return "✔ " + c
+	case "failure", "timed_out", "startup_failure":
+		return "✘ " + strings.ReplaceAll(c, "_", " ")
+	default:
+		return "- " + strings.ReplaceAll(c, "_", " ")
+	}
+}
+
+func (g *Github) fetchWorkflowRuns(repository string, branch string, limit int) ([]*github.WorkflowRun, error) {
+	repo := g.repoName
+	if repository != "" {
+		repo = repository
+	}
+
+	if repo == "" {
+		return nil, errors.New("you need to specify a repository in the github service or in the widget")
+	}
+
+	runs, _, err := g.client.Actions.ListRepositoryWorkflowRuns(context.Background(), g.owner, repo, &github.ListWorkflowRunsOptions{
+		Branch:      branch,
+		ListOptions: github.ListOptions{PerPage: limit},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("can't find the workflow runs of owner %s for repo %s: %w", g.owner, repo, err)
+	}
+
+	return runs.WorkflowRuns, nil
 }

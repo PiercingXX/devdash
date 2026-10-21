@@ -22,6 +22,8 @@ const (
 	githubBarViews          = "github.bar_views"
 	githubBarCommits        = "github.bar_commits"
 	githubBarStars          = "github.bar_stars"
+	githubTableWorkflowRuns = "github.table_workflow_runs"
+	githubBoxLastRun        = "github.box_last_run"
 )
 
 type githubWidget struct {
@@ -65,6 +67,10 @@ func (g *githubWidget) CreateWidgets(widget Widget, tui *Tui) (f func() error, e
 		f, err = g.barCommits(widget)
 	case githubBarStars:
 		f, err = g.barStars(widget)
+	case githubTableWorkflowRuns:
+		f, err = g.tableWorkflowRuns(widget)
+	case githubBoxLastRun:
+		f, err = g.boxLastRun(widget)
 	default:
 		return nil, fmt.Errorf("can't find the widget %s for service github", widget.Name)
 	}
@@ -399,6 +405,50 @@ func (g *githubWidget) barStars(widget Widget) (f func() error, err error) {
 
 	f = func() error {
 		return g.tui.AddBarChart(counts, dim, title, widget.Options)
+	}
+
+	return
+}
+
+func (g *githubWidget) tableWorkflowRuns(widget Widget) (f func() error, err error) {
+	title := " Github Actions "
+	if _, ok := widget.Options[optionTitle]; ok {
+		title = widget.Options[optionTitle]
+	}
+
+	var limit int64 = 5
+	if _, ok := widget.Options[optionRowLimit]; ok {
+		limit, err = strconv.ParseInt(widget.Options[optionRowLimit], 10, 0)
+		if err != nil {
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionRowLimit], err)
+		}
+	}
+
+	runs, err := g.client.WorkflowRuns(widget.Options[optionRepository], widget.Options[optionBranch], int(limit))
+	if err != nil {
+		return nil, err
+	}
+
+	f = func() error {
+		return g.tui.AddTable(runs, title, widget.Options)
+	}
+
+	return
+}
+
+func (g *githubWidget) boxLastRun(widget Widget) (f func() error, err error) {
+	title := " Last Github Actions run "
+	if _, ok := widget.Options[optionTitle]; ok {
+		title = widget.Options[optionTitle]
+	}
+
+	run, err := g.client.LastWorkflowRun(widget.Options[optionRepository], widget.Options[optionBranch])
+	if err != nil {
+		return nil, err
+	}
+
+	f = func() error {
+		return g.tui.AddTextBox(run, title, widget.Options)
 	}
 
 	return

@@ -289,3 +289,24 @@ func Test_fetchStarsSince(t *testing.T) {
 		t.Errorf("expected the stars of the pages 2 and 3 in order, actual %d stars from %v", len(s), s[0].GetStarredAt())
 	}
 }
+
+func Test_formatWorkflowRuns(t *testing.T) {
+	created := github.Timestamp{Time: time.Date(2026, 10, 20, 9, 30, 0, 0, time.UTC)}
+	runs := []*github.WorkflowRun{
+		{Name: github.Ptr("CI"), RunNumber: github.Ptr(12), HeadBranch: github.Ptr("main"), Status: github.Ptr("completed"), Conclusion: github.Ptr("success"), Event: github.Ptr("push"), CreatedAt: &created},
+		{Name: github.Ptr("CI"), RunNumber: github.Ptr(11), HeadBranch: github.Ptr("fix"), Status: github.Ptr("completed"), Conclusion: github.Ptr("timed_out"), Event: github.Ptr("pull_request")},
+		{Name: github.Ptr("Release"), RunNumber: github.Ptr(3), HeadBranch: github.Ptr("v1"), Status: github.Ptr("in_progress"), Event: github.Ptr("push")},
+		{Name: github.Ptr("Other"), RunNumber: github.Ptr(1)},
+	}
+
+	expected := [][]string{
+		{"workflow", "branch", "state", "event", "date"},
+		{"CI #12", "main", "✔ success", "push", "2026-10-20 09:30"},
+		{"CI #11", "fix", "✘ timed out", "pull_request", ""},
+		{"Release #3", "v1", "… in progress", "push", ""},
+	}
+
+	if actual := formatWorkflowRuns(runs, 3); !reflect.DeepEqual(actual, expected) {
+		t.Errorf("Expected %v, actual %v", expected, actual)
+	}
+}
