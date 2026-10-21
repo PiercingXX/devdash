@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -31,10 +30,10 @@ func edit(args []string) {
 		name = args[0]
 	}
 
-	file := findDashboard(name)
-	if file == "" {
-		fmt.Fprintf(os.Stdout, "The dashboard %s doesn't exist in %s or in the current directory\n", name, dashPath())
-		return
+	file, err := findDashboard(name)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 
 	editDashboard(os.ExpandEnv(editor), file)
@@ -49,16 +48,4 @@ func editDashboard(editor string, config string) {
 	if err := cmd.Run(); err != nil {
 		fmt.Println(err)
 	}
-}
-
-// findDashboard returns the path of a dashboard, given with or without its extension.
-func findDashboard(name string) string {
-	for _, f := range dashboards() {
-		base := filepath.Base(f)
-		if name == base || name == removeExt(base) {
-			return f
-		}
-	}
-
-	return ""
 }

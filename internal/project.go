@@ -236,6 +236,11 @@ func (p *project) Render(funcs [][][]func() error) {
 		p.tui.AddRow()
 		p.tui.Render()
 	}
+
+	// A project without widgets still displays its title.
+	if len(p.widgets) == 0 {
+		p.tui.Render()
+	}
 }
 
 func (p *project) addTitle(tui *Tui) error {

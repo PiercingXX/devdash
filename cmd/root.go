@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/PiercingXX/devdash/internal"
@@ -44,58 +46,65 @@ func Execute() {
 
 // run the dashboard.
 func run() {
-	terminal, err := platform.NewTerminal()
+	path, err := findDashboard(cfgName)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		fail(err)
 	}
 
-	// Create the TUI.
+	cfg, err := loadConfig(path)
+	if err != nil {
+		fail(err)
+	}
+
+	if debug {
+		fmt.Printf("Config file used: %s\n", path)
+	}
+
+	terminal, err := platform.NewTerminal()
+	if err != nil {
+		fail(err)
+	}
+
 	tui := internal.NewTUI(terminal)
 	defer tui.Close()
 
-	// Map dashboard config to a struct Config.
-	cfg, cfgFile := mapConfig(cfgName)
-	if debug {
-		fmt.Fprintf(os.Stdout, "Config file used: %s", cfgFile)
-	}
+	d := &dashboard{path: path}
 
 	// Passing a time.Time to this channel reload the entire dashboard.
 	hotReload := make(chan time.Time)
 
-	// Add keystrokes to reload and quit
 	tui.AddKHotReload(cfg.KHotReload(), hotReload)
 	tui.AddKQuit(cfg.KQuit())
+	tui.AddKAction(cfg.KNext(), func() {
+		d.move(1)
+		hotReload <- time.Now()
+	})
+	tui.AddKAction(cfg.KPrevious(), func() {
+		d.move(-1)
+		hotReload <- time.Now()
+	})
 
 	// Passing a bool to this channel stop the automatic reload of the dashboard.
 	stopAutoReload := make(chan bool)
 	autoReload(cfg.RefreshTime(), stopAutoReload, hotReload)
 
-	editor := os.Getenv("EDITOR")
-	if cfg.General.Editor != "" {
-		editor = cfg.General.Editor
-	}
-
-	// Add keystroke (managed by TUI) to edit the configuration in a CLI editor.
-	// Wrap edit config in lambda to defer the execution.
+	// The editor is given the terminal until it exits.
 	tui.AddKEdit(
 		cfg.KEdit(),
 		func() {
 			stopReload(stopAutoReload)
-			editDashboard(editor, cfgFile)
+			editDashboard(d.editor(), d.current())
 			hotReload <- time.Now()
 			autoReload(cfg.RefreshTime(), stopAutoReload, hotReload)
 		},
 	)
 
-	// First display.
-	build(cfgName, tui)
+	build(d.current(), tui)
 
-	// Automatic reload
 	go func() {
 		for hr := range hotReload {
 			tui.HotReload()
-			build(cfgName, tui)
+			build(d.current(), tui)
 			if debug {
 				fmt.Println("Last reload: " + hr.Format("2006-01-02 15:04:05"))
 			}
@@ -103,6 +112,65 @@ func run() {
 	}()
 
 	tui.Loop()
+}
+
+// fail displays the error and exits.
+func fail(err error) {
+	fmt.Fprintln(os.Stderr, "Error:", err)
+	os.Exit(1)
+}
+
+// dashboard currently displayed.
+type dashboard struct {
+	mu   sync.Mutex
+	path string
+}
+
+func (d *dashboard) current() string {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	return d.path
+}
+
+// move to the next dashboard of the list (step 1), or the previous one (step -1).
+func (d *dashboard) move(step int) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.path = nextDashboard(dashboards(), d.path, step)
+}
+
+// editor of the current dashboard: the general editor option, or $EDITOR.
+func (d *dashboard) editor() string {
+	if cfg, err := loadConfig(d.current()); err == nil && cfg.General.Editor != "" {
+		return cfg.General.Editor
+	}
+
+	return os.Getenv("EDITOR")
+}
+
+// nextDashboard in the list, after moving from the current one. The current dashboard is kept if the list is empty.
+func nextDashboard(list []string, current string, step int) string {
+	if len(list) == 0 {
+		return current
+	}
+
+	abs := func(p string) string {
+		a, err := filepath.Abs(p)
+		if err != nil {
+			return p
+		}
+		return a
+	}
+
+	for i, p := range list {
+		if abs(p) == abs(current) {
+			return list[((i+step)%len(list)+len(list))%len(list)]
+		}
+	}
+
+	return list[0]
 }
 
 func autoReload(refresh int64, stopAutoReload <-chan bool, hotReload chan<- time.Time) {
@@ -124,9 +192,22 @@ func stopReload(stopAutoReload chan<- bool) {
 	stopAutoReload <- true
 }
 
+// showError alone on the dashboard.
+func showError(tui *internal.Tui, err error) {
+	internal.DisplayError(tui, err)()
+	_ = tui.AddCol("12")
+	tui.AddRow()
+	tui.Render()
+}
+
 // build every services present in the configuration
-func build(file string, tui *internal.Tui) {
-	cfg, _ := mapConfig(file)
+func build(path string, tui *internal.Tui) {
+	cfg, err := loadConfig(path)
+	if err != nil {
+		showError(tui, err)
+		return
+	}
+
 	for _, p := range cfg.Projects {
 		rows, sizes := p.OrderWidgets()
 		project := internal.NewProject(p.Name, p.NameOptions, rows, sizes, p.Themes, tui)
@@ -197,7 +278,6 @@ func build(file string, tui *internal.Tui) {
 				remoteHostService.Address,
 			)
 			if err != nil {
-				fmt.Println(err)
 				internal.DisplayError(tui, err)()
 			} else {
 				project.WithRemoteHost(remoteHostWidget)
@@ -206,7 +286,6 @@ func build(file string, tui *internal.Tui) {
 
 		localhost, err := internal.NewHostWidget("localhost", "localhost")
 		if err != nil {
-			fmt.Println(err)
 			internal.DisplayError(tui, err)()
 		}
 		project.WithLocalhost(localhost)

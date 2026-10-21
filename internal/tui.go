@@ -163,6 +163,7 @@ type keyManager interface {
 		key string,
 		editDashboard func(),
 	)
+	KAction(key string, action func())
 }
 
 type looper interface {
@@ -524,6 +525,11 @@ func (t *Tui) AddKEdit(
 	editDashboard func(),
 ) {
 	t.instance.KEdit(key, editDashboard)
+}
+
+// AddKAction runs an action when the key is pressed.
+func (t *Tui) AddKAction(key string, action func()) {
+	t.instance.KAction(key, action)
 }
 
 // Loop the TUI to receive events.

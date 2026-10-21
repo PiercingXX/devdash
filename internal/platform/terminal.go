@@ -296,6 +296,13 @@ func (t *terminal) KEdit(key string, editDashboard func()) {
 	})
 }
 
+// KAction set a key to run an action, without blocking the events.
+func (t *terminal) KAction(key string, action func()) {
+	t.handle(key, func() {
+		go action()
+	})
+}
+
 func (t *terminal) handle(key string, f func()) {
 	t.mu.Lock()
 	defer t.mu.Unlock()

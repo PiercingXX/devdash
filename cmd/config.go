@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -19,6 +18,8 @@ const (
 	kQuit      = "C-c"
 	kHotReload = "C-r"
 	kEdit      = "C-e"
+	kNext      = "C-n"
+	kPrevious  = "C-p"
 )
 
 type config struct {
@@ -163,26 +164,49 @@ func dashPath() string {
 	return filepath.Join(xdg.ConfigHome, "devdash")
 }
 
-// Map config and return it with the config path
-func mapConfig(cfgFile string) (config, string) {
-	if cfgFile == "" {
-		cfgFile = "default.yml"
-		createConfig(dashPath(), cfgFile, defaultConfig(dashPath()))
+// findDashboard returns the path of a dashboard: a path to a file, or a name with or without extension,
+// searched in the config directory then in the current directory.
+// Without a name, the default dashboard is created if it doesn't exist.
+func findDashboard(name string) (string, error) {
+	if name == "" {
+		return createConfig(dashPath(), "default.yml", defaultConfig(dashPath()))
 	}
 
-	// viper.AddConfigPath(home)
-	viper.AddConfigPath(dashPath())
-	viper.AddConfigPath(".")
+	if fileExists(name) {
+		return name, nil
+	}
 
-	viper.SetConfigName(removeExt(cfgFile))
-	err := viper.ReadInConfig()
-	if err != nil {
-		tryReadFile(cfgFile)
+	for _, dir := range []string{dashPath(), "."} {
+		candidates := []string{filepath.Join(dir, name)}
+		for _, ext := range dashboardExts {
+			candidates = append(candidates, filepath.Join(dir, name+ext))
+		}
+
+		for _, c := range candidates {
+			if fileExists(c) {
+				return c, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("can't find the dashboard %s in %s or in the current directory", name, dashPath())
+}
+
+// loadConfig of a dashboard file.
+func loadConfig(path string) (config, error) {
+	v := viper.New()
+	v.SetConfigFile(path)
+	if ext := strings.TrimPrefix(filepath.Ext(path), "."); ext == "yml" {
+		v.SetConfigType("yaml")
 	}
 
 	var cfg config
-	if err := viper.Unmarshal(&cfg); err != nil {
-		panic(err)
+	if err := v.ReadInConfig(); err != nil {
+		return cfg, fmt.Errorf("can't read the dashboard %s: %w", path, err)
+	}
+
+	if err := v.Unmarshal(&cfg); err != nil {
+		return cfg, fmt.Errorf("invalid dashboard %s: %w", path, err)
 	}
 
 	prefix := "DEVDASH"
@@ -200,7 +224,7 @@ func mapConfig(cfgFile string) (config, string) {
 		}
 	}
 
-	return cfg, viper.ConfigFileUsed()
+	return cfg, nil
 }
 
 // removeExt of a dashboard's file name.
@@ -212,42 +236,23 @@ func removeExt(file string) string {
 	return file
 }
 
-func createConfig(path string, filename string, template string) string {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		os.MkdirAll(path, 0755)
+func fileExists(path string) bool {
+	f, err := os.Stat(path)
+	return err == nil && !f.IsDir()
+}
+
+// createConfig with a template if it doesn't exist, and return its path.
+func createConfig(path string, filename string, template string) (string, error) {
+	if err := os.MkdirAll(path, 0o755); err != nil {
+		return "", err
 	}
 
 	f := filepath.Join(path, filename)
-	if _, err := os.Stat(f); os.IsNotExist(err) {
-		file, _ := os.Create(f)
-		defer file.Close()
-
-		if file != nil {
-			_, err := file.Write([]byte(template))
-			if err != nil {
-				panic(err)
-			}
-		}
+	if _, err := os.Stat(f); err == nil {
+		return f, nil
 	}
 
-	return f
-}
-
-func tryReadFile(cfgFile string) {
-	if _, err := os.Stat(cfgFile); os.IsNotExist(err) {
-		panic(fmt.Errorf("config %s doesn't exist", cfgFile))
-	}
-
-	f, err := os.ReadFile(cfgFile)
-	if err != nil {
-		panic(fmt.Errorf("could not read file %s", cfgFile))
-	}
-
-	viper.SetConfigType(strings.Trim(filepath.Ext(cfgFile), "."))
-	err = viper.ReadConfig(bytes.NewBuffer(f))
-	if err != nil {
-		panic(fmt.Errorf("could not read config %s data", string(f)))
-	}
+	return f, os.WriteFile(f, []byte(template), 0o644)
 }
 
 // Keyboard events
@@ -273,6 +278,22 @@ func (c config) KEdit() string {
 	}
 
 	return kEdit
+}
+
+func (c config) KNext() string {
+	if k := c.General.Keys["next"]; k != "" {
+		return k
+	}
+
+	return kNext
+}
+
+func (c config) KPrevious() string {
+	if k := c.General.Keys["previous"]; k != "" {
+		return k
+	}
+
+	return kPrevious
 }
 
 // defaultConfig is the dashboard created on the first run. The host widgets need Linux.

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"path/filepath"
 
 	"github.com/PiercingXX/devdash/internal"
 	"github.com/spf13/cobra"
@@ -78,16 +79,20 @@ func createGitHubDefaultConfig() string {
 }
 
 func createOrDisplayTemplate(content string) string {
-	if templateFile != "" {
-		cfg := createTemplateFile(templateFile, content)
-		return fmt.Sprintf("The file %s has been created.", cfg)
-	} else {
+	if templateFile == "" {
 		return content
 	}
-}
 
-func createTemplateFile(filename string, template string) string {
-	return createConfig(dashPath(), filename+".yml", template)
+	if f := filepath.Join(dashPath(), templateFile+".yml"); fileExists(f) {
+		return fmt.Sprintf("The file %s already exists.", f)
+	}
+
+	cfg, err := createConfig(dashPath(), templateFile+".yml", content)
+	if err != nil {
+		return fmt.Sprintf("Can't create the file %s: %v", cfg, err)
+	}
+
+	return fmt.Sprintf("The file %s has been created.", cfg)
 }
 
 func wizardIntro(name string) {
