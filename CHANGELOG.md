@@ -6,7 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-Maintained fork of [Phantas0s/devdash](https://github.com/Phantas0s/devdash), archived upstream in 2023.
+## [0.6.0] - 2026-10-20
+
+First release of the maintained fork of [Phantas0s/devdash](https://github.com/Phantas0s/devdash), archived upstream in 2023.
 
 ### ADDED
 
