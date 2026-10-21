@@ -322,12 +322,20 @@ func (ms *HostWidget) boxNetIO(widget Widget) (f func() error, err error) {
 		unit = widget.Options[optionUnit]
 	}
 
+	rate, err := boolOption(widget.Options, optionRate)
+	if err != nil {
+		return nil, err
+	}
+
 	title := fmt.Sprintf(" Net I/O (%s) ", strings.ToUpper(unit))
+	if rate {
+		title = fmt.Sprintf(" Net I/O (%s/s) ", strings.ToUpper(unit))
+	}
 	if _, ok := widget.Options[optionTitle]; ok {
 		title = widget.Options[optionTitle]
 	}
 
-	netIO, err := platform.HostNetIO(ms.service.Runner, unit)
+	netIO, err := platform.HostNetIO(ms.service.Runner, unit, rate)
 	if err != nil {
 		return nil, err
 	}
@@ -345,12 +353,20 @@ func (ms *HostWidget) boxDiskIO(widget Widget) (f func() error, err error) {
 		unit = widget.Options[optionUnit]
 	}
 
+	rate, err := boolOption(widget.Options, optionRate)
+	if err != nil {
+		return nil, err
+	}
+
 	title := fmt.Sprintf(" Disk I/O (%s) ", strings.ToUpper(unit))
+	if rate {
+		title = fmt.Sprintf(" Disk I/O (%s/s) ", strings.ToUpper(unit))
+	}
 	if _, ok := widget.Options[optionTitle]; ok {
 		title = widget.Options[optionTitle]
 	}
 
-	diskIO, err := platform.HostDiskIO(ms.service.Runner, unit)
+	diskIO, err := platform.HostDiskIO(ms.service.Runner, unit, rate)
 	if err != nil {
 		return nil, err
 	}

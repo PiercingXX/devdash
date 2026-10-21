@@ -1,7 +1,9 @@
 package platform
 
 import (
+	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"errors"
@@ -387,7 +389,7 @@ func Test_HostCPURate(t *testing.T) {
 	}{
 		{
 			name:     "happy case",
-			expected: 11.969999999999999,
+			expected: 11.91,
 			runner: func(cmd string) (string, error) {
 				return string(ReadFixtureFile("./testdata/fixtures/host_cpu", t)), nil
 			},
@@ -441,7 +443,7 @@ func Test_HostNetIO(t *testing.T) {
 	}{
 		{
 			name:     "happy case",
-			expected: "322.29 / 146.11",
+			expected: "361006.41 / 18992.37",
 			unit:     "kb",
 			runner: func(cmd string) (string, error) {
 				return string(ReadFixtureFile("./testdata/fixtures/host_net", t)), nil
@@ -477,7 +479,7 @@ func Test_HostNetIO(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actual, err := HostNetIO(tc.runner, tc.unit)
+			actual, err := HostNetIO(tc.runner, tc.unit, false)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("Error '%v' even if wantErr is %t", err, tc.wantErr)
 				return
@@ -606,7 +608,7 @@ func Test_HostDiskIO(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actual, err := HostDiskIO(tc.runner, tc.unit)
+			actual, err := HostDiskIO(tc.runner, tc.unit, false)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("Error '%v' even if wantErr is %t", err, tc.wantErr)
 				return
@@ -834,5 +836,41 @@ func Test_runLocalhost(t *testing.T) {
 				t.Errorf("Expected %q, actual %q", tc.expected, actual)
 			}
 		})
+	}
+}
+
+func Test_HostCPURateSampled(t *testing.T) {
+	// 100 more jiffies, 25 of them idle or waiting for I/O: 75% busy.
+	runner := func(cmd string) (string, error) {
+		if !strings.Contains(cmd, "sleep") {
+			t.Errorf("expected a sampled command, actual %q", cmd)
+		}
+		return "cpu  100 0 100 700 100 0 0 0 0 0\nintr 1\n" + sampleSeparator + "\ncpu  150 0 125 720 105 0 0 0 0 0\n", nil
+	}
+
+	actual, err := HostCPURate(runner)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if actual != 75 {
+		t.Errorf("Expected 75, actual %v", actual)
+	}
+}
+
+func Test_HostNetIORate(t *testing.T) {
+	netDev := func(rx, tx int) string {
+		return fmt.Sprintf("  eth0: %d 1 0 0 0 0 0 0 %d 1 0 0 0 0 0 0\nveth1: 999 1 0 0 0 0 0 0 999 1 0 0 0 0 0 0\n", rx, tx)
+	}
+	runner := func(cmd string) (string, error) {
+		return netDev(1000, 2000) + sampleSeparator + netDev(1512, 2256), nil
+	}
+
+	// 512 and 256 bytes in half a second.
+	actual, err := HostNetIO(runner, "b", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if actual != "1024.00 / 512.00" {
+		t.Errorf("Expected 1024.00 / 512.00, actual %v", actual)
 	}
 }

@@ -1,6 +1,10 @@
 package internal
 
-import "strings"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 const (
 	// Data
@@ -29,6 +33,7 @@ const (
 	optionMetrics    = "metrics"
 	optionMetric     = "metric"
 	optionUnit       = "unit"
+	optionRate       = "rate"
 
 	optionHeaders = "headers"
 
@@ -76,4 +81,19 @@ func truncate(text string, limit int) string {
 	}
 
 	return text
+}
+
+// boolOption of a widget, false if it's not set.
+func boolOption(options map[string]string, name string) (bool, error) {
+	v, ok := options[name]
+	if !ok {
+		return false, nil
+	}
+
+	b, err := strconv.ParseBool(v)
+	if err != nil {
+		return false, fmt.Errorf("the option %s needs to be true or false, not %q", name, v)
+	}
+
+	return b, nil
 }

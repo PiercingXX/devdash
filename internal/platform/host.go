@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"regexp"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -295,94 +296,144 @@ func HostSwapRate(runner runnerFunc) (float64, error) {
 }
 
 // See https://www.idnt.net/en-US/kb/941772
+// cpuSampleInterval between the two measures of the CPU, network or disk usage.
+const cpuSampleInterval = "0.5"
+
+// sampleSeparator between the two outputs of a sampled command.
+const sampleSeparator = "==== devdash ===="
+
+// sampled command: the output of the command, then its output after the interval.
+func sampled(command string) string {
+	return command + " && sleep " + cpuSampleInterval + " && echo '" + sampleSeparator + "' && " + command
+}
+
+// samples of the output of a sampled command. An output without separator is one sample.
+func samples(output string) []string {
+	return strings.Split(output, sampleSeparator)
+}
+
+// cpuTimes of the first line of /proc/stat: the idle time (with the I/O wait), and the total time.
+func cpuTimes(stat string) (idle uint64, total uint64, err error) {
+	line, _, _ := strings.Cut(strings.TrimSpace(stat), "\n")
+	cpu := strings.Fields(line)
+	if len(cpu) < 5 || cpu[0] != "cpu" {
+		return 0, 0, fmt.Errorf("needs 5 fields for cpu: header, user, nice, system, idle. Instead, having %s", cpu)
+	}
+
+	for k, v := range cpu[1:] {
+		n, _ := strconv.ParseUint(v, 10, 64)
+		total += n
+		// idle and iowait
+		if k == 3 || k == 4 {
+			idle += n
+		}
+	}
+
+	return idle, total, nil
+}
+
+// HostCPURate is the CPU usage, in percent, during half a second. It's the average since the boot if the command
+// doesn't give two samples.
 func HostCPURate(runner runnerFunc) (float64, error) {
-	raw, err := runner("/bin/cat /proc/stat")
+	raw, err := runner(sampled("/bin/cat /proc/stat"))
 	if err != nil {
 		return 0, err
 	}
 
-	lines := strings.Split(string(raw), "\n")
-
-	// aggregate of all other cpus
-	cpu := strings.Fields(lines[0])
-
-	if len(cpu) < 5 {
-		return 0, fmt.Errorf("needs 5 fields for cpu: header, user, nice, system, idle. Instead, having %s", cpu)
+	s := samples(raw)
+	idle, total, err := cpuTimes(s[0])
+	if err != nil {
+		return 0, err
 	}
 
-	user, _ := strconv.ParseUint(cpu[1], 10, strconv.IntSize)
-	nice, _ := strconv.ParseUint(cpu[2], 10, strconv.IntSize)
-	system, _ := strconv.ParseUint(cpu[3], 10, strconv.IntSize)
-	idle, _ := strconv.ParseUint(cpu[4], 10, strconv.IntSize)
-
-	var IOWait uint64 = 0
-	var IRQ uint64 = 0
-	var softIRQs uint64 = 0
-	var steal uint64 = 0
-	var guest uint64 = 0
-	var guestNice uint64 = 0
-	if len(cpu) > 5 {
-		IOWait, _ = strconv.ParseUint(cpu[5], 10, strconv.IntSize)
+	if len(s) > 1 {
+		idle2, total2, err := cpuTimes(s[1])
+		if err != nil {
+			return 0, err
+		}
+		if total2 > total {
+			idle, total = idle2-idle, total2-total
+		}
 	}
-	if len(cpu) > 6 {
-		IRQ, _ = strconv.ParseUint(cpu[6], 10, strconv.IntSize)
-	}
-	if len(cpu) > 7 {
-		softIRQs, _ = strconv.ParseUint(cpu[7], 10, strconv.IntSize)
-	}
-	if len(cpu) > 8 {
-		steal, _ = strconv.ParseUint(cpu[8], 10, strconv.IntSize)
-	}
-	if len(cpu) > 9 {
-		guest, _ = strconv.ParseUint(cpu[9], 10, strconv.IntSize)
-	}
-	if len(cpu) > 10 {
-		guestNice, _ = strconv.ParseUint(cpu[10], 10, strconv.IntSize)
-	}
-
-	total := user + nice + system + idle + IOWait + IRQ + softIRQs + steal + guest + guestNice
 
 	if total == 0 {
 		return 0, nil
 	}
 
 	// Percentage of not idle (busy)
-	return 100 - gokit.Round(float64(idle)*100/float64(total), 2), nil
+	return gokit.Round(100-float64(idle)*100/float64(total), 2), nil
 }
 
-// GetNetStat returns net stat
-func HostNetIO(runner runnerFunc, unit string) (string, error) {
-	lines, err := runner("/bin/cat /proc/net/dev")
+// virtualInterfaces don't count in the network I/O: their traffic goes through a physical interface too.
+// They're the loopback, the bridges and interfaces of containers and virtual machines, and the VPN tunnels.
+var virtualInterfaces = []string{
+	"lo", "docker", "veth", "br-", "virbr", "vnet", "cni", "flannel", "cali", "podman",
+	"tailscale", "tun", "tap", "wg", "zt",
+}
+
+// netTotals received and transmitted by the network interfaces, in bytes.
+func netTotals(netDev string) (rx uint64, tx uint64) {
+	scanner := bufio.NewScanner(strings.NewReader(netDev))
+	for scanner.Scan() {
+		// The interface, then the received bytes, packets... and the transmitted bytes, packets...
+		device, values, ok := strings.Cut(scanner.Text(), ":")
+		parts := strings.Fields(values)
+		if !ok || len(parts) < 9 {
+			continue
+		}
+
+		device = strings.TrimSpace(device)
+		if slices.ContainsFunc(virtualInterfaces, func(v string) bool { return strings.HasPrefix(device, v) }) {
+			continue
+		}
+
+		r, _ := strconv.ParseUint(parts[0], 10, 64)
+		t, _ := strconv.ParseUint(parts[8], 10, 64)
+		rx += r
+		tx += t
+	}
+
+	return rx, tx
+}
+
+// HostNetIO received / transmitted since the boot, or per second with rate.
+func HostNetIO(runner runnerFunc, unit string, rate bool) (string, error) {
+	command := "/bin/cat /proc/net/dev"
+	if rate {
+		command = sampled(command)
+	}
+
+	lines, err := runner(command)
 	if err != nil {
 		return "", err
 	}
 
-	scanner := bufio.NewScanner(strings.NewReader(lines))
-	var receiveBytes uint64 = 0
-	var transmitBytes uint64 = 0
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.Fields(line)
-
-		if len(parts) < 10 {
-			continue
-		}
-
-		device := strings.TrimSpace(strings.Trim(parts[0], ":"))
-
-		if device != "lo" {
-			rb, _ := strconv.ParseUint(parts[2], 10, strconv.IntSize)
-			tb, _ := strconv.ParseUint(parts[10], 10, strconv.IntSize)
-
-			receiveBytes += rb
-			transmitBytes += tb
-		}
+	s := samples(lines)
+	rx, tx := netTotals(s[0])
+	if rate && len(s) > 1 {
+		rx2, tx2 := netTotals(s[1])
+		rx, tx = perSecond(rx, rx2), perSecond(tx, tx2)
 	}
 
-	rx := strconv.FormatFloat(gokit.ConvertBinUnit(float64(receiveBytes), "b", unit), 'f', 2, strconv.IntSize)
-	tx := strconv.FormatFloat(gokit.ConvertBinUnit(float64(transmitBytes), "b", unit), 'f', 2, strconv.IntSize)
+	return formatIO(rx, tx, unit), nil
+}
 
-	return rx + " / " + tx, nil
+// perSecond between two samples.
+func perSecond(before uint64, after uint64) uint64 {
+	interval, _ := strconv.ParseFloat(cpuSampleInterval, 64)
+	if after < before {
+		return 0
+	}
+
+	return uint64(float64(after-before) / interval)
+}
+
+// formatIO of two values in bytes.
+func formatIO(in uint64, out uint64, unit string) string {
+	fi := gokit.ConvertBinUnit(float64(in), "b", unit)
+	fo := gokit.ConvertBinUnit(float64(out), "b", unit)
+
+	return strconv.FormatFloat(fi, 'f', 2, 64) + " / " + strconv.FormatFloat(fo, 'f', 2, 64)
 }
 
 func HostDisk(runner runnerFunc, headers []string, unit string) ([][]string, error) {
@@ -433,19 +484,15 @@ func HostDisk(runner runnerFunc, headers []string, unit string) ([][]string, err
 	return c, nil
 }
 
-// HostDiskIO read and written on the physical disks since the boot.
-func HostDiskIO(runner runnerFunc, unit string) (string, error) {
-	lines, err := runner("/bin/cat /proc/diskstats")
-	if err != nil {
-		return "", err
-	}
-
+// diskTotals read and written on the physical disks, in bytes.
+func diskTotals(diskstats string) (read uint64, write uint64) {
 	type stat struct {
 		name        string
 		read, write uint64
 	}
 	stats := []stat{}
-	scanner := bufio.NewScanner(strings.NewReader(lines))
+	names := []string{}
+	scanner := bufio.NewScanner(strings.NewReader(diskstats))
 	for scanner.Scan() {
 		parts := strings.Fields(scanner.Text())
 		if len(parts) < 10 || parts[3] == "0" {
@@ -456,14 +503,9 @@ func HostDiskIO(runner runnerFunc, unit string) (string, error) {
 		r, _ := strconv.ParseUint(parts[5], 10, 64)
 		w, _ := strconv.ParseUint(parts[9], 10, 64)
 		stats = append(stats, stat{name: parts[2], read: r * 512, write: w * 512})
+		names = append(names, parts[2])
 	}
 
-	names := []string{}
-	for _, s := range stats {
-		names = append(names, s.name)
-	}
-
-	var read, write uint64
 	for _, s := range stats {
 		if isPhysicalDisk(s.name, names) {
 			read += s.read
@@ -471,10 +513,29 @@ func HostDiskIO(runner runnerFunc, unit string) (string, error) {
 		}
 	}
 
-	fr := gokit.ConvertBinUnit(float64(read), "b", unit)
-	fw := gokit.ConvertBinUnit(float64(write), "b", unit)
+	return read, write
+}
 
-	return strconv.FormatFloat(fr, 'f', 2, strconv.IntSize) + " / " + strconv.FormatFloat(fw, 'f', 2, strconv.IntSize), nil
+// HostDiskIO read / written on the physical disks since the boot, or per second with rate.
+func HostDiskIO(runner runnerFunc, unit string, rate bool) (string, error) {
+	command := "/bin/cat /proc/diskstats"
+	if rate {
+		command = sampled(command)
+	}
+
+	lines, err := runner(command)
+	if err != nil {
+		return "", err
+	}
+
+	s := samples(lines)
+	read, write := diskTotals(s[0])
+	if rate && len(s) > 1 {
+		read2, write2 := diskTotals(s[1])
+		read, write = perSecond(read, read2), perSecond(write, write2)
+	}
+
+	return formatIO(read, write, unit), nil
 }
 
 // partitionSuffix of a partition's name after its disk's name, like "1" for sda1 or "p2" for nvme0n1p2.
