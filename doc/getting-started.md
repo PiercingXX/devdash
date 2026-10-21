@@ -73,7 +73,6 @@ projects:
               elements:
                 - name: lh.gauge_cpu_rate
                   options:
-                    title: " CPU (since boot) "
                     bar_color: green
                 - name: lh.gauge_memory_rate
                   options:
@@ -151,9 +150,11 @@ You can also give a relative or absolute path with its extension, for example `d
 | `devdash`                           | Display the default dashboard, `$XDG_CONFIG_HOME/devdash/default.yml`. Create it first if it doesn't exist.                                        |
 | `devdash -c <dashboard>`            | Display a dashboard.                                                                                                                                |
 | `devdash -d`                        | Debug mode: fetch the data but don't display the widgets, and print the configuration file used.                                                   |
-| `devdash list`                      | List the dashboards in `$XDG_CONFIG_HOME/devdash`. Add `-e` to display the file extensions.                                                        |
+| `devdash list`                      | List the dashboards in `$XDG_CONFIG_HOME/devdash` and in the current directory. Add `-e` to display the file extensions.                           |
 | `devdash edit [dashboard]`          | Open a dashboard of `$XDG_CONFIG_HOME/devdash` in `$EDITOR` (`default` if no dashboard is given). Use `-e <editor>` to choose another editor.        |
 | `devdash generate -t <type>`        | Generate a dashboard from a template, asking for the needed credentials. The types are `blog` (Google Analytics, Search Console) and `project` (Github). Add `-f <name>` to save it as `$XDG_CONFIG_HOME/devdash/<name>.yml` instead of printing it. |
+| `devdash check [dashboard]`         | Report the problems of a dashboard, see [Checking a dashboard](./configuration.md#checking-a-dashboard).                                          |
+| `devdash schema`                    | Print the JSON schema of the dashboards, for the completion of your editor.                                                                       |
 | `devdash version`                   | Display the version.                                                                                                                                |
 | `devdash help [command]`            | Display the help of a command.                                                                                                                      |
 
@@ -164,6 +165,8 @@ You can also give a relative or absolute path with its extension, for example `d
 | `CTRL+c` | Quit                                                                                            |
 | `CTRL+r` | Reload the dashboard: read the configuration file again and fetch every widget's data           |
 | `CTRL+e` | Edit the dashboard's configuration file in your editor; the dashboard is reloaded when you quit it |
+| `CTRL+n` | Display the next dashboard of `devdash list`                                                    |
+| `CTRL+p` | Display the previous dashboard of `devdash list`                                                |
 
 The shortcuts can be changed in the [general configuration](./configuration.md#general).
 

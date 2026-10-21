@@ -13,13 +13,15 @@ DevDash is a configurable terminal dashboard for developers and creators: choose
 
 * Display data from:
   * Your computer, or a remote one through SSH: memory, CPU, disks, network... and the output of your own commands and scripts.
-  * Github: stars, views, commits, issues, pull requests, branches.
+  * Github: stars, views, commits, issues, pull requests, Github Actions runs.
   * Google Analytics 4 and Google Search Console.
+  * Any API answering in JSON.
   * The availability of your websites, Feedly subscribers, the branches of a local Git repository.
 * Place your widgets on a grid, and choose their size, colors and data. Everything has a default.
 * Reuse options with themes.
-* As many dashboards as you want, written in YAML, JSON or TOML.
+* As many dashboards as you want, written in YAML, JSON or TOML, and switch between them with a keystroke.
 * The data is refreshed automatically, or with a keystroke. Edit a dashboard without leaving DevDash.
+* `devdash check` finds the mistakes in your dashboards, and a JSON schema gives the completion of your editor.
 
 ## Installation
 
@@ -37,29 +39,21 @@ go install github.com/PiercingXX/devdash@latest
 
 Run `devdash`. On the first run, it creates a default dashboard in `$XDG_CONFIG_HOME/devdash/default.yml` (`~/.config/devdash` on Linux) and displays it.
 
-* `CTRL+e` edits the dashboard, `CTRL+r` reloads it, `CTRL+c` quits.
+* `CTRL+e` edits the dashboard, `CTRL+r` reloads it, `CTRL+n` / `CTRL+p` switch to the next / previous one, `CTRL+c` quits.
 * `devdash -c <name>` displays another dashboard, for example one of the [examples](./doc/examples.md).
-* `devdash list` lists your dashboards, `devdash generate` creates one for a blog or a Github project.
+* `devdash list` lists your dashboards, `devdash generate` creates one for a blog or a Github project, `devdash check` finds their mistakes.
 
 ## Documentation
 
 * [Getting started](./doc/getting-started.md): installation, commands, keyboard shortcuts.
 * [Examples](./doc/examples.md), with their screenshots.
 * [Configuration](./doc/configuration.md), [widgets and display options](./doc/widgets.md), [dates](./doc/dates.md).
-* The services: [Monitor](./doc/services/monitor.md), [Host](./doc/services/host.md), [Github](./doc/services/github.md), [Google Analytics 4](./doc/services/google-analytics.md), [Google Search Console](./doc/services/google-search-console.md), [Feedly](./doc/services/feedly.md), [Git](./doc/services/git.md), [Display](./doc/services/display.md).
+* The services: [Monitor](./doc/services/monitor.md), [Host](./doc/services/host.md), [Github](./doc/services/github.md), [Google Analytics 4](./doc/services/google-analytics.md), [Google Search Console](./doc/services/google-search-console.md), [Feedly](./doc/services/feedly.md), [Git](./doc/services/git.md), [Display](./doc/services/display.md), [JSON](./doc/services/json.md).
 * [Upgrading from the original DevDash](./doc/upgrading.md).
 
 ## Contributing
 
-Bug reports, ideas and pull requests are welcome: please open an issue first for new features.
-
-```shell
-go build .            # build
-go test -race ./...   # test
-go vet ./...
-```
-
-The release binaries are built by [GoReleaser](https://goreleaser.com) when a `v*` tag is pushed. The [changelog](./CHANGELOG.md) lists the changes of each version.
+Bug reports, ideas and pull requests are welcome: see [CONTRIBUTING.md](./CONTRIBUTING.md). Please report vulnerabilities privately, see [SECURITY.md](./SECURITY.md). The [changelog](./CHANGELOG.md) lists the changes of each version.
 
 ## Acknowledgements
 

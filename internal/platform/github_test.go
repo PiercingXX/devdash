@@ -301,9 +301,9 @@ func Test_formatWorkflowRuns(t *testing.T) {
 
 	expected := [][]string{
 		{"workflow", "branch", "state", "event", "date"},
-		{"CI #12", "main", "✔ success", "push", "2026-10-20 09:30"},
-		{"CI #11", "fix", "✘ timed out", "pull_request", ""},
-		{"Release #3", "v1", "… in progress", "push", ""},
+		{"CI #12", "main", "success", "push", "2026-10-20 09:30"},
+		{"CI #11", "fix", "timed out", "pull_request", ""},
+		{"Release #3", "v1", "in progress", "push", ""},
 	}
 
 	if actual := formatWorkflowRuns(runs, 3); !reflect.DeepEqual(actual, expected) {

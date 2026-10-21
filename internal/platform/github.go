@@ -583,7 +583,7 @@ func (g *Github) WorkflowRuns(repository string, branch string, limit int) ([][]
 	return formatWorkflowRuns(runs, limit), nil
 }
 
-// LastWorkflowRun of the Github Actions of a repository, like "✔ success - CI #12 on main".
+// LastWorkflowRun of the Github Actions of a repository, like "success - CI #12 on main".
 func (g *Github) LastWorkflowRun(repository string, branch string) (string, error) {
 	runs, err := g.fetchWorkflowRuns(repository, branch, 1)
 	if err != nil {
@@ -618,20 +618,14 @@ func formatWorkflowRuns(runs []*github.WorkflowRun, limit int) [][]string {
 	return table
 }
 
-// runState is the conclusion of a finished run, its status otherwise, with a symbol.
+// runState is the conclusion of a finished run, its status otherwise.
 func runState(r *github.WorkflowRun) string {
+	state := r.GetConclusion()
 	if r.GetStatus() != "completed" {
-		return "… " + strings.ReplaceAll(r.GetStatus(), "_", " ")
+		state = r.GetStatus()
 	}
 
-	switch c := r.GetConclusion(); c {
-	case "success":
-		return "✔ " + c
-	case "failure", "timed_out", "startup_failure":
-		return "✘ " + strings.ReplaceAll(c, "_", " ")
-	default:
-		return "- " + strings.ReplaceAll(c, "_", " ")
-	}
+	return strings.ReplaceAll(state, "_", " ")
 }
 
 func (g *Github) fetchWorkflowRuns(repository string, branch string, limit int) ([]*github.WorkflowRun, error) {

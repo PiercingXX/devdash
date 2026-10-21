@@ -76,7 +76,7 @@ Every widget accepts `title`, and the [display options](../widgets.md#display-op
 | `row_limit`       | Maximum number of rows                                                                                            | `5`                           | Table widgets                                                  |
 | `character_limit` | Maximum number of characters of the first column                                                                  | `20`                          | Table widgets                                                  |
 
-The values in the bars are integers: a rate like `bounce_rate` is better displayed in a box or a table.
+The rates, like `bounce_rate` or `engagement_rate`, are displayed in percent. The values in the bars are integers.
 
 ### Metrics
 

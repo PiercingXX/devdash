@@ -31,31 +31,28 @@ projects:
                     bar_gap: 1
                     color: green
           - col:
-              size: 2
+              size: 4
               elements:
                 - name: github.box_stars
                   options:
                     title: " Stars "
                     color: yellow
-                - name: github.box_watchers
-                  options:
-                    color: yellow
                 - name: github.box_open_issues
                   options:
-                    title: " Open issues "
+                    title: " Open issues and pull requests "
                     color: red
-          - col:
-              size: 2
-              elements:
-                - name: github.table_branches
+                - name: github.box_last_run
+                  options:
+                    title: " Last run on main "
+                    branch: main
+                    multiline: true
+                    color: green
       - row:
           - col:
               size: 6
               elements:
-                - name: github.table_pull_requests
+                - name: github.table_workflow_runs
           - col:
               size: 6
               elements:
-                - name: github.table_repositories
-                  options:
-                    metrics: stars,forks
+                - name: github.table_pull_requests

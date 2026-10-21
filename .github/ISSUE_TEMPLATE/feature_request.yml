@@ -1,0 +1,17 @@
+name: Feature request
+description: A new widget, service or option
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you need?
+      description: The data you'd like to display, or what you'd like to do, and why.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How could it work?
+      description: For example, the widget and its options in a dashboard.
+      render: yaml

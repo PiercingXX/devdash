@@ -29,15 +29,14 @@ projects:
                     color: magenta
                 - name: lh.box_disk_io
                   options:
-                    title: " Disk I/O since boot (GB) "
-                    unit: "gb"
+                    unit: "mb"
+                    rate: true
                     color: magenta
           - col:
               size: 4
               elements:
                 - name: lh.gauge_cpu_rate
                   options:
-                    title: " CPU (since boot) "
                     bar_color: green
                 - name: lh.gauge_memory_rate
                   options:
@@ -56,8 +55,8 @@ projects:
                     color: cyan
                 - name: lh.box_net_io
                   options:
-                    title: " Network since boot (GB) "
-                    unit: "gb"
+                    unit: "kb"
+                    rate: true
                     color: green
       - row:
           - col:

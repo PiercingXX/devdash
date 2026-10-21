@@ -307,7 +307,6 @@ func defaultConfig(dashPath string) string {
               elements:
                 - name: lh.gauge_cpu_rate
                   options:
-                    title: " CPU (since boot) "
                     bar_color: green
                 - name: lh.gauge_memory_rate
                   options:

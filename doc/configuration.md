@@ -51,6 +51,10 @@ Each refresh calls the APIs of every widget. Keep it high enough not to reach th
 | `quit`       | Quit DevDash                                                                        | `C-c`   |
 | `hot_reload` | Read the configuration again and refresh every widget                               | `C-r`   |
 | `edit`       | Edit the configuration in the editor; the dashboard is reloaded when the editor exits | `C-e`   |
+| `next`       | Display the next dashboard of `devdash list`                                        | `C-n`   |
+| `previous`   | Display the previous dashboard of `devdash list`                                    | `C-p`   |
+
+The keys and the refresh of the first dashboard displayed are kept when you switch to another one.
 
 The keys use these notations:
 
@@ -95,7 +99,7 @@ The colors are listed in [Colors](./widgets.md#colors).
 
 ### Services
 
-Each service has its own configuration, documented on its page. A widget can only be used if its service is configured in the same project, except for the `lh` (local host) and `display` widgets, which don't need any configuration.
+Each service has its own configuration, documented on its page. A widget can only be used if its service is configured in the same project, except for the `lh` (local host), `display` and `json` widgets, which don't need any configuration.
 
 | Service                 | Page                                                         |
 | ----------------------- | ------------------------------------------------------------ |
@@ -190,3 +194,26 @@ projects:
 * The options of the widget override the options of its theme.
 
 A theme can hold any option, not only display options: `row_limit`, `start_date`...
+
+## Checking a dashboard
+
+`devdash check <dashboard>` reports the problems of a dashboard: unknown options, widgets or services (with the closest valid name), invalid colors, sizes, dates or numbers, widgets without their service, and columns wider than the grid.
+
+```shell
+$ devdash check blog
+projects[0].widgets[0].row[0].col.elements[0] (ga.bar_users).options.startdate: unknown option (did you mean start_date?)
+projects[0].widgets[0].row[0].col.elements[1] (github.bar_stars): the widget needs the service github in the project
+blog.yml: 2 problem(s)
+```
+
+The options are written in lowercase in the messages: the configuration library ignores their case.
+
+### Completion in your editor
+
+The [JSON schema of the dashboards](./devdash.schema.json) gives the completion and the validation of the widgets and their options in the editors supporting it. With the YAML language server (VS Code, Neovim, Helix...), add this line at the top of a dashboard:
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/PiercingXX/devdash/master/doc/devdash.schema.json
+```
+
+`devdash schema` prints the schema of your version of DevDash.

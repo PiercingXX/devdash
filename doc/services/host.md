@@ -19,15 +19,15 @@ services:
     address: "203.0.113.10:22"
 ```
 
-| Option     | Description                                      |
-| ---------- | ------------------------------------------------ |
-| `username` | The SSH user                                     |
-| `address`  | The host and its SSH port; the port is required  |
+| Option        | Description                                                  | Default               |
+| ------------- | ------------------------------------------------------------ | --------------------- |
+| `username`    | The SSH user                                                 |                       |
+| `address`     | The host and its SSH port; the port is required              |                       |
+| `known_hosts` | The file with the keys of the known hosts                    | `~/.ssh/known_hosts`  |
 
 DevDash authenticates with the keys of your [ssh-agent](https://www.ssh.com/academy/ssh/agent): the agent needs to run (`SSH_AUTH_SOCK` set) with a key accepted by the remote host. Passwords are not supported.
 
-> [!WARNING]
-> DevDash doesn't verify the key of the remote host. Only connect to hosts on networks you trust.
+DevDash verifies the key of the remote host with your known hosts, like `ssh` does. If the host isn't known yet, connect to it once with `ssh -p <port> <username>@<host>` to add it. The connection is kept between the refreshes, and a command which doesn't finish within 30 seconds is displayed as an error.
 
 ## Widgets
 
@@ -38,12 +38,12 @@ Replace `rh` with `lh` for the local host.
 | `rh.box_uptime`        | box   | Time since the last boot                                                    |
 | `rh.box_load`          | box   | Load averages over 1, 5 and 15 minutes                                      |
 | `rh.box_processes`     | box   | Running processes / total processes                                         |
-| `rh.box_cpu_rate`      | box   | CPU usage (%), averaged since the last boot                                 |
+| `rh.box_cpu_rate`      | box   | CPU usage (%), measured during half a second                                |
 | `rh.box_memory_rate`   | box   | Memory usage (%)                                                            |
 | `rh.box_swap_rate`     | box   | Swap usage (%)                                                              |
-| `rh.box_net_io`        | box   | Data received / sent on every network interface except `lo`, since the last boot |
-| `rh.box_disk_io`       | box   | Data read / written on the physical disks since the last boot (the partitions and virtual devices are not counted twice) |
-| `rh.gauge_cpu_rate`    | gauge | CPU usage (%), averaged since the last boot                                 |
+| `rh.box_net_io`        | box   | Data received / sent since the last boot, or per second with `rate`. The loopback, bridges, container and VM interfaces, and VPN tunnels are not counted: their traffic goes through a physical interface too. |
+| `rh.box_disk_io`       | box   | Data read / written on the physical disks since the last boot, or per second with `rate`. The partitions and virtual devices are not counted twice. |
+| `rh.gauge_cpu_rate`    | gauge | CPU usage (%), measured during half a second                                |
 | `rh.gauge_memory_rate` | gauge | Memory usage (%)                                                            |
 | `rh.gauge_swap_rate`   | gauge | Swap usage (%)                                                              |
 | `rh.bar_rates`         | bar   | CPU, memory and swap usage (%)                                              |
@@ -63,6 +63,7 @@ Every widget accepts `title`, and the [display options](../widgets.md#display-op
 | `unit`    | Unit of the values: `b`, `kb`, `mb`, `gb`, `tb`, `pb` or `eb` (powers of 1024) | `kb`, `gb` for `table_disk`           | `box_net_io`, `box_disk_io`, `bar_memory`, `table_disk` |
 | `metrics` | Fields of `/proc/meminfo` to display, separated with commas         | `MemTotal,MemFree,MemAvailable`                 | `bar_memory` |
 | `headers` | Labels of the bars, or columns of the table, separated with commas  | The metrics for `bar_memory`; `Filesystem,Size,Used,Available,Use%,Mount` for `table_disk` | `bar_memory`, `table_disk`, `bar`, `table` |
+| `rate`    | `true` to display the throughput per second, instead of the total since the boot | `false`                   | `box_net_io`, `box_disk_io` |
 | `command` | The command to run                                                  | An example                                      | `box`, `gauge`, `bar`, `table` |
 
 ## Commands
@@ -76,9 +77,9 @@ The widgets `box`, `gauge`, `bar` and `table` display the output of `command`:
 | `bar`   | Positive integers separated with spaces or new lines, one per bar. Give their labels with `headers`.          |
 | `table` | One row per line, the cells separated with spaces. Without `headers`, the first line is used as headers. The cells can't contain commas. |
 
-On the local host, DevDash runs the command without a shell: pipes (`|`) work, but quotes are removed and other shell features (redirections, variables, `&&`...) don't. Put anything more complex in a script, and run it with `command: "sh ./my-script.sh"`. On a remote host, the command is run by the shell of the SSH user.
+The command is run by a shell: `sh` on the local host (`cmd` on Windows), the shell of the SSH user on a remote host. Pipes, quotes, variables and redirections work. A command which doesn't finish within 30 seconds is displayed as an error.
 
-On the local host, a command writing anything on its error output is displayed as an error.
+On the local host, a command writing anything on its error output is displayed as an error: add `2>/dev/null` to ignore it.
 
 ## Example
 
@@ -102,7 +103,7 @@ The widgets displaying your own commands:
 - name: lh.gauge
   options:
     title: " Root filesystem usage "
-    command: "sh ./root-usage.sh"   # prints a number between 0 and 100
+    command: "df --output=pcent / | tail -n 1 | tr -d ' %'"
 - name: rh.box
   options:
     title: " Last login "

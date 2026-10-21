@@ -30,6 +30,14 @@ The default metrics of the table widgets are now `sessions,page_views,users`, in
 
 travis-ci.org was shut down: the `travis` service and the widget `travis.table_builds` are removed.
 
+## Remote hosts
+
+DevDash now verifies the key of the remote hosts with `~/.ssh/known_hosts`, like `ssh`: it accepted any key before. If a host isn't in your known hosts yet, connect to it once with `ssh`. You can use another file with the option `known_hosts` of the service `remote_host`.
+
+## Commands
+
+The commands of the `lh` widgets now run with `sh` (`cmd` on Windows), like the `rh` widgets run with the shell of the SSH user. Quotes, variables and redirections work. Before, the quotes were removed: a command relying on it may need its quotes fixed.
+
 ## Options renamed
 
 These options were documented, but didn't work with their documented name:
@@ -69,3 +77,7 @@ The terminal interface uses [tcell](https://github.com/gdamore/tcell) instead of
 * `github.table_pull_requests` displays the author instead of the `merged` and `commits` columns, which were always `unknown`. Merged pull requests have the state `merged`.
 * The pages of `gsc.table_pages` keep their leading `/`, and the home page is `/`.
 * `devdash list` and `devdash edit` find the JSON and TOML dashboards, and the dashboards of the current directory.
+* The CPU widgets display the current usage, instead of the average since the boot.
+* `rh.box_net_io` displays bytes: it displayed the number of packets. The loopback, container, VM and VPN interfaces aren't counted anymore.
+* The Google Analytics rates are displayed in percent.
+* An invalid dashboard displays an error instead of crashing DevDash.
