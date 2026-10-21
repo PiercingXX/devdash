@@ -61,6 +61,7 @@ Maintained fork of [Phantas0s/devdash](https://github.com/Phantas0s/devdash), ar
 * `rh.box_disk_io` and `lh.box_disk_io` displayed values 1024 times too big.
 * The example dashboards used options that don't exist.
 * `devdash version` displayed "gocket".
+* A widget name without a dot crashed DevDash.
 * `devdash list` ignored the JSON and TOML dashboards and the names with a dot, and `devdash edit` couldn't open the dashboards of the current directory.
 * The `unit` option converted wrongly to a smaller unit, and uppercase units were considered as exabytes.
 * `gsc.table_pages` removed the leading `/` of the pages, and displayed the home page as an empty line.

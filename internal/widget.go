@@ -56,13 +56,17 @@ type Widget struct {
 	Theme   string            `mapstructure:"theme"`
 }
 
+// typeID of the widget: "bar" for "ga.bar_pages".
 func (w *Widget) typeID() string {
-	n := strings.Split(w.Name, ".")[1]
-	return strings.Split(n, "_")[0]
+	_, n, _ := strings.Cut(w.Name, ".")
+	t, _, _ := strings.Cut(n, "_")
+	return t
 }
 
+// serviceID of the widget: "ga" for "ga.bar_pages".
 func (w *Widget) serviceID() string {
-	return strings.Split(w.Name, ".")[0]
+	s, _, _ := strings.Cut(w.Name, ".")
+	return s
 }
 
 // truncate a text to a number of characters.
