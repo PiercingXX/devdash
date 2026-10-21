@@ -2,7 +2,13 @@ package platform
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"reflect"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -243,5 +249,43 @@ func Test_fillMissingDays(t *testing.T) {
 				t.Errorf("Expected values %v, actual %v", tc.expectedValues, val)
 			}
 		})
+	}
+}
+
+func Test_fetchStarsSince(t *testing.T) {
+	// 250 stars, one per day: 3 pages.
+	first := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	requests := []string{}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests = append(requests, r.URL.Path+"?"+r.URL.RawQuery)
+		if r.URL.Path == "/repos/owner/repo" {
+			fmt.Fprint(w, `{"stargazers_count": 250}`)
+			return
+		}
+
+		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+		stars := []map[string]any{}
+		for i := (page - 1) * 100; i < min(page*100, 250); i++ {
+			stars = append(stars, map[string]any{"starred_at": first.AddDate(0, 0, i).Format(time.RFC3339)})
+		}
+		_ = json.NewEncoder(w).Encode(stars)
+	}))
+	defer srv.Close()
+
+	g, _ := NewGithubClient("", "owner", "repo")
+	g.client.BaseURL, _ = url.Parse(srv.URL + "/")
+
+	// The last 60 days are on the last two pages.
+	since := first.AddDate(0, 0, 190)
+	s, err := g.fetchStars("", since)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(requests) != 3 || !strings.Contains(requests[1], "page=3") || !strings.Contains(requests[2], "page=2") {
+		t.Errorf("expected the repository, then the pages 3 and 2, actual %v", requests)
+	}
+	if len(s) != 150 || !s[0].GetStarredAt().Time.Equal(first.AddDate(0, 0, 100)) {
+		t.Errorf("expected the stars of the pages 2 and 3 in order, actual %d stars from %v", len(s), s[0].GetStarredAt())
 	}
 }

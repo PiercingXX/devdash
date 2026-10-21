@@ -3,16 +3,15 @@ package platform
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"slices"
 	"sort"
 	"strconv"
-	"sync"
 	"time"
 
 	"errors"
 
 	"github.com/google/go-github/v80/github"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -323,7 +322,7 @@ func formatCountCommits(
 // CountStars of a repository overtime.
 // Only on a daily basis for now.
 func (g *Github) CountStars(repository string, startDate, endDate time.Time) (dim []string, val []int, err error) {
-	se, err := g.fetchStars(repository)
+	se, err := g.fetchStars(repository, startDate)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -376,9 +375,9 @@ func aggregateStarResults(stargazers []*github.Stargazer) (dim []time.Time, val 
 	return
 }
 
-// fetchStars from the Github API. Every stars are fetched.
-// Unfortunatelly, perPage is limited to 100, so we need multiple requests.
-func (g *Github) fetchStars(repository string) (s []*github.Stargazer, err error) {
+// fetchStars given since a date. The stargazers are listed from the oldest, so the pages are fetched from the last
+// one, until the beginning of the period.
+func (g *Github) fetchStars(repository string, since time.Time) (s []*github.Stargazer, err error) {
 	repo := g.repoName
 	if repository != "" {
 		repo = repository
@@ -393,38 +392,24 @@ func (g *Github) fetchStars(repository string) (s []*github.Stargazer, err error
 		return nil, err
 	}
 
-	pages := (*r.StargazersCount / githubMaxPerPage)
-	if *r.StargazersCount%100 != 0 {
-		pages += 1
-	}
-
-	var lock sync.Mutex
-	var eg errgroup.Group
-	sem := make(chan bool, 4)
-
-	// At most 4 pages are fetched at the same time.
-	for i := 1; i <= pages; i++ {
-		sem <- true
-		page := i
-		eg.Go(func() error {
-			defer func() { <-sem }()
-			e, _, err := g.client.Activity.ListStargazers(context.Background(), g.owner, repo, &github.ListOptions{
-				Page:    page,
-				PerPage: githubMaxPerPage,
-			})
-			if err != nil {
-				return fmt.Errorf("can't find repo %s of owner %s: %w", repo, g.owner, err)
-			}
-
-			lock.Lock()
-			defer lock.Unlock()
-			s = append(s, e...)
-			return nil
+	pages := (r.GetStargazersCount() + githubMaxPerPage - 1) / githubMaxPerPage
+	for page := pages; page >= 1; page-- {
+		e, _, err := g.client.Activity.ListStargazers(context.Background(), g.owner, repo, &github.ListOptions{
+			Page:    page,
+			PerPage: githubMaxPerPage,
 		})
-	}
-	err = eg.Wait()
-	if err != nil {
-		return nil, err
+		var gerr *github.ErrorResponse
+		if errors.As(err, &gerr) && (gerr.Response.StatusCode == http.StatusUnauthorized || gerr.Response.StatusCode == http.StatusNotFound) {
+			return nil, fmt.Errorf("Github only gives the stars over time of your own repositories, with a token: can't get the stars of %s/%s", g.owner, repo)
+		}
+		if err != nil {
+			return nil, fmt.Errorf("can't find the stars of the repo %s of owner %s: %w", repo, g.owner, err)
+		}
+
+		s = append(e, s...)
+		if len(e) > 0 && e[0].GetStarredAt().Before(since) {
+			break
+		}
 	}
 
 	return s, nil
