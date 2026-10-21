@@ -142,6 +142,7 @@ func (c *Analytics) SimpleMetric(val AnalyticValues) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("can't get total metric data from Google Analytics from %s to %s: %w", val.StartDate, val.EndDate, googleError(err))
 	}
+	percentRates(resp)
 
 	if len(resp.Rows) != 0 && len(resp.Rows[0].MetricValues) != 0 {
 		return formatValue(resp.Rows[0].MetricValues[0].Value), nil
@@ -180,6 +181,7 @@ func (c *Analytics) BarMetric(val AnalyticValues) ([]string, []int, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("can't get bar data from Google Analytics from %s to %s: %w", val.StartDate, val.EndDate, googleError(err))
 	}
+	percentRates(resp)
 
 	// Decide of the header X-axis
 	f := func(dimValues []string) string {
@@ -252,6 +254,7 @@ func (c *Analytics) Table(
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("can't get table data from Google Analytics from %s to %s: %w", an.StartDate, an.EndDate, googleError(err))
 	}
+	percentRates(resp)
 
 	formater := func(dim []string) string {
 		return dim[0]
@@ -287,6 +290,7 @@ func (c *Analytics) StackedBar(an AnalyticValues) (dim []string, values map[stri
 	if err != nil {
 		return nil, nil, fmt.Errorf("can't get stacked bar data from Google Analytics from %s to %s: %w", an.StartDate, an.EndDate, googleError(err))
 	}
+	percentRates(resp)
 
 	// Always dates on x-axis
 	formater := func(dim []string) string {
@@ -396,6 +400,7 @@ func dimensionValues(r *ga.Row) []string {
 
 // parseMetricValue parses a metric value returned by the API. Decimal values are truncated.
 func parseMetricValue(value string) (int, error) {
+	value = strings.TrimSuffix(value, "%")
 	if strings.Contains(value, ".") {
 		f, err := strconv.ParseFloat(value, 64)
 		if err != nil {
@@ -414,7 +419,7 @@ func parseMetricValue(value string) (int, error) {
 
 // formatValue rounds decimal values to two digits.
 func formatValue(value string) string {
-	if !strings.Contains(value, ".") {
+	if !strings.Contains(value, ".") || strings.HasSuffix(value, "%") {
 		return value
 	}
 
@@ -638,4 +643,27 @@ func mapHeaders(el string, metrics []string) []string {
 	}
 
 	return h
+}
+
+// isRate if the metric is a rate between 0 and 1, like engagementRate.
+func isRate(metric string) bool {
+	return strings.HasSuffix(metric, "Rate")
+}
+
+// percentRates converts the values of the rates to percentages, like "71.00%".
+func percentRates(resp *ga.RunReportResponse) {
+	for i, h := range resp.MetricHeaders {
+		if !isRate(h.Name) {
+			continue
+		}
+
+		for _, r := range resp.Rows {
+			if i >= len(r.MetricValues) {
+				continue
+			}
+			if f, err := strconv.ParseFloat(r.MetricValues[i].Value, 64); err == nil {
+				r.MetricValues[i].Value = strconv.FormatFloat(f*100, 'f', 2, 64) + "%"
+			}
+		}
+	}
 }

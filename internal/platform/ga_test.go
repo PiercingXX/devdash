@@ -531,3 +531,23 @@ func Test_propertyName(t *testing.T) {
 		}
 	}
 }
+
+func Test_percentRates(t *testing.T) {
+	resp := &ga.RunReportResponse{
+		MetricHeaders: []*ga.MetricHeader{{Name: "sessions"}, {Name: "engagementRate"}},
+		Rows: []*ga.Row{
+			{MetricValues: []*ga.MetricValue{{Value: "120"}, {Value: "0.7134"}}},
+		},
+	}
+	percentRates(resp)
+
+	if v := resp.Rows[0].MetricValues; v[0].Value != "120" || v[1].Value != "71.34%" {
+		t.Errorf("expected 120 and 71.34%%, actual %s and %s", v[0].Value, v[1].Value)
+	}
+	if v := formatValue("71.34%"); v != "71.34%" {
+		t.Errorf("expected the percentage to stay as it is, actual %s", v)
+	}
+	if v, err := parseMetricValue("71.34%"); err != nil || v != 71 {
+		t.Errorf("expected 71 in a bar, actual %d, %v", v, err)
+	}
+}
