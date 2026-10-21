@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"errors"
+
 	"github.com/PiercingXX/devdash/internal/platform"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -65,7 +66,7 @@ func (g *githubWidget) CreateWidgets(widget Widget, tui *Tui) (f func() error, e
 	case githubBarStars:
 		f, err = g.barStars(widget)
 	default:
-		return nil, errors.Errorf("can't find the widget %s for service github", widget.Name)
+		return nil, fmt.Errorf("can't find the widget %s for service github", widget.Name)
 	}
 
 	return
@@ -168,7 +169,7 @@ func (g *githubWidget) tableRepo(widget Widget) (f func() error, err error) {
 	if _, ok := widget.Options[optionRowLimit]; ok {
 		limit, err = strconv.ParseInt(widget.Options[optionRowLimit], 10, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%s must be a number", widget.Options[optionRowLimit])
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionRowLimit], err)
 		}
 	}
 
@@ -211,7 +212,7 @@ func (g *githubWidget) tableBranches(widget Widget) (f func() error, err error) 
 	if _, ok := widget.Options[optionRowLimit]; ok {
 		limit, err = strconv.ParseInt(widget.Options[optionRowLimit], 10, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%s must be a number", widget.Options[optionRowLimit])
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionRowLimit], err)
 		}
 	}
 
@@ -242,7 +243,7 @@ func (g *githubWidget) tableIssues(widget Widget) (f func() error, err error) {
 	if _, ok := widget.Options[optionRowLimit]; ok {
 		limit, err = strconv.ParseInt(widget.Options[optionRowLimit], 10, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%s must be a number", widget.Options[optionRowLimit])
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionRowLimit], err)
 		}
 	}
 
@@ -273,7 +274,7 @@ func (g *githubWidget) tablePullRequests(widget Widget) (f func() error, err err
 	if _, ok := widget.Options[optionRowLimit]; ok {
 		limit, err = strconv.ParseInt(widget.Options[optionRowLimit], 10, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%s must be a number", widget.Options[optionRowLimit])
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionRowLimit], err)
 		}
 	}
 

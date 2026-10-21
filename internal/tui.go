@@ -2,11 +2,10 @@
 package internal
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -302,7 +301,7 @@ func (t *Tui) AddProjectTitle(title string, options map[string]string) (err erro
 	if _, ok := options[optionBold]; ok {
 		bold, err = strconv.ParseBool(options[optionBold])
 		if err != nil {
-			return errors.Wrapf(err, "can't convert %s to bool - please verify your configuration (correct values: true or false)", options[optionBold])
+			return fmt.Errorf("can't convert %s to bool - please verify your configuration (correct values: true or false): %w", options[optionBold], err)
 		}
 	}
 
@@ -345,10 +344,7 @@ func (t *Tui) AddTextBox(
 	if _, ok := options[optionMultiline]; ok {
 		multiline, err = strconv.ParseBool(options[optionMultiline])
 		if err != nil {
-			return errors.Wrapf(
-				err, "can't convert %s to bool - please verify your configuration (correct values: 'true' or 'false')",
-				options[optionMultiline],
-			)
+			return fmt.Errorf("can't convert %s to bool - please verify your configuration (correct values: 'true' or 'false'): %w", options[optionMultiline], err)
 		}
 	}
 
@@ -356,7 +352,7 @@ func (t *Tui) AddTextBox(
 	if _, ok := options[optionBold]; ok {
 		bold, err = strconv.ParseBool(options[optionBold])
 		if err != nil {
-			return errors.Wrapf(err, "can't convert %s to bool - please verify your configuration (correct values: true or false)", options[optionBold])
+			return fmt.Errorf("can't convert %s to bool - please verify your configuration (correct values: true or false): %w", options[optionBold], err)
 		}
 	}
 

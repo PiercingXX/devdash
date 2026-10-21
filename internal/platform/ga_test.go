@@ -2,11 +2,11 @@ package platform
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"reflect"
 	"testing"
 
-	"github.com/pkg/errors"
 	ga "google.golang.org/api/analyticsdata/v1beta"
 )
 
@@ -274,7 +274,7 @@ func Test_formatTable(t *testing.T) {
 func ReadFixtureFile(file string, t *testing.T) (data []byte) {
 	data, err := os.ReadFile(file)
 	if err != nil {
-		t.Error(errors.Wrapf(err, "can't read file %s", file))
+		t.Error(fmt.Errorf("can't read file %s: %w", file, err))
 	}
 
 	return data

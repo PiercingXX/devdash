@@ -1,8 +1,9 @@
 package internal
 
 import (
+	"fmt"
+
 	"github.com/PiercingXX/devdash/internal/platform"
-	"github.com/pkg/errors"
 )
 
 const FeedlySubscribers = "feedly.box_subscribers"
@@ -27,7 +28,7 @@ func (f feedlyWidget) CreateWidgets(widget Widget, tui *Tui) (fu func() error, e
 	case FeedlySubscribers:
 		fu, err = f.boxSubscribers(widget)
 	default:
-		return nil, errors.Errorf("can't find the widget %s for service Feedly", widget.Name)
+		return nil, fmt.Errorf("can't find the widget %s for service Feedly", widget.Name)
 	}
 
 	return

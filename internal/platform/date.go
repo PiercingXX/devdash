@@ -1,12 +1,12 @@
 package platform
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/PiercingXX/devdash/totime"
-	"github.com/pkg/errors"
+	"github.com/PiercingXX/devdash/internal/totime"
 )
 
 const (
@@ -104,7 +104,7 @@ func convertStartDate(base time.Time, startDate string) (time.Time, error) {
 	if strings.Contains(startDate, yearsAgo) {
 		years, err := ExtractCountPeriod(startDate)
 		if err != nil {
-			return time.Time{}, errors.Wrapf(err, "%s is not a valid date", startDate)
+			return time.Time{}, fmt.Errorf("%s is not a valid date: %w", startDate, err)
 		}
 
 		startDate, _ := totime.PrevYears(base, int(years))
@@ -206,7 +206,7 @@ func ExtractCountPeriod(period string) (int64, error) {
 	t := strings.Split(period, "_")
 	p, err := strconv.ParseInt(t[0], 0, 0)
 	if err != nil {
-		return 0, errors.Wrapf(err, "%v is from %s not a valid number", t[0], period)
+		return 0, fmt.Errorf("%v is from %s not a valid number: %w", t[0], period, err)
 	}
 
 	return p, nil

@@ -2,10 +2,9 @@ package platform
 
 import (
 	"bytes"
+	"fmt"
 	"os/exec"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 const git = "git"
@@ -35,7 +34,7 @@ func (g *Git) Branches() ([][]string, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't run %v", git+" "+strings.Join(cmd.Args, " "))
+		return nil, fmt.Errorf("can't run %v: %w", git+" "+strings.Join(cmd.Args, " "), err)
 	}
 
 	output := cmdOutput.Bytes()

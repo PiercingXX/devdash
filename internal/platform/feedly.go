@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/pkg/errors"
+	"errors"
 )
 
 type Feedly struct {
@@ -37,13 +37,13 @@ func (f *Feedly) Subscribers() (string, error) {
 	url := f.createAPIURL()
 	resp, err := f.Client.Get(url)
 	if err != nil {
-		return "", errors.Wrap(err, "error while fetching feedly API")
+		return "", fmt.Errorf("error while fetching feedly API: %w", err)
 	}
 
 	defer resp.Body.Close()
 	c, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", errors.Wrap(err, "error while reading feedly API response")
+		return "", fmt.Errorf("error while reading feedly API response: %w", err)
 	}
 
 	subscribers, err := extractSubscribers(c)
@@ -70,7 +70,7 @@ func extractSubscribers(data []byte) (string, error) {
 	fr := &FeedlyResponse{}
 	err := json.Unmarshal(data, fr)
 	if err != nil {
-		return "", errors.Wrap(err, "error while unmarshal feedly API response")
+		return "", fmt.Errorf("error while unmarshal feedly API response: %w", err)
 	}
 
 	if len(fr.Results) == 0 {

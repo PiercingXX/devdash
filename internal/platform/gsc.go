@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/adrg/xdg"
-	"github.com/pkg/errors"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/option"
@@ -47,7 +46,7 @@ func NewSearchConsoleClient(keyfile string) (*SearchConsole, error) {
 
 	web.config, err = google.JWTConfigFromJSON(data, sc.WebmastersReadonlyScope)
 	if err != nil {
-		return nil, errors.Errorf("creating JWT config from json keyfile %q failed: %v", keyfile, err)
+		return nil, fmt.Errorf("creating JWT config from json keyfile %q failed: %v", keyfile, err)
 	}
 
 	web.service, err = sc.NewService(
@@ -55,7 +54,7 @@ func NewSearchConsoleClient(keyfile string) (*SearchConsole, error) {
 		option.WithHTTPClient(web.config.Client(context.Background())),
 	)
 	if err != nil {
-		return nil, errors.Errorf("can't get search console service: %v", err)
+		return nil, fmt.Errorf("can't get search console service: %v", err)
 	}
 
 	return web, nil

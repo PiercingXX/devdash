@@ -6,7 +6,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/pkg/errors"
+	"errors"
+
 	probing "github.com/prometheus-community/pro-bing"
 )
 

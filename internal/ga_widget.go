@@ -8,8 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"errors"
+
 	"github.com/PiercingXX/devdash/internal/platform"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -86,7 +87,7 @@ func (g *gaWidget) CreateWidgets(widget Widget, tui *Tui) (f func() error, err e
 	case gaTable:
 		f, err = g.table(widget, widget.Options[optionDimension])
 	default:
-		return nil, errors.Errorf("can't find the widget %s", widget.Name)
+		return nil, fmt.Errorf("can't find the widget %s", widget.Name)
 	}
 
 	return
@@ -107,7 +108,7 @@ func (g *gaWidget) totalMetric(widget Widget) (f func() error, err error) {
 	if _, ok := widget.Options[optionGlobal]; ok {
 		global, err = strconv.ParseBool(widget.Options[optionGlobal])
 		if err != nil {
-			return nil, errors.Wrapf(err, "could not parse string %s to bool", widget.Options[optionGlobal])
+			return nil, fmt.Errorf("could not parse string %s to bool: %w", widget.Options[optionGlobal], err)
 		}
 	}
 
@@ -229,7 +230,7 @@ func (g *gaWidget) barMetric(widget Widget, xHeader uint16) (f func() error, err
 	if _, ok := widget.Options[optionGlobal]; ok {
 		global, err = strconv.ParseBool(widget.Options[optionGlobal])
 		if err != nil {
-			return nil, errors.Wrapf(err, "could not parse string %s to bool", widget.Options[optionGlobal])
+			return nil, fmt.Errorf("could not parse string %s to bool: %w", widget.Options[optionGlobal], err)
 		}
 	}
 
@@ -284,7 +285,7 @@ func (g *gaWidget) table(widget Widget, firstHeader string) (f func() error, err
 	if _, ok := widget.Options[optionGlobal]; ok {
 		global, err = strconv.ParseBool(widget.Options[optionGlobal])
 		if err != nil {
-			return nil, errors.Wrapf(err, "could not parse string %s to bool", widget.Options[optionGlobal])
+			return nil, fmt.Errorf("could not parse string %s to bool: %w", widget.Options[optionGlobal], err)
 		}
 	}
 
@@ -331,7 +332,7 @@ func (g *gaWidget) table(widget Widget, firstHeader string) (f func() error, err
 	if _, ok := widget.Options[optionRowLimit]; ok {
 		rowLimit, err = strconv.ParseInt(widget.Options[optionRowLimit], 0, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%s must be a number", widget.Options[optionRowLimit])
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionRowLimit], err)
 		}
 	}
 
@@ -361,7 +362,7 @@ func (g *gaWidget) table(widget Widget, firstHeader string) (f func() error, err
 	if _, ok := widget.Options[optionCharLimit]; ok {
 		charLimit, err = strconv.ParseInt(widget.Options[optionCharLimit], 0, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%s must be a number", widget.Options[optionCharLimit])
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionCharLimit], err)
 		}
 	}
 

@@ -13,8 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PiercingXX/devdash/gokit"
-	"github.com/pkg/errors"
+	"errors"
+
+	"github.com/PiercingXX/devdash/internal/gokit"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -56,7 +57,7 @@ func (s *Host) Runner(command string) (string, error) {
 
 	session, err := s.sshClient.NewSession()
 	if err != nil {
-		return "", errors.Wrapf(err, "can't create session with SSH client for command %s", command)
+		return "", fmt.Errorf("can't create session with SSH client for command %s: %w", command, err)
 	}
 	defer session.Close()
 
@@ -64,7 +65,7 @@ func (s *Host) Runner(command string) (string, error) {
 	session.Stdout = &buf
 	err = session.Run(command)
 	if err != nil {
-		return "", errors.Wrapf(err, "can't run command %s on remote server", command)
+		return "", fmt.Errorf("can't run command %s on remote server: %w", command, err)
 	}
 
 	return buf.String(), nil
@@ -92,7 +93,7 @@ func HostUptime(runner runnerFunc) (int64, error) {
 
 	d := strings.Fields(uptime)
 	if len(d) < 1 {
-		return 0, errors.Errorf("command %s return nothing", command)
+		return 0, fmt.Errorf("command %s return nothing", command)
 	}
 
 	var secs float64
@@ -112,7 +113,7 @@ func HostLoad(runner runnerFunc) (string, error) {
 	}
 	res := strings.Fields(lines)
 	if len(res) < 3 {
-		return "", errors.Errorf(
+		return "", fmt.Errorf(
 			"command %s return unexpected %v, needs to have 3 parts separated with whitespaces",
 			command,
 			res,
@@ -131,7 +132,7 @@ func HostProcesses(runner runnerFunc) (string, error) {
 
 	res := strings.Fields(lines)
 	if len(res) < 5 {
-		return "", errors.Errorf(
+		return "", fmt.Errorf(
 			"command %s return unexpected %v, needs to have 5 parts separated with whitespaces",
 			command,
 			res,
@@ -285,7 +286,7 @@ func HostCPURate(runner runnerFunc) (float64, error) {
 	cpu := strings.Fields(lines[0])
 
 	if len(cpu) < 5 {
-		return 0, errors.Errorf("needs 5 fields for cpu: header, user, nice, system, idle. Instead, having %s", cpu)
+		return 0, fmt.Errorf("needs 5 fields for cpu: header, user, nice, system, idle. Instead, having %s", cpu)
 	}
 
 	user, _ := strconv.ParseUint(cpu[1], 10, strconv.IntSize)

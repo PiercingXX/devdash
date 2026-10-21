@@ -1,10 +1,10 @@
 package platform
 
 import (
+	"fmt"
 	"net"
 	"os"
 
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
@@ -12,12 +12,12 @@ import (
 func sshAgentAuth(username, addr string) (*ssh.Client, error) {
 	s := os.Getenv(sshAgentEnv)
 	if s == "" {
-		return nil, errors.Errorf("%s environment varible empty", sshAgentEnv)
+		return nil, fmt.Errorf("%s environment varible empty", sshAgentEnv)
 	}
 
 	agentConn, err := net.Dial("unix", s)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Can't connect via ssh-agent")
+		return nil, fmt.Errorf("Can't connect via ssh-agent: %w", err)
 	}
 
 	auth := ssh.PublicKeysCallback(agent.NewClient(agentConn).Signers)

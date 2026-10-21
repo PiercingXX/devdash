@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/PiercingXX/devdash/internal/platform"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -55,7 +54,7 @@ func (s *gscWidget) CreateWidgets(widget Widget, tui *Tui) (f func() error, err 
 	case gscTable:
 		f, err = s.table(widget)
 	default:
-		return nil, errors.Errorf("can't find the widget %s", widget.Name)
+		return nil, fmt.Errorf("can't find the widget %s", widget.Name)
 	}
 
 	return
@@ -93,7 +92,7 @@ func (s *gscWidget) table(widget Widget) (f func() error, err error) {
 	if _, ok := widget.Options[optionRowLimit]; ok {
 		rowLimit, err = strconv.ParseInt(widget.Options[optionRowLimit], 0, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%s must be a number", widget.Options[optionRowLimit])
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionRowLimit], err)
 		}
 	}
 
@@ -101,7 +100,7 @@ func (s *gscWidget) table(widget Widget) (f func() error, err error) {
 	if _, ok := widget.Options[optionCharLimit]; ok {
 		c, err := strconv.ParseInt(widget.Options[optionCharLimit], 0, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%s must be a number", widget.Options[optionCharLimit])
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionCharLimit], err)
 		}
 		charLimit = int(c)
 	}

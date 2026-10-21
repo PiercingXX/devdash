@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/PiercingXX/devdash/internal/platform"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -91,7 +90,7 @@ func (ms *HostWidget) CreateWidgets(widget Widget, tui *Tui) (f func() error, er
 	case rhBar:
 		f, err = ms.bar(widget)
 	default:
-		return nil, errors.Errorf("can't find the widget %s", widget.Name)
+		return nil, fmt.Errorf("can't find the widget %s", widget.Name)
 	}
 	return
 }

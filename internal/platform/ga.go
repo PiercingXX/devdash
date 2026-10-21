@@ -9,8 +9,9 @@ import (
 	"strconv"
 	"strings"
 
+	"errors"
+
 	"github.com/adrg/xdg"
-	"github.com/pkg/errors"
 	"golang.org/x/oauth2/google"
 	ga "google.golang.org/api/analyticsdata/v1beta"
 	"google.golang.org/api/option"
@@ -155,12 +156,7 @@ func (c *Analytics) SimpleMetric(val AnalyticValues) (string, error) {
 
 	resp, err := c.service.Properties.RunReport(propertyName(val.PropertyID), req).Do()
 	if err != nil {
-		return "", errors.Wrapf(
-			err,
-			"can't get total metric data from google analytics with start data %s / end_date %s",
-			val.StartDate,
-			val.EndDate,
-		)
+		return "", fmt.Errorf("can't get total metric data from google analytics with start data %s / end_date %s: %w", val.StartDate, val.EndDate, err)
 	}
 
 	if len(resp.Rows) != 0 && len(resp.Rows[0].MetricValues) != 0 {
@@ -198,12 +194,7 @@ func (c *Analytics) BarMetric(val AnalyticValues) ([]string, []int, error) {
 
 	resp, err := c.service.Properties.RunReport(propertyName(val.PropertyID), req).Do()
 	if err != nil {
-		return nil, nil, errors.Wrapf(
-			err,
-			"can't get bar data from google analytics with start data %s / end_date %s",
-			val.StartDate,
-			val.EndDate,
-		)
+		return nil, nil, fmt.Errorf("can't get bar data from google analytics with start data %s / end_date %s: %w", val.StartDate, val.EndDate, err)
 	}
 
 	// Decide of the header X-axis
@@ -275,12 +266,7 @@ func (c *Analytics) Table(
 
 	resp, err := c.service.Properties.RunReport(propertyName(an.PropertyID), req).Do()
 	if err != nil {
-		return nil, nil, nil, errors.Wrapf(
-			err,
-			"can't get table data from google analytics with start data %s / end_date %s",
-			an.StartDate,
-			an.EndDate,
-		)
+		return nil, nil, nil, fmt.Errorf("can't get table data from google analytics with start data %s / end_date %s: %w", an.StartDate, an.EndDate, err)
 	}
 
 	formater := func(dim []string) string {
@@ -315,12 +301,7 @@ func (c *Analytics) StackedBar(an AnalyticValues) (dim []string, values map[stri
 
 	resp, err := c.service.Properties.RunReport(propertyName(an.PropertyID), req).Do()
 	if err != nil {
-		return nil, nil, errors.Wrapf(
-			err,
-			"can't get stacked bar data from google analytics with start data %s / end_date %s",
-			an.StartDate,
-			an.EndDate,
-		)
+		return nil, nil, fmt.Errorf("can't get stacked bar data from google analytics with start data %s / end_date %s: %w", an.StartDate, an.EndDate, err)
 	}
 
 	// Always dates on x-axis
@@ -583,7 +564,7 @@ func mapMetric(metric string) (*ga.Metric, error) {
 
 	name := normalizeName(metric)
 	if removedMetrics[name] {
-		return nil, errors.Errorf("the metric %s doesn't exist in Google Analytics 4", metric)
+		return nil, fmt.Errorf("the metric %s doesn't exist in Google Analytics 4", metric)
 	}
 
 	return &ga.Metric{Name: name}, nil

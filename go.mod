@@ -7,7 +7,6 @@ require (
 	github.com/clipperhouse/displaywidth v0.11.0
 	github.com/gdamore/tcell/v3 v3.6.0
 	github.com/google/go-github/v80 v80.0.0
-	github.com/pkg/errors v0.9.1
 	github.com/prometheus-community/pro-bing v0.9.1
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0

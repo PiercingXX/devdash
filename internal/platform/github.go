@@ -2,14 +2,16 @@ package platform
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"sort"
 	"strconv"
 	"sync"
 	"time"
 
+	"errors"
+
 	"github.com/google/go-github/v80/github"
-	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -411,7 +413,7 @@ func (g *Github) fetchStars(repository string) (s []*github.Stargazer, err error
 				PerPage: githubMaxPerPage,
 			})
 			if err != nil {
-				return errors.Wrapf(err, "can't find repo %s of owner %s", repo, g.owner)
+				return fmt.Errorf("can't find repo %s of owner %s: %w", repo, g.owner, err)
 			}
 
 			lock.Lock()
@@ -440,7 +442,7 @@ func (g *Github) fetchRepo(repository string) (*github.Repository, error) {
 
 	r, _, err := g.client.Repositories.Get(context.Background(), g.owner, repo)
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find repo %s of owner %s", repo, g.owner)
+		return nil, fmt.Errorf("can't find repo %s of owner %s: %w", repo, g.owner, err)
 	}
 
 	return r, nil
@@ -459,7 +461,7 @@ func (g *Github) fetchCommitCount(repository string) (*github.RepositoryParticip
 
 	p, _, err := g.client.Repositories.ListParticipation(context.Background(), g.owner, repo)
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find repo %s of owner %s", repo, g.owner)
+		return nil, fmt.Errorf("can't find repo %s of owner %s: %w", repo, g.owner, err)
 	}
 
 	return p, nil
@@ -477,7 +479,7 @@ func (g *Github) fetchViews(repository string) (*github.TrafficViews, error) {
 
 	t, _, err := g.client.Repositories.ListTrafficViews(context.Background(), g.owner, repo, nil)
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find repo %s of owner %s", repo, g.owner)
+		return nil, fmt.Errorf("can't find repo %s of owner %s: %w", repo, g.owner, err)
 	}
 
 	return t, nil
@@ -496,7 +498,7 @@ func (g *Github) fetchBranches(repository string, limit int) ([]*github.Branch, 
 	opt := github.BranchListOptions{ListOptions: github.ListOptions{PerPage: limit}}
 	bs, _, err := g.client.Repositories.ListBranches(context.Background(), g.owner, repo, &opt)
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find branches of owner %s for repo %s", g.owner, repo)
+		return nil, fmt.Errorf("can't find branches of owner %s for repo %s: %w", g.owner, repo, err)
 	}
 
 	return bs, nil
@@ -519,7 +521,7 @@ func (g *Github) fetchIssues(repository string, limit int) ([]*github.Issue, err
 	}
 	is, _, err := g.client.Issues.ListByRepo(context.Background(), g.owner, repo, &opt)
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find the issues of owner %s for repo %s", g.owner, repo)
+		return nil, fmt.Errorf("can't find the issues of owner %s for repo %s: %w", g.owner, repo, err)
 	}
 
 	return is, nil
@@ -541,7 +543,7 @@ func (g *Github) fetchPullRequests(repository string, limit int) ([]*github.Pull
 		ListOptions: github.ListOptions{PerPage: limit},
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find the pull requests of owner %s for repo %s", g.owner, repo)
+		return nil, fmt.Errorf("can't find the pull requests of owner %s for repo %s: %w", g.owner, repo, err)
 	}
 
 	return prs, nil
@@ -552,7 +554,7 @@ func (g *Github) fetchAllRepo(order string) ([]*github.Repository, error) {
 
 	r, _, err := g.client.Repositories.ListByUser(ctx, g.owner, &github.RepositoryListByUserOptions{Sort: order})
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find all repo of owner %s", g.owner)
+		return nil, fmt.Errorf("can't find all repo of owner %s: %w", g.owner, err)
 	}
 
 	return r, nil

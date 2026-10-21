@@ -1,10 +1,8 @@
 package internal
 
-// Dispatch the different widgets from the config to their services, and get back the render functions.
+import "fmt"
 
-import (
-	"github.com/pkg/errors"
-)
+// Dispatch the different widgets from the config to their services, and get back the render functions.
 
 type service interface {
 	CreateWidgets(widget Widget, tui *Tui) (f func() error, err error)
@@ -125,7 +123,7 @@ func (p *project) mapServiceID(serviceID string) (service, error) {
 		return services[serviceID], nil
 	}
 
-	return nil, errors.Errorf("Impossible to find the service with ID %s", serviceID)
+	return nil, fmt.Errorf("Impossible to find the service with ID %s", serviceID)
 }
 
 func mapServiceName(serviceID string) (string, error) {
@@ -145,7 +143,7 @@ func mapServiceName(serviceID string) (string, error) {
 		return services[serviceID], nil
 	}
 
-	return "", errors.Errorf("Impossible to find the service with ID %s", serviceID)
+	return "", fmt.Errorf("Impossible to find the service with ID %s", serviceID)
 }
 
 // Create all the widgets and populate them with data.
@@ -153,7 +151,7 @@ func mapServiceName(serviceID string) (string, error) {
 func (p *project) CreateWidgets() [][][]func() error {
 	err := p.addTitle(p.tui)
 	if err != nil {
-		err = errors.Wrapf(err, "can't add project title %s", p.name)
+		err = fmt.Errorf("can't add project title %s: %w", p.name, err)
 		DisplayError(p.tui, err)()
 	}
 
@@ -208,11 +206,11 @@ func (p *project) CreateWidgets() [][][]func() error {
 // One channel per widget to keep the order of widget in a slice.
 func getRenderers(s service, name string, w Widget, tui *Tui, c chan<- func() error) {
 	if s == nil {
-		c <- DisplayError(tui, errors.Errorf("can't use widget %s without service %s.", w.Name, name))
+		c <- DisplayError(tui, fmt.Errorf("can't use widget %s without service %s.", w.Name, name))
 	} else {
 		f, err := s.CreateWidgets(w, tui)
 		if err != nil {
-			c <- DisplayError(tui, errors.Errorf("%s / %s: %s", name, w.Name, err.Error()))
+			c <- DisplayError(tui, fmt.Errorf("%s / %s: %s", name, w.Name, err.Error()))
 		} else {
 			c <- f
 		}
