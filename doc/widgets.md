@@ -30,7 +30,9 @@ Every widget accepts the options of its type, in addition to the options of its 
 | `border_color` | Color of the border                                                    | default                 |
 | `text_color`   | Color of the text                                                      | default                 |
 | `bold`         | Display the text in bold                                               | `false`                 |
-| `multiline`    | Wrap the text and make the box as high as needed to display all of it. Without it, a text too long for the box ends with `…`. | `false` |
+| `multiline`    | Make the box as high as needed to display all of the text. Without it, a text too long for the box ends with `…`. | `false` |
+
+The text is wrapped between words.
 
 ### Gauge
 
@@ -41,7 +43,7 @@ Every widget accepts the options of its type, in addition to the options of its 
 | `color`        | Color of the title, the border, the text and the bar | default               |
 | `title_color`  | Color of the title                                   | default               |
 | `border_color` | Color of the border                                  | default               |
-| `text_color`   | Color of the percentage                              | default               |
+| `text_color`   | Color of the percentage. On a colored gauge, the default is black. | default |
 | `bar_color`    | Color of the gauge                                   | default (reverse video) |
 
 ### Bar
@@ -57,10 +59,10 @@ Every widget accepts the options of its type, in addition to the options of its 
 | `border_color`    | Color of the border                                                    | default               |
 | `text_color`      | Color of the labels below the bars                                     | default               |
 | `bar_color`       | Color of the bars                                                      | default (reverse video) |
-| `num_color`       | Color of the numbers displayed on the bars                             | default               |
+| `num_color`       | Color of the numbers displayed on the bars. On colored bars, the default is black. | default |
 | `empty_num_color` | Color of the numbers of empty bars                                     | default               |
 
-The bars that don't fit in the width of the widget are not displayed: reduce `bar_width` or `bar_gap`, or make the column wider.
+When the bars don't all fit in the width of the widget, the last ones are displayed: with a period, the most recent ones. Reduce `bar_width` or `bar_gap`, or make the column wider, to display more.
 
 #### Stacked bar
 
@@ -86,7 +88,7 @@ The series are sorted by name, so they keep the same color between refreshes. At
 | `border_color` | Color of the border                         | default               |
 | `text_color`   | Color of the text                           | default               |
 
-The height of a table depends on its number of rows. Most table widgets limit the rows with the option `row_limit`.
+The height of a table depends on its number of rows. Most table widgets limit the rows with the option `row_limit`. When a table is too wide, its widest columns are shortened, ending with `…`.
 
 ## Sizes
 

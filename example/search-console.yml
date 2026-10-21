@@ -1,0 +1,59 @@
+---
+# Google Search Console. See doc/services/google-search-console.md to create the keyfile.
+general:
+  refresh: 3600
+
+projects:
+  - name: example.com - Search Console
+    name_options:
+      color: green
+    services:
+      google_search_console:
+        keyfile: my-keyfile.json
+        address: https://example.com/
+    widgets:
+      - row:
+          - col:
+              size: 7
+              elements:
+                - name: gsc.table_queries
+                  options:
+                    title: " Queries - last month "
+                    start_date: last_month
+                    end_date: last_month
+                    character_limit: 30
+                    row_limit: 8
+                    color: green
+          - col:
+              size: 5
+              elements:
+                - name: gsc.table
+                  options:
+                    title: " Clicks per country - last month "
+                    dimension: country
+                    metrics: clicks,impressions
+                    start_date: last_month
+                    end_date: last_month
+                    row_limit: 4
+                    color: yellow
+                - name: gsc.table
+                  options:
+                    title: " Clicks per device - last month "
+                    dimension: device
+                    metrics: clicks,ctr
+                    start_date: last_month
+                    end_date: last_month
+                    row_limit: 3
+                    color: blue
+      - row:
+          - col:
+              size: 12
+              elements:
+                - name: gsc.table_pages
+                  options:
+                    title: " Pages - last month, without the tags "
+                    start_date: last_month
+                    end_date: last_month
+                    filters: "-/tag/"
+                    row_limit: 6
+                    color: magenta

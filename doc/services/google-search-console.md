@@ -97,4 +97,6 @@ projects:
                     metrics: clicks
 ```
 
-![google search console dashboard](../../example/img/gsc-1.png)
+A complete dashboard is in [`example/search-console.yml`](../../example/search-console.yml) (screenshot with sample data):
+
+![search console dashboard](../img/search-console.png)

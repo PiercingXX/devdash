@@ -34,7 +34,9 @@ go build .
 
 Run `devdash` without any argument. If it doesn't exist yet, DevDash creates the default dashboard `default.yml` in `$XDG_CONFIG_HOME/devdash`, and displays it:
 
-![default dashboard](../example/img/monitor.png)
+![default dashboard](./img/default.png)
+
+It checks every 600 seconds that `https://github.com` answers with a status code 200. On Linux, it also displays the metrics of your computer. Press `CTRL+e` to open it in your editor: replace the address with your own website, save, and quit the editor to see the result.
 
 ```yaml
 ---
@@ -43,26 +45,56 @@ general:
   keys:
     quit: "C-c"
     hot_reload: "C-r"
+    edit: "C-e"
 
 projects:
-  - name: Default dashboard located at ~/.config/devdash/default.yml
+  - name: Default dashboard - /home/me/.config/devdash/default.yml
     services:
       monitor:
-        address: "https://thevaluable.dev"
+        address: "https://github.com"
     widgets:
       - row:
           - col:
-              size: "M"
+              size: 4
               elements:
+                - name: display.box
+                  options:
+                    title: " Welcome to DevDash "
+                    content: "CTRL+e edits this dashboard, CTRL+r reloads it, CTRL+c quits.\n\nDocumentation and examples:\ngithub.com/PiercingXX/devdash"
+                    multiline: true
+                    color: cyan
                 - name: mon.box_availability
                   options:
-                    title: " thevaluable.dev status "
-                    color: yellow
+                    title: " github.com "
+                    color: green
+          # Only on Linux.
+          - col:
+              size: 4
+              elements:
+                - name: lh.gauge_cpu_rate
+                  options:
+                    title: " CPU (since boot) "
+                    bar_color: green
+                - name: lh.gauge_memory_rate
+                  options:
+                    bar_color: yellow
+                - name: lh.gauge_swap_rate
+                  options:
+                    bar_color: red
+          - col:
+              size: 4
+              elements:
+                - name: lh.box_uptime
+                - name: lh.box_load
+                - name: lh.box_processes
+      - row:
+          - col:
+              size: 12
+              elements:
+                - name: lh.table_disk
 ```
 
-Every 600 seconds, DevDash sends a request to `https://thevaluable.dev` and displays whether the website answers with a status code 200. Replace the address with your own website, then press `CTRL+r` to reload the dashboard without restarting DevDash.
-
-The same dashboard can be written in JSON:
+The same kind of dashboard can be written in JSON:
 
 ```json
 {
@@ -70,7 +102,7 @@ The same dashboard can be written in JSON:
     {
       "name": "Quickstart",
       "services": {
-        "monitor": { "address": "https://thevaluable.dev" }
+        "monitor": { "address": "https://example.com" }
       },
       "widgets": [
         {

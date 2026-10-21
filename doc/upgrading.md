@@ -2,6 +2,8 @@
 
 This fork is compatible with the dashboards of [Phantas0s/devdash](https://github.com/Phantas0s/devdash) 0.5.0, except for the changes below. The complete list is in the [changelog](../CHANGELOG.md).
 
+The website thedevdash.com documents the original version: use this documentation instead.
+
 ## Google Analytics
 
 Google shut down Universal Analytics, and its API. The `google_analytics` service now uses Google Analytics 4:
@@ -45,7 +47,7 @@ These options were documented, but didn't work with their documented name:
 * `ga.bar_bounces` added ` Bounces ` to your title.
 * On Sundays, the weeks (`this_week`, `last_week`, `x_weeks_ago`) began on Saturday.
 * `end_date: this_year` and `end_date: x_years_ago` were the first day of the year.
-* `rh.box_disk_io` displayed values 1024 times too big.
+* `rh.box_disk_io` displayed values 1024 times too big, and counted the I/O of a disk again for each of its partitions and virtual devices.
 * `mon.box_ping` only pinged once, when DevDash started.
 * The Google Analytics `filters` beginning with `-` now exclude their value, as they already did for Google Search Console.
 
@@ -56,3 +58,14 @@ The terminal interface uses [tcell](https://github.com/gdamore/tcell) instead of
 * The `size` option of `name_options` is now applied.
 * `CTRL+e` gives the terminal to your editor until you quit it, then reloads the dashboard.
 * The keys keep the same notation (`C-c`, `M-x`, `<f5>`...).
+* The text of the boxes is wrapped between words.
+* When a bar chart is too narrow for its bars, the last (most recent) ones are displayed instead of the first ones.
+* The columns of a table too wide for its widget are shortened.
+* The numbers on a colored bar or gauge are black by default, to be readable.
+
+## Other changes
+
+* The default dashboard, created on the first run, checks `https://github.com` and displays the metrics of your computer (on Linux), instead of a fixed blog.
+* `github.table_pull_requests` displays the author instead of the `merged` and `commits` columns, which were always `unknown`. Merged pull requests have the state `merged`.
+* The pages of `gsc.table_pages` keep their leading `/`, and the home page is `/`.
+* `devdash list` and `devdash edit` find the JSON and TOML dashboards, and the dashboards of the current directory.

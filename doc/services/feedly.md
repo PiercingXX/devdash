@@ -7,7 +7,7 @@ Display the number of [Feedly](https://feedly.com) subscribers of a website. It 
 ```yaml
 services:
   feedly:
-    address: https://thevaluable.dev
+    address: https://example.com
 ```
 
 | Option    | Description                                    |

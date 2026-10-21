@@ -39,7 +39,7 @@ services:
 | `github.table_repositories`  | table | Public repositories of the owner, with their stars, watchers, forks and open issues                   |
 | `github.table_branches`      | table | Branches of the repository                                                                            |
 | `github.table_issues`        | table | Issues and pull requests of the repository, open or closed, with their state                          |
-| `github.table_pull_requests` | table | Pull requests of the repository, open or closed, with their state and creation date                   |
+| `github.table_pull_requests` | table | Pull requests of the repository, with their state (open, closed or merged), author and creation date |
 | `github.bar_views`           | bar   | Views of the repository's page, per day, for the last 14 days                                         |
 | `github.bar_commits`         | bar   | Commits per week, for the last 52 weeks at most                                                       |
 | `github.bar_stars`           | bar   | Stars given per day. The days without a new star are not displayed.                                   |
@@ -62,54 +62,65 @@ The dates are described in [Dates](../dates.md). For `github.bar_commits`, both 
 
 ## Example
 
+[`example/github.yml`](../../example/github.yml) works without a token:
+
 ```yaml
 projects:
-  - name: DevDash
+  - name: gdamore/tcell
+    name_options:
+      color: green
     services:
       github:
-        owner: PiercingXX
-        repository: devdash
+        # token: or the environment variable DEVDASH_GITHUB_TOKEN
+        owner: gdamore
+        repository: tcell
     themes:
-      bar:
-        color: yellow
-        title_color: red
-        bar_color: green
-        bar_gap: 1
       table:
-        border_color: green
-        row_limit: 10
+        color: yellow
+        row_limit: 5
     widgets:
       - row:
           - col:
-              size: 12
+              size: 8
               elements:
-                - name: github.bar_stars
+                - name: github.bar_commits
                   options:
-                    start_date: 3_months_ago
+                    title: " Commits per week (everybody) "
+                    start_date: 15_weeks_ago
+                    end_date: 0_weeks_ago
+                    scope: all
+                    bar_width: 5
+                    bar_gap: 1
+                    color: green
+          - col:
+              size: 2
+              elements:
+                - name: github.box_stars
+                  options:
+                    title: " Stars "
+                    color: yellow
+                - name: github.box_watchers
+                  options:
+                    color: yellow
+                - name: github.box_open_issues
+                  options:
+                    title: " Open issues "
+                    color: red
+          - col:
+              size: 2
+              elements:
+                - name: github.table_branches
       - row:
           - col:
               size: 6
               elements:
-                - name: github.bar_views
-                  options:
-                    height: 23
-                    bar_gap: 5
+                - name: github.table_pull_requests
           - col:
               size: 6
               elements:
                 - name: github.table_repositories
                   options:
                     metrics: stars,forks
-                    order: created
-                - name: github.table_issues
-      - row:
-          - col:
-              size: 12
-              elements:
-                - name: github.bar_commits
-                  options:
-                    start_date: 35_weeks_ago
-                    scope: all
 ```
 
-![github dashboard](../../example/img/devdash-1.png)
+![github dashboard](../img/github.png)

@@ -192,6 +192,8 @@ projects:
                     filters: "/blog/,-/blog/tag/"
 ```
 
-![google analytics dashboard](../../example/img/ga-1.png)
+A complete dashboard is in [`example/google-analytics.yml`](../../example/google-analytics.yml) (screenshot with sample data):
+
+![google analytics dashboard](../img/google-analytics.png)
 
 More examples are in [Examples](../examples.md).

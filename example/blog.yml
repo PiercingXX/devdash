@@ -1,161 +1,111 @@
 ---
+# A blog: Google Analytics 4, Google Search Console, and the availability of the website.
 general:
   refresh: 600
-  keys:
-    quit: "C-c"
 
 projects:
-  - name: web-techno.net - Metrics
+  - name: example.com - Blog
     name_options:
-      border_color: default
-      text_color: default
-      size: XXL
-      bold: true
+      color: cyan
     services:
       google_analytics:
-        keyfile: goanalytics-123.json
+        keyfile: my-keyfile.json
         property_id: 123456789
-      monitor:
-        address: "https://www.web-techno.net"
       google_search_console:
-        keyfile: goanalytics-123.json
-        address: 'https://web-techno.net'
+        keyfile: my-keyfile.json
+        address: https://example.com/
+      monitor:
+        address: https://example.com
+    themes:
+      bar:
+        num_color: black
+        bar_gap: 1
+      table:
+        title_color: blue
+        border_color: magenta
     widgets:
       - row:
           - col:
-              size: "M"
+              size: 5
               elements:
                 - name: ga.bar_users
                   options:
-                    start_date: "15_days_ago"
-                    end_date: "today"
+                    title: " Users - last 10 days "
+                    start_date: 9_days_ago
+                    bar_width: 5
                     bar_color: yellow
                     border_color: yellow
                     title_color: yellow
-                    num_color: black
-                    bar_gap: 1
-                - name: ga.bar_users
+                - name: ga.bar_pages
                   options:
-                    start_date: "12_months_ago"
-                    end_date: "this_month"
-                    time_period: month
-                    title_color: red
-                    border_color: red
+                    title: " Views of /blog/ - last 10 days "
+                    start_date: 9_days_ago
+                    filters: "/blog/"
+                    bar_width: 5
                     bar_color: red
-                    bar_width: 8
-                    num_color: black
-                    bar_gap: 1
+                    border_color: red
+                    title_color: red
           - col:
-              size: "S"
+              size: 5
               elements:
-                - name: ga.bar_new_returning
+                - name: ga.bar_devices
                   options:
-                    start_date: "6_months_ago"
-                    end_date: "this_month"
+                    title: " Sessions per device - last 6 months "
+                    start_date: 5_months_ago
+                    end_date: this_month
                     time_period: month
-                    metric: "users"
-                    title_color: blue
-                    bar_width: 8
-                    num_color: black
+                    bar_width: 7
                     bar_gap: 2
                     height: 20
           - col:
-              size: "XS"
+              size: 2
               elements:
                 - name: ga.box_real_time
                   options:
-                    title_color: red
-                    border_color: red
-                    text_color: red
+                    color: red
                 - name: mon.box_availability
                   options:
-                    title_color: yellow
-                    border_color: yellow
-                    text_color: green
+                    color: green
                 - name: ga.box_total
                   options:
-                    title: "sessions/users 4 weeks ago"
-                    metric: "sessionsPerUser"
-                    title_color: green
-                    border_color: green
-                    text_color: green
-                    start_date: 4_weeks_ago
-                    end_date: 4_weeks_ago
-                - name: ga.box_total
-                  options:
-                    title: "sessions/users 3 weeks ago"
-                    metric: "sessionsPerUser"
+                    title: " Sessions / user "
+                    metric: sessionsPerUser
                     color: blue
-                    start_date: 3_weeks_ago
-                    end_date: 3_weeks_ago
                 - name: ga.box_total
                   options:
-                    title: "sessions/users 2 weeks ago"
-                    metric: "sessionsPerUser"
+                    title: " Bounce rate "
+                    metric: bounce_rate
                     color: magenta
-                    start_date: 2_weeks_ago
-                    end_date: 2_weeks_ago
-                - name: ga.box_total
-                  options:
-                    title: "sessions/users 1 week ago"
-                    metric: "sessionsPerUser"
-                    text_color: default
-                    start_date: last_week
-                    end_date: last_week
       - row:
           - col:
-              size: "S"
-              elements:
-                - name: gsc.table_pages
-                  options:
-                    start_date: "last_week"
-                    end_date: "last_week"
-                    character_limit: 20
-                    border_color: magenta
-                    title_color: blue
-                    row_limit: 10
-                - name: ga.table_traffic_sources
-                  options:
-                    title: "Traffic sources - Today"
-                    filters: "google"
-                    start_date: "today"
-                    end_date: "today"
-                    row_limit: 8
-          - col:
-              size: "S"
+              size: 4
               elements:
                 - name: gsc.table_queries
                   options:
-                    title: "Last week queries (-date, -php)"
-                    start_date: "last_week"
-                    end_date: "last_week"
+                    title: " Queries - last week "
+                    start_date: last_week
+                    end_date: last_week
                     character_limit: 25
-                    row_limit: 19
-                    border_color: magenta
-                    title_color: blue
-                    filters: "-date,-php"
-                    # metrics: "clicks,ctr"
+                    metrics: clicks,impressions
+                    row_limit: 6
           - col:
-              size: "XS"
+              size: 4
               elements:
                 - name: ga.table_pages
                   options:
-                    title: "Pages - Yesterday"
-                    start_date: "yesterday"
-                    end_date: "yesterday"
-                    border_color: magenta
-                    title_color: blue
-                    metrics: "sessions"
-                    row_limit: 19
+                    title: " Pages - yesterday "
+                    start_date: yesterday
+                    end_date: yesterday
+                    metrics: page_views,users
+                    character_limit: 25
+                    row_limit: 6
           - col:
-              size: "XS"
+              size: 4
               elements:
-                - name: ga.table_pages
+                - name: ga.table_traffic_sources
                   options:
-                    title: "Pages - Today"
-                    metrics: "sessions"
-                    start_date: "today"
-                    end_date: "today"
-                    border_color: magenta
-                    title_color: blue
-                    row_limit: 19
+                    title: " Traffic sources - today "
+                    start_date: today
+                    end_date: today
+                    metrics: sessions
+                    row_limit: 6

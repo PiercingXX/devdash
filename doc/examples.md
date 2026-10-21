@@ -1,58 +1,60 @@
 # Examples
 
-Each example is a complete dashboard: copy it into `$XDG_CONFIG_HOME/devdash`, replace the credentials and addresses with yours, and run `devdash -c <name>`.
+Each example is a complete dashboard in the [`example`](../example) directory. Copy it into `$XDG_CONFIG_HOME/devdash`, replace the credentials and addresses with yours, and run `devdash -c <name>`.
 
-The screenshots were taken with the original DevDash, with the same configurations.
+The Google Analytics and Search Console screenshots show sample data.
 
-## Monitoring
+## Default dashboard
 
-[`monitor.yml`](../example/monitor.yml): the availability of a website.
+The dashboard DevDash creates on the first run: a website's availability, and on Linux, the metrics of your computer. Its configuration is in [Getting started](./getting-started.md#your-first-dashboard).
 
-![monitoring dashboard](../example/img/monitor.png)
+![default dashboard](./img/default.png)
 
 ## Localhost
 
-The system metrics of your computer, and the output of your own commands. The configuration is in [Host](./services/host.md#example).
+[`localhost.yml`](../example/localhost.yml): the memory, CPU, disks, network and load of your computer, and the output of your own commands. It needs Linux.
 
-## Google Analytics
-
-[`ga-1.yml`](../example/ga-1.yml): bar charts of users, a stacked bar chart of new and returning users, real time users and the availability of the website. The columns use numbers and T-shirt sizes.
-
-![google analytics dashboard](../example/img/ga-1.png)
-
-[`ga-2.yml`](../example/ga-2.yml): the `general` options, monthly bars, and tables of pages and traffic sources.
-
-![google analytics dashboard with tables](../example/img/ga-2.png)
-
-## Google Search Console
-
-[`gsc-1.yml`](../example/gsc-1.yml): the queries and pages of last month.
-
-![google search console dashboard](../example/img/gsc-1.png)
+![localhost dashboard](./img/localhost.png)
 
 ## Github
 
-[`git-1.yml`](../example/git-1.yml): repositories, branches and issues.
+[`github.yml`](../example/github.yml): commits per week, stars, branches, pull requests and repositories of a public repository, with themes. It works without a token.
 
-![github dashboard](../example/img/git-1.png)
+![github dashboard](./img/github.png)
 
-A dashboard with themes, stars, views and commits is in [Github](./services/github.md#example).
+## Google Analytics
+
+[`google-analytics.yml`](../example/google-analytics.yml): users per day, sessions per month, new and returning users in a stacked bar chart, real time users, totals, and tables of pages and traffic sources.
+
+![google analytics dashboard](./img/google-analytics.png)
+
+## Google Search Console
+
+[`search-console.yml`](../example/search-console.yml): the queries, countries, devices and pages of last month, with a filter excluding pages.
+
+![search console dashboard](./img/search-console.png)
 
 ## A blog
 
-[`mix-1.yml`](../example/mix-1.yml): Google Analytics, Google Search Console and monitoring together, to follow a blog.
+[`blog.yml`](../example/blog.yml): Google Analytics, Google Search Console and the availability of the website together.
 
-![blog dashboard](../example/img/mix-1.png)
+![blog dashboard](./img/blog.png)
 
 ### Page views of chosen pages
 
+`ga.bar_pages` displays the views of the pages containing its filter. `ga.bar` can do the same with any metric and dimension.
+
 ```yaml
 projects:
-  - name: https://thevaluable.dev - Pages
+  - name: example.com - Pages
     services:
       google_analytics:
         keyfile: my-keyfile.json
         property_id: 123456789
+    themes:
+      bar:
+        start_date: 9_days_ago
+        bar_width: 5
     widgets:
       - row:
           - col:
@@ -60,53 +62,28 @@ projects:
               elements:
                 - name: ga.bar_pages
                   options:
-                    title: " Developer stress "
-                    start_date: 18_days_ago
+                    title: " Terminal dashboards "
                     color: blue
-                    filters: "/developer-stress/"
+                    filters: "/blog/terminal-dashboards/"
           - col:
               size: M
               elements:
-                # Equivalent to ga.bar_pages: ga.bar can query any metric and dimension.
                 - name: ga.bar
                   options:
-                    title: " DevDash case study "
+                    title: " Users of the Go articles "
                     color: cyan
-                    start_date: 18_days_ago
+                    metric: users
                     dimensions: page_path
-                    metric: page_views
-                    filters: "/programming-side-project-example-devdash/"
-      - row:
-          - col:
-              size: M
-              elements:
-                - name: ga.bar_pages
-                  options:
-                    title: " Vim search "
-                    start_date: 18_days_ago
-                    # Each element of a widget can have its own color.
-                    title_color: green
-                    border_color: yellow
-                    bar_color: red
-                    filters: "/vim-search/"
-          - col:
-              size: M
-              elements:
-                - name: ga.bar_pages
-                  options:
-                    title: " DRY principle "
-                    start_date: 18_days_ago
-                    color: red
-                    filters: "/dry-principle-explained/"
+                    filters: "/blog/go-"
 ```
-
-![page views dashboard](../example/img/thevaluabledev-2.png)
 
 ### Pages per day
 
+Columns of the same widget for different days. The theme `table` sets the options common to every table.
+
 ```yaml
 projects:
-  - name: https://thevaluable.dev - Pages per day
+  - name: example.com - Pages per day
     services:
       google_analytics:
         keyfile: my-keyfile.json
@@ -118,16 +95,7 @@ projects:
     widgets:
       - row:
           - col:
-              size: XS
-              elements:
-                - name: ga.table_pages
-                  options:
-                    title: " 3 days ago "
-                    start_date: 3_days_ago
-                    end_date: 3_days_ago
-                    color: yellow
-          - col:
-              size: XS
+              size: S
               elements:
                 - name: ga.table_pages
                   options:
@@ -136,7 +104,7 @@ projects:
                     end_date: 2_days_ago
                     color: blue
           - col:
-              size: XS
+              size: S
               elements:
                 - name: ga.table_pages
                   options:
@@ -145,7 +113,7 @@ projects:
                     end_date: yesterday
                     color: magenta
           - col:
-              size: XS
+              size: S
               elements:
                 - name: ga.table_pages
                   options:
@@ -154,7 +122,3 @@ projects:
                     end_date: today
                     color: green
 ```
-
-![pages per day dashboard](../example/img/thevaluabledev-3.png)
-
-More dashboards are in the [dotfiles of the original author](https://github.com/Phantas0s/.dotfiles/tree/master/devdash). They use Universal Analytics: see [Upgrading](./upgrading.md) to convert them.

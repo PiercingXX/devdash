@@ -42,7 +42,7 @@ Replace `rh` with `lh` for the local host.
 | `rh.box_memory_rate`   | box   | Memory usage (%)                                                            |
 | `rh.box_swap_rate`     | box   | Swap usage (%)                                                              |
 | `rh.box_net_io`        | box   | Data received / sent on every network interface except `lo`, since the last boot |
-| `rh.box_disk_io`       | box   | Data read / written on every disk, since the last boot                      |
+| `rh.box_disk_io`       | box   | Data read / written on the physical disks since the last boot (the partitions and virtual devices are not counted twice) |
 | `rh.gauge_cpu_rate`    | gauge | CPU usage (%), averaged since the last boot                                 |
 | `rh.gauge_memory_rate` | gauge | Memory usage (%)                                                            |
 | `rh.gauge_swap_rate`   | gauge | Swap usage (%)                                                              |
@@ -82,49 +82,29 @@ On the local host, a command writing anything on its error output is displayed a
 
 ## Example
 
+A complete dashboard is in [`example/localhost.yml`](../../example/localhost.yml):
+
+![localhost dashboard](../img/localhost.png)
+
+The widgets displaying your own commands:
+
 ```yaml
-projects:
-  - name: My Sweet Localhost
-    widgets:
-      - row:
-          - col:
-              size: 8
-              elements:
-                - name: lh.bar_memory
-                  options:
-                    unit: "mb"
-                    color: yellow
-                    bar_gap: 1
-                    bar_width: 10
-                - name: lh.table_disk
-                  options:
-                    color: magenta
-                - name: lh.table
-                  options:
-                    title: " ls -lah "
-                    command: "ls -lah | tail -n +2"
-                    headers: "rights,links,user,group,size,month,day,time,name"
-          - col:
-              size: 4
-              elements:
-                - name: lh.gauge_cpu_rate
-                  options:
-                    bar_color: green
-                - name: lh.gauge_memory_rate
-                  options:
-                    bar_color: green
-                - name: lh.box_uptime
-                  options:
-                    color: blue
-                - name: lh.box_load
-                  options:
-                    color: blue
-                - name: lh.box_net_io
-                  options:
-                    color: green
-                    unit: "mb"
-                - name: lh.bar
-                  options:
-                    headers: "a,b,c"
-                    command: "echo 10 20 30"
+- name: lh.table
+  options:
+    title: " uname -srmo "
+    command: "uname -srmo"
+    headers: "kernel,release,machine,os"
+- name: lh.bar
+  options:
+    title: " Output of a command "
+    command: "echo 3 7 5 9 4"
+    headers: "mon,tue,wed,thu,fri"
+- name: lh.gauge
+  options:
+    title: " Root filesystem usage "
+    command: "sh ./root-usage.sh"   # prints a number between 0 and 100
+- name: rh.box
+  options:
+    title: " Last login "
+    command: "last -n 1 | head -n 1"
 ```

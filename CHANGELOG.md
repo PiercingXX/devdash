@@ -17,6 +17,7 @@ Maintained fork of [Phantas0s/devdash](https://github.com/Phantas0s/devdash), ar
 * The complete documentation in the `doc` directory, including a guide to upgrade from upstream DevDash.
 * The Google Analytics `filters` beginning with `-` exclude their value, like for Google Search Console.
 * `devdash edit` without argument edits the default dashboard.
+* New example dashboards and screenshots: localhost, Github, Google Analytics, Search Console and a blog.
 
 ### UPDATED
 
@@ -28,12 +29,21 @@ Maintained fork of [Phantas0s/devdash](https://github.com/Phantas0s/devdash), ar
 * Upgrade Go and every dependency. CI now runs on GitHub Actions.
 * The box option to wrap the text is now `multiline` (it was `false`), and the option of `github.bar_commits` to count every commit is now `scope` (it was `owner`), as documented.
 * The default title of `mon.box_ping` is ` Ping `. The columns of `git.table_branches` describe the last commit of each branch.
+* The default dashboard checks github.com and, on Linux, displays the metrics of the computer.
+* The text of the boxes is wrapped between words.
+* Bar charts too narrow for their bars display the last (most recent) ones, instead of the first ones.
+* The widest columns of a table too wide for its widget are shortened.
+* The numbers on a colored bar or gauge are black by default.
+* `github.table_pull_requests` displays the author, and the state `merged`, instead of the `merged` and `commits` columns, which were always `unknown`.
+* `rh.box_disk_io` only counts the physical disks: the I/O of a disk was counted again for each of its partitions and virtual devices.
 
 ### REMOVED
 
 * The Travis CI service (travis-ci.org was shut down).
 * The Google Analytics metrics `entrances` and `unique_page_views`, which don't exist in GA4.
 * The GitHub funding link to the original author.
+* The references to the original author's websites, in the default dashboard, the examples and the tests.
+* Dead code: unused functions, options and configuration fields.
 
 ### FIXED
 
@@ -50,6 +60,12 @@ Maintained fork of [Phantas0s/devdash](https://github.com/Phantas0s/devdash), ar
 * `end_date: this_year` and `end_date: x_years_ago` were the first day of the year instead of the last one.
 * `rh.box_disk_io` and `lh.box_disk_io` displayed values 1024 times too big.
 * The example dashboards used options that don't exist.
+* `devdash version` displayed "gocket".
+* `devdash list` ignored the JSON and TOML dashboards and the names with a dot, and `devdash edit` couldn't open the dashboards of the current directory.
+* The `unit` option converted wrongly to a smaller unit, and uppercase units were considered as exabytes.
+* `gsc.table_pages` removed the leading `/` of the pages, and displayed the home page as an empty line.
+* The tables could cut a character in the middle with `character_limit`.
+* The blog template of `devdash generate` used the unknown option `title_options` instead of `name_options`.
 
 ## [0.5.0] - 2021-04-25
 
