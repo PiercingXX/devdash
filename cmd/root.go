@@ -35,6 +35,8 @@ func init() {
 	rootCmd.AddCommand(versionCmd())
 	rootCmd.AddCommand(editCmd())
 	rootCmd.AddCommand(generateCmd())
+	rootCmd.AddCommand(checkCmd())
+	rootCmd.AddCommand(schemaCmd())
 }
 
 func Execute() {

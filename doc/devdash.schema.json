@@ -1,0 +1,4567 @@
+{
+  "$id": "https://raw.githubusercontent.com/PiercingXX/devdash/master/doc/devdash.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "definitions": {
+    "color": {
+      "enum": [
+        "black",
+        "blue",
+        "cyan",
+        "default",
+        "green",
+        "magenta",
+        "red",
+        "white",
+        "yellow"
+      ]
+    },
+    "column": {
+      "additionalProperties": false,
+      "properties": {
+        "elements": {
+          "items": {
+            "$ref": "#/definitions/widget"
+          },
+          "type": "array"
+        },
+        "size": {
+          "$ref": "#/definitions/size"
+        }
+      },
+      "required": [
+        "size"
+      ],
+      "type": "object"
+    },
+    "option_address": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_bar_color": {
+      "$ref": "#/definitions/color"
+    },
+    "option_bar_gap": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "pattern": "^[0-9]+$",
+          "type": "string"
+        }
+      ]
+    },
+    "option_bar_width": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "pattern": "^[0-9]+$",
+          "type": "string"
+        }
+      ]
+    },
+    "option_bold": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "enum": [
+            "true",
+            "false"
+          ]
+        }
+      ]
+    },
+    "option_border_color": {
+      "$ref": "#/definitions/color"
+    },
+    "option_branch": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_character_limit": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "pattern": "^[0-9]+$",
+          "type": "string"
+        }
+      ]
+    },
+    "option_color": {
+      "$ref": "#/definitions/color"
+    },
+    "option_columns": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_command": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_content": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_dimension": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_dimensions": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_empty_num_color": {
+      "$ref": "#/definitions/color"
+    },
+    "option_end_date": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_fifth_color": {
+      "$ref": "#/definitions/color"
+    },
+    "option_filters": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_first_color": {
+      "$ref": "#/definitions/color"
+    },
+    "option_fourth_color": {
+      "$ref": "#/definitions/color"
+    },
+    "option_global": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "enum": [
+            "true",
+            "false"
+          ]
+        }
+      ]
+    },
+    "option_header": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_headers": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_height": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "pattern": "^[0-9]+$",
+          "type": "string"
+        }
+      ]
+    },
+    "option_label": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_metric": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_metrics": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_multiline": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "enum": [
+            "true",
+            "false"
+          ]
+        }
+      ]
+    },
+    "option_num_color": {
+      "$ref": "#/definitions/color"
+    },
+    "option_order": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_path": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_rate": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "enum": [
+            "true",
+            "false"
+          ]
+        }
+      ]
+    },
+    "option_repository": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_row_limit": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "pattern": "^[0-9]+$",
+          "type": "string"
+        }
+      ]
+    },
+    "option_scope": {
+      "enum": [
+        "owner",
+        "all"
+      ]
+    },
+    "option_second_color": {
+      "$ref": "#/definitions/color"
+    },
+    "option_size": {
+      "$ref": "#/definitions/size"
+    },
+    "option_start_date": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_text_color": {
+      "$ref": "#/definitions/color"
+    },
+    "option_third_color": {
+      "$ref": "#/definitions/color"
+    },
+    "option_time_period": {
+      "enum": [
+        "day",
+        "month",
+        "year"
+      ]
+    },
+    "option_title": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_title_color": {
+      "$ref": "#/definitions/color"
+    },
+    "option_unit": {
+      "enum": [
+        "b",
+        "kb",
+        "mb",
+        "gb",
+        "tb",
+        "pb",
+        "eb"
+      ]
+    },
+    "option_url": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "option_value": {
+      "type": [
+        "string",
+        "number",
+        "boolean"
+      ]
+    },
+    "project": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "name_options": {
+          "additionalProperties": false,
+          "properties": {
+            "bold": {
+              "$ref": "#/definitions/option_bold"
+            },
+            "border_color": {
+              "$ref": "#/definitions/option_border_color"
+            },
+            "color": {
+              "$ref": "#/definitions/option_color"
+            },
+            "height": {
+              "$ref": "#/definitions/option_height"
+            },
+            "size": {
+              "$ref": "#/definitions/option_size"
+            },
+            "text_color": {
+              "$ref": "#/definitions/option_text_color"
+            }
+          },
+          "type": "object"
+        },
+        "services": {
+          "additionalProperties": false,
+          "properties": {
+            "feedly": {
+              "additionalProperties": false,
+              "properties": {
+                "address": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "git": {
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "github": {
+              "additionalProperties": false,
+              "properties": {
+                "owner": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                },
+                "repository": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                },
+                "token": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "google_analytics": {
+              "additionalProperties": false,
+              "properties": {
+                "keyfile": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                },
+                "property_id": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                },
+                "view_id": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "google_search_console": {
+              "additionalProperties": false,
+              "properties": {
+                "address": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                },
+                "keyfile": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "monitor": {
+              "additionalProperties": false,
+              "properties": {
+                "address": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "remote_host": {
+              "additionalProperties": false,
+              "properties": {
+                "address": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                },
+                "known_hosts": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                },
+                "username": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "themes": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "address": {
+                "$ref": "#/definitions/option_address"
+              },
+              "bar_color": {
+                "$ref": "#/definitions/option_bar_color"
+              },
+              "bar_gap": {
+                "$ref": "#/definitions/option_bar_gap"
+              },
+              "bar_width": {
+                "$ref": "#/definitions/option_bar_width"
+              },
+              "bold": {
+                "$ref": "#/definitions/option_bold"
+              },
+              "border_color": {
+                "$ref": "#/definitions/option_border_color"
+              },
+              "branch": {
+                "$ref": "#/definitions/option_branch"
+              },
+              "character_limit": {
+                "$ref": "#/definitions/option_character_limit"
+              },
+              "color": {
+                "$ref": "#/definitions/option_color"
+              },
+              "columns": {
+                "$ref": "#/definitions/option_columns"
+              },
+              "command": {
+                "$ref": "#/definitions/option_command"
+              },
+              "content": {
+                "$ref": "#/definitions/option_content"
+              },
+              "dimension": {
+                "$ref": "#/definitions/option_dimension"
+              },
+              "dimensions": {
+                "$ref": "#/definitions/option_dimensions"
+              },
+              "empty_num_color": {
+                "$ref": "#/definitions/option_empty_num_color"
+              },
+              "end_date": {
+                "$ref": "#/definitions/option_end_date"
+              },
+              "fifth_color": {
+                "$ref": "#/definitions/option_fifth_color"
+              },
+              "filters": {
+                "$ref": "#/definitions/option_filters"
+              },
+              "first_color": {
+                "$ref": "#/definitions/option_first_color"
+              },
+              "fourth_color": {
+                "$ref": "#/definitions/option_fourth_color"
+              },
+              "global": {
+                "$ref": "#/definitions/option_global"
+              },
+              "header": {
+                "$ref": "#/definitions/option_header"
+              },
+              "headers": {
+                "$ref": "#/definitions/option_headers"
+              },
+              "height": {
+                "$ref": "#/definitions/option_height"
+              },
+              "label": {
+                "$ref": "#/definitions/option_label"
+              },
+              "metric": {
+                "$ref": "#/definitions/option_metric"
+              },
+              "metrics": {
+                "$ref": "#/definitions/option_metrics"
+              },
+              "multiline": {
+                "$ref": "#/definitions/option_multiline"
+              },
+              "num_color": {
+                "$ref": "#/definitions/option_num_color"
+              },
+              "order": {
+                "$ref": "#/definitions/option_order"
+              },
+              "path": {
+                "$ref": "#/definitions/option_path"
+              },
+              "rate": {
+                "$ref": "#/definitions/option_rate"
+              },
+              "repository": {
+                "$ref": "#/definitions/option_repository"
+              },
+              "row_limit": {
+                "$ref": "#/definitions/option_row_limit"
+              },
+              "scope": {
+                "$ref": "#/definitions/option_scope"
+              },
+              "second_color": {
+                "$ref": "#/definitions/option_second_color"
+              },
+              "start_date": {
+                "$ref": "#/definitions/option_start_date"
+              },
+              "text_color": {
+                "$ref": "#/definitions/option_text_color"
+              },
+              "third_color": {
+                "$ref": "#/definitions/option_third_color"
+              },
+              "time_period": {
+                "$ref": "#/definitions/option_time_period"
+              },
+              "title": {
+                "$ref": "#/definitions/option_title"
+              },
+              "title_color": {
+                "$ref": "#/definitions/option_title_color"
+              },
+              "unit": {
+                "$ref": "#/definitions/option_unit"
+              },
+              "url": {
+                "$ref": "#/definitions/option_url"
+              },
+              "value": {
+                "$ref": "#/definitions/option_value"
+              }
+            },
+            "type": "object"
+          },
+          "type": "object"
+        },
+        "widgets": {
+          "items": {
+            "$ref": "#/definitions/row"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "row": {
+      "additionalProperties": false,
+      "properties": {
+        "row": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "col": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/column"
+                  },
+                  {
+                    "items": {
+                      "$ref": "#/definitions/column"
+                    },
+                    "type": "array"
+                  }
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "size": {
+      "anyOf": [
+        {
+          "maximum": 12,
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "pattern": "^([1-9]|1[0-2]|[Xx]{0,2}[SsLl]|[Mm])$",
+          "type": "string"
+        }
+      ]
+    },
+    "widget": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "display.box"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "content": {
+                    "$ref": "#/definitions/option_content"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "feedly.box_subscribers"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "ga.bar"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "dimensions": {
+                    "$ref": "#/definitions/option_dimensions"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "filters": {
+                    "$ref": "#/definitions/option_filters"
+                  },
+                  "global": {
+                    "$ref": "#/definitions/option_global"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "metric": {
+                    "$ref": "#/definitions/option_metric"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "time_period": {
+                    "$ref": "#/definitions/option_time_period"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "ga.bar_bounces"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "dimensions": {
+                    "$ref": "#/definitions/option_dimensions"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "filters": {
+                    "$ref": "#/definitions/option_filters"
+                  },
+                  "global": {
+                    "$ref": "#/definitions/option_global"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "time_period": {
+                    "$ref": "#/definitions/option_time_period"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "ga.bar_countries"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "filters": {
+                    "$ref": "#/definitions/option_filters"
+                  },
+                  "global": {
+                    "$ref": "#/definitions/option_global"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "ga.bar_devices"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "fifth_color": {
+                    "$ref": "#/definitions/option_fifth_color"
+                  },
+                  "first_color": {
+                    "$ref": "#/definitions/option_first_color"
+                  },
+                  "fourth_color": {
+                    "$ref": "#/definitions/option_fourth_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "metric": {
+                    "$ref": "#/definitions/option_metric"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "second_color": {
+                    "$ref": "#/definitions/option_second_color"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "third_color": {
+                    "$ref": "#/definitions/option_third_color"
+                  },
+                  "time_period": {
+                    "$ref": "#/definitions/option_time_period"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "ga.bar_new_returning"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "fifth_color": {
+                    "$ref": "#/definitions/option_fifth_color"
+                  },
+                  "first_color": {
+                    "$ref": "#/definitions/option_first_color"
+                  },
+                  "fourth_color": {
+                    "$ref": "#/definitions/option_fourth_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "metric": {
+                    "$ref": "#/definitions/option_metric"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "second_color": {
+                    "$ref": "#/definitions/option_second_color"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "third_color": {
+                    "$ref": "#/definitions/option_third_color"
+                  },
+                  "time_period": {
+                    "$ref": "#/definitions/option_time_period"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "ga.bar_pages"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "filters": {
+                    "$ref": "#/definitions/option_filters"
+                  },
+                  "global": {
+                    "$ref": "#/definitions/option_global"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "time_period": {
+                    "$ref": "#/definitions/option_time_period"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "ga.bar_returning"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "global": {
+                    "$ref": "#/definitions/option_global"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "time_period": {
+                    "$ref": "#/definitions/option_time_period"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "ga.bar_sessions"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "dimensions": {
+                    "$ref": "#/definitions/option_dimensions"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "filters": {
+                    "$ref": "#/definitions/option_filters"
+                  },
+                  "global": {
+                    "$ref": "#/definitions/option_global"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "metric": {
+                    "$ref": "#/definitions/option_metric"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "time_period": {
+                    "$ref": "#/definitions/option_time_period"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "ga.bar_users"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "dimensions": {
+                    "$ref": "#/definitions/option_dimensions"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "filters": {
+                    "$ref": "#/definitions/option_filters"
+                  },
+                  "global": {
+                    "$ref": "#/definitions/option_global"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "time_period": {
+                    "$ref": "#/definitions/option_time_period"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "ga.box_real_time"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "ga.box_total"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "global": {
+                    "$ref": "#/definitions/option_global"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "metric": {
+                    "$ref": "#/definitions/option_metric"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "ga.table"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "character_limit": {
+                    "$ref": "#/definitions/option_character_limit"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "dimension": {
+                    "$ref": "#/definitions/option_dimension"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "filters": {
+                    "$ref": "#/definitions/option_filters"
+                  },
+                  "global": {
+                    "$ref": "#/definitions/option_global"
+                  },
+                  "metrics": {
+                    "$ref": "#/definitions/option_metrics"
+                  },
+                  "order": {
+                    "$ref": "#/definitions/option_order"
+                  },
+                  "row_limit": {
+                    "$ref": "#/definitions/option_row_limit"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "ga.table_pages"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "character_limit": {
+                    "$ref": "#/definitions/option_character_limit"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "dimension": {
+                    "$ref": "#/definitions/option_dimension"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "filters": {
+                    "$ref": "#/definitions/option_filters"
+                  },
+                  "global": {
+                    "$ref": "#/definitions/option_global"
+                  },
+                  "metrics": {
+                    "$ref": "#/definitions/option_metrics"
+                  },
+                  "order": {
+                    "$ref": "#/definitions/option_order"
+                  },
+                  "row_limit": {
+                    "$ref": "#/definitions/option_row_limit"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "ga.table_traffic_sources"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "character_limit": {
+                    "$ref": "#/definitions/option_character_limit"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "filters": {
+                    "$ref": "#/definitions/option_filters"
+                  },
+                  "global": {
+                    "$ref": "#/definitions/option_global"
+                  },
+                  "metrics": {
+                    "$ref": "#/definitions/option_metrics"
+                  },
+                  "order": {
+                    "$ref": "#/definitions/option_order"
+                  },
+                  "row_limit": {
+                    "$ref": "#/definitions/option_row_limit"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "git.table_branches"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "github.bar_commits"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "repository": {
+                    "$ref": "#/definitions/option_repository"
+                  },
+                  "scope": {
+                    "$ref": "#/definitions/option_scope"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "github.bar_stars"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "repository": {
+                    "$ref": "#/definitions/option_repository"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "github.bar_views"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "repository": {
+                    "$ref": "#/definitions/option_repository"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "github.box_last_run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "branch": {
+                    "$ref": "#/definitions/option_branch"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "repository": {
+                    "$ref": "#/definitions/option_repository"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "github.box_open_issues"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "repository": {
+                    "$ref": "#/definitions/option_repository"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "github.box_stars"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "repository": {
+                    "$ref": "#/definitions/option_repository"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "github.box_watchers"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "repository": {
+                    "$ref": "#/definitions/option_repository"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "github.table_branches"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "repository": {
+                    "$ref": "#/definitions/option_repository"
+                  },
+                  "row_limit": {
+                    "$ref": "#/definitions/option_row_limit"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "github.table_issues"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "repository": {
+                    "$ref": "#/definitions/option_repository"
+                  },
+                  "row_limit": {
+                    "$ref": "#/definitions/option_row_limit"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "github.table_pull_requests"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "repository": {
+                    "$ref": "#/definitions/option_repository"
+                  },
+                  "row_limit": {
+                    "$ref": "#/definitions/option_row_limit"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "github.table_repositories"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "metrics": {
+                    "$ref": "#/definitions/option_metrics"
+                  },
+                  "order": {
+                    "$ref": "#/definitions/option_order"
+                  },
+                  "row_limit": {
+                    "$ref": "#/definitions/option_row_limit"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "github.table_workflow_runs"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "branch": {
+                    "$ref": "#/definitions/option_branch"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "repository": {
+                    "$ref": "#/definitions/option_repository"
+                  },
+                  "row_limit": {
+                    "$ref": "#/definitions/option_row_limit"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "gsc.table"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "character_limit": {
+                    "$ref": "#/definitions/option_character_limit"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "dimension": {
+                    "$ref": "#/definitions/option_dimension"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "filters": {
+                    "$ref": "#/definitions/option_filters"
+                  },
+                  "metrics": {
+                    "$ref": "#/definitions/option_metrics"
+                  },
+                  "row_limit": {
+                    "$ref": "#/definitions/option_row_limit"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "gsc.table_pages"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "character_limit": {
+                    "$ref": "#/definitions/option_character_limit"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "filters": {
+                    "$ref": "#/definitions/option_filters"
+                  },
+                  "metrics": {
+                    "$ref": "#/definitions/option_metrics"
+                  },
+                  "row_limit": {
+                    "$ref": "#/definitions/option_row_limit"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "gsc.table_queries"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "character_limit": {
+                    "$ref": "#/definitions/option_character_limit"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "dimension": {
+                    "$ref": "#/definitions/option_dimension"
+                  },
+                  "end_date": {
+                    "$ref": "#/definitions/option_end_date"
+                  },
+                  "filters": {
+                    "$ref": "#/definitions/option_filters"
+                  },
+                  "metrics": {
+                    "$ref": "#/definitions/option_metrics"
+                  },
+                  "row_limit": {
+                    "$ref": "#/definitions/option_row_limit"
+                  },
+                  "start_date": {
+                    "$ref": "#/definitions/option_start_date"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "json.bar"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "header": {
+                    "$ref": "#/definitions/option_header"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "label": {
+                    "$ref": "#/definitions/option_label"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "path": {
+                    "$ref": "#/definitions/option_path"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  },
+                  "url": {
+                    "$ref": "#/definitions/option_url"
+                  },
+                  "value": {
+                    "$ref": "#/definitions/option_value"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "json.box"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "header": {
+                    "$ref": "#/definitions/option_header"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "path": {
+                    "$ref": "#/definitions/option_path"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  },
+                  "url": {
+                    "$ref": "#/definitions/option_url"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "json.gauge"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "header": {
+                    "$ref": "#/definitions/option_header"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "path": {
+                    "$ref": "#/definitions/option_path"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  },
+                  "url": {
+                    "$ref": "#/definitions/option_url"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "json.table"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "columns": {
+                    "$ref": "#/definitions/option_columns"
+                  },
+                  "header": {
+                    "$ref": "#/definitions/option_header"
+                  },
+                  "headers": {
+                    "$ref": "#/definitions/option_headers"
+                  },
+                  "path": {
+                    "$ref": "#/definitions/option_path"
+                  },
+                  "row_limit": {
+                    "$ref": "#/definitions/option_row_limit"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  },
+                  "url": {
+                    "$ref": "#/definitions/option_url"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.bar"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "command": {
+                    "$ref": "#/definitions/option_command"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "headers": {
+                    "$ref": "#/definitions/option_headers"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.bar_memory"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "headers": {
+                    "$ref": "#/definitions/option_headers"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "metrics": {
+                    "$ref": "#/definitions/option_metrics"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  },
+                  "unit": {
+                    "$ref": "#/definitions/option_unit"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.bar_rates"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.box"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "command": {
+                    "$ref": "#/definitions/option_command"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.box_cpu_rate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.box_disk_io"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "rate": {
+                    "$ref": "#/definitions/option_rate"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  },
+                  "unit": {
+                    "$ref": "#/definitions/option_unit"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.box_load"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.box_memory_rate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.box_net_io"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "rate": {
+                    "$ref": "#/definitions/option_rate"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  },
+                  "unit": {
+                    "$ref": "#/definitions/option_unit"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.box_processes"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.box_swap_rate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.box_uptime"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.gauge"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "command": {
+                    "$ref": "#/definitions/option_command"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.gauge_cpu_rate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.gauge_memory_rate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.gauge_swap_rate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.table"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "command": {
+                    "$ref": "#/definitions/option_command"
+                  },
+                  "headers": {
+                    "$ref": "#/definitions/option_headers"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "lh.table_disk"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "headers": {
+                    "$ref": "#/definitions/option_headers"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  },
+                  "unit": {
+                    "$ref": "#/definitions/option_unit"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "mon.box_availability"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "address": {
+                    "$ref": "#/definitions/option_address"
+                  },
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "mon.box_ping"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "address": {
+                    "$ref": "#/definitions/option_address"
+                  },
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.bar"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "command": {
+                    "$ref": "#/definitions/option_command"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "headers": {
+                    "$ref": "#/definitions/option_headers"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.bar_memory"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "headers": {
+                    "$ref": "#/definitions/option_headers"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "metrics": {
+                    "$ref": "#/definitions/option_metrics"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  },
+                  "unit": {
+                    "$ref": "#/definitions/option_unit"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.bar_rates"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "bar_gap": {
+                    "$ref": "#/definitions/option_bar_gap"
+                  },
+                  "bar_width": {
+                    "$ref": "#/definitions/option_bar_width"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "empty_num_color": {
+                    "$ref": "#/definitions/option_empty_num_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "num_color": {
+                    "$ref": "#/definitions/option_num_color"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.box"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "command": {
+                    "$ref": "#/definitions/option_command"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.box_cpu_rate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.box_disk_io"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "rate": {
+                    "$ref": "#/definitions/option_rate"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  },
+                  "unit": {
+                    "$ref": "#/definitions/option_unit"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.box_load"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.box_memory_rate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.box_net_io"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "rate": {
+                    "$ref": "#/definitions/option_rate"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  },
+                  "unit": {
+                    "$ref": "#/definitions/option_unit"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.box_processes"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.box_swap_rate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.box_uptime"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bold": {
+                    "$ref": "#/definitions/option_bold"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "multiline": {
+                    "$ref": "#/definitions/option_multiline"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.gauge"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "command": {
+                    "$ref": "#/definitions/option_command"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.gauge_cpu_rate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.gauge_memory_rate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.gauge_swap_rate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "bar_color": {
+                    "$ref": "#/definitions/option_bar_color"
+                  },
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "height": {
+                    "$ref": "#/definitions/option_height"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.table"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "command": {
+                    "$ref": "#/definitions/option_command"
+                  },
+                  "headers": {
+                    "$ref": "#/definitions/option_headers"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "const": "rh.table_disk"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "additionalProperties": false,
+                "properties": {
+                  "border_color": {
+                    "$ref": "#/definitions/option_border_color"
+                  },
+                  "color": {
+                    "$ref": "#/definitions/option_color"
+                  },
+                  "headers": {
+                    "$ref": "#/definitions/option_headers"
+                  },
+                  "text_color": {
+                    "$ref": "#/definitions/option_text_color"
+                  },
+                  "title": {
+                    "$ref": "#/definitions/option_title"
+                  },
+                  "title_color": {
+                    "$ref": "#/definitions/option_title_color"
+                  },
+                  "unit": {
+                    "$ref": "#/definitions/option_unit"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "display.box",
+            "feedly.box_subscribers",
+            "ga.bar",
+            "ga.bar_bounces",
+            "ga.bar_countries",
+            "ga.bar_devices",
+            "ga.bar_new_returning",
+            "ga.bar_pages",
+            "ga.bar_returning",
+            "ga.bar_sessions",
+            "ga.bar_users",
+            "ga.box_real_time",
+            "ga.box_total",
+            "ga.table",
+            "ga.table_pages",
+            "ga.table_traffic_sources",
+            "git.table_branches",
+            "github.bar_commits",
+            "github.bar_stars",
+            "github.bar_views",
+            "github.box_last_run",
+            "github.box_open_issues",
+            "github.box_stars",
+            "github.box_watchers",
+            "github.table_branches",
+            "github.table_issues",
+            "github.table_pull_requests",
+            "github.table_repositories",
+            "github.table_workflow_runs",
+            "gsc.table",
+            "gsc.table_pages",
+            "gsc.table_queries",
+            "json.bar",
+            "json.box",
+            "json.gauge",
+            "json.table",
+            "lh.bar",
+            "lh.bar_memory",
+            "lh.bar_rates",
+            "lh.box",
+            "lh.box_cpu_rate",
+            "lh.box_disk_io",
+            "lh.box_load",
+            "lh.box_memory_rate",
+            "lh.box_net_io",
+            "lh.box_processes",
+            "lh.box_swap_rate",
+            "lh.box_uptime",
+            "lh.gauge",
+            "lh.gauge_cpu_rate",
+            "lh.gauge_memory_rate",
+            "lh.gauge_swap_rate",
+            "lh.table",
+            "lh.table_disk",
+            "mon.box_availability",
+            "mon.box_ping",
+            "rh.bar",
+            "rh.bar_memory",
+            "rh.bar_rates",
+            "rh.box",
+            "rh.box_cpu_rate",
+            "rh.box_disk_io",
+            "rh.box_load",
+            "rh.box_memory_rate",
+            "rh.box_net_io",
+            "rh.box_processes",
+            "rh.box_swap_rate",
+            "rh.box_uptime",
+            "rh.gauge",
+            "rh.gauge_cpu_rate",
+            "rh.gauge_memory_rate",
+            "rh.gauge_swap_rate",
+            "rh.table",
+            "rh.table_disk"
+          ]
+        },
+        "options": {
+          "type": "object"
+        },
+        "theme": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    }
+  },
+  "properties": {
+    "general": {
+      "additionalProperties": false,
+      "properties": {
+        "editor": {
+          "type": "string"
+        },
+        "keys": {
+          "additionalProperties": false,
+          "properties": {
+            "edit": {
+              "type": "string"
+            },
+            "hot_reload": {
+              "type": "string"
+            },
+            "next": {
+              "type": "string"
+            },
+            "previous": {
+              "type": "string"
+            },
+            "quit": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "refresh": {
+          "description": "Seconds between two refreshes",
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "projects": {
+      "items": {
+        "$ref": "#/definitions/project"
+      },
+      "minItems": 1,
+      "type": "array"
+    }
+  },
+  "required": [
+    "projects"
+  ],
+  "title": "DevDash dashboard",
+  "type": "object"
+}

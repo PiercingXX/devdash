@@ -3,9 +3,9 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"github.com/PiercingXX/devdash/internal"
 	"github.com/spf13/cobra"

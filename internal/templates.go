@@ -240,9 +240,6 @@ projects:
               elements:
                 # The theme table is applied
                 - name: github.table_issues
-                  options:
-                    bar_gap: 1
-                    bar_width: 6
       - row:
           - col:
               size: 12
