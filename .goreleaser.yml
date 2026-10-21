@@ -23,6 +23,10 @@ archives:
     format_overrides:
       - goos: windows
         formats: [zip]
+    files:
+      - LICENCE
+      - README.md
+      - CHANGELOG.md
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -30,3 +34,49 @@ snapshot:
 changelog:
   # Keep a manual, simpler changelog for now
   disable: true
+
+# The Homebrew cask and the AUR package are only published when their secrets are set in the repository:
+# HOMEBREW_TAP_TOKEN, a token which can push to PiercingXX/homebrew-tap, and AUR_KEY, the private SSH key of the
+# AUR account.
+homebrew_casks:
+  - name: devdash
+    homepage: https://github.com/PiercingXX/devdash
+    description: Highly configurable terminal dashboard for developers and creators
+    license: Apache-2.0
+    repository:
+      owner: PiercingXX
+      name: homebrew-tap
+      token: '{{ envOrDefault "HOMEBREW_TAP_TOKEN" "" }}'
+    skip_upload: '{{ if envOrDefault "HOMEBREW_TAP_TOKEN" "" }}false{{ else }}true{{ end }}'
+    commit_author:
+      name: PiercingXX
+      email: 155384428+PiercingXX@users.noreply.github.com
+    hooks:
+      post:
+        # The binaries are not signed: remove the quarantine of macOS.
+        install: |
+          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/devdash"]
+          end
+
+aurs:
+  - name: devdash-piercingxx-bin
+    homepage: https://github.com/PiercingXX/devdash
+    description: Highly configurable terminal dashboard for developers and creators (maintained fork)
+    license: Apache-2.0
+    maintainers:
+      - PiercingXX
+    provides:
+      - devdash
+    conflicts:
+      - devdash
+      - devdash-bin
+    private_key: '{{ envOrDefault "AUR_KEY" "" }}'
+    git_url: ssh://aur@aur.archlinux.org/devdash-piercingxx-bin.git
+    skip_upload: '{{ if envOrDefault "AUR_KEY" "" }}false{{ else }}true{{ end }}'
+    commit_author:
+      name: PiercingXX
+      email: 155384428+PiercingXX@users.noreply.github.com
+    package: |-
+      install -Dm755 "./devdash" "${pkgdir}/usr/bin/devdash"
+      install -Dm644 "./LICENCE" "${pkgdir}/usr/share/licenses/devdash/LICENCE"
