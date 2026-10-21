@@ -1,64 +1,49 @@
-[![CI](https://github.com/PiercingXX/devdash/actions/workflows/ci.yml/badge.svg)](https://github.com/PiercingXX/devdash/actions/workflows/ci.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/PiercingXX/devdash)](https://goreportcard.com/report/github.com/PiercingXX/devdash) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENCE)
+# DevDash
 
 ![logo of devdash with a gopher](./doc/img/logo.jpg)
 
-DevDash is a configurable terminal dashboard for developers and creators: choose the metrics you need, from your computer, your servers, Github or Google, and display them in one place.
+[![CI](https://github.com/PiercingXX/devdash/actions/workflows/ci.yml/badge.svg)](https://github.com/PiercingXX/devdash/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENCE)
+
+A configurable terminal dashboard: pick the metrics you care about and see them in one place.
 
 ![a blog dashboard with Google Analytics and Search Console](./doc/img/blog.png)
 
-> [!NOTE]
-> This is the maintained fork of [Phantas0s/devdash](https://github.com/Phantas0s/devdash), archived in 2023. It supports Google Analytics 4 and runs on current Go and libraries. Coming from the original? See [Upgrading](./doc/upgrading.md).
+Maintained fork of the archived [Phantas0s/devdash](https://github.com/Phantas0s/devdash). Coming from the original? See [Upgrading](./doc/upgrading.md).
 
-## Features
+## What it shows
 
-* Display data from:
-  * Your computer, or a remote one through SSH: memory, CPU, disks, network... and the output of your own commands and scripts.
-  * Github: stars, views, commits, issues, pull requests, Github Actions runs.
-  * Google Analytics 4 and Google Search Console.
-  * Any API answering in JSON.
-  * The availability of your websites, Feedly subscribers, the branches of a local Git repository.
-* Place your widgets on a grid, and choose their size, colors and data. Everything has a default.
-* Reuse options with themes.
-* As many dashboards as you want, written in YAML, JSON or TOML, and switch between them with a keystroke.
-* The data is refreshed automatically, or with a keystroke. Edit a dashboard without leaving DevDash.
-* `devdash check` finds the mistakes in your dashboards, and a JSON schema gives the completion of your editor.
+* **Your computer or a server (SSH):** CPU, memory, disks, network, and the output of your own commands.
+* **Github:** stars, commits, issues, pull requests, Actions runs.
+* **Google Analytics 4** and **Search Console**.
+* **Anything else** with a JSON API, plus website availability, Feedly and local Git branches.
 
-## Installation
-
-Download the binary for your OS from the [latest release](https://github.com/PiercingXX/devdash/releases/latest), or:
+## Install
 
 ```shell
-# Linux, into /usr/local/bin
-curl -fsSL https://raw.githubusercontent.com/PiercingXX/devdash/master/install/linux.sh | bash
-
-# With Go 1.26 or later
-go install github.com/PiercingXX/devdash@latest
+git clone https://github.com/PiercingXX/devdash.git
+cd devdash
+go build .   # needs Go 1.26+
 ```
 
-## Getting started
+Or download a binary from the [releases](https://github.com/PiercingXX/devdash/releases/latest).
 
-Run `devdash`. On the first run, it creates a default dashboard in `$XDG_CONFIG_HOME/devdash/default.yml` (`~/.config/devdash` on Linux) and displays it.
+## Use
 
-* `CTRL+e` edits the dashboard, `CTRL+r` reloads it, `CTRL+n` / `CTRL+p` switch to the next / previous one, `CTRL+c` quits.
-* `devdash -c <name>` displays another dashboard, for example one of the [examples](./doc/examples.md).
-* `devdash list` lists your dashboards, `devdash generate` creates one for a blog or a Github project, `devdash check` finds their mistakes.
+Run `devdash`. The first run creates `~/.config/devdash/default.yml` and displays it.
+
+| Key / command            | Does                                   |
+| ------------------------ | -------------------------------------- |
+| `CTRL+e`                 | Edit the dashboard                     |
+| `CTRL+r`                 | Reload it                              |
+| `CTRL+n` / `CTRL+p`      | Next / previous dashboard              |
+| `CTRL+c`                 | Quit                                   |
+| `devdash -c <name>`      | Open another dashboard                 |
+| `devdash check <name>`   | Find mistakes in a dashboard           |
 
 ## Documentation
 
-* [Getting started](./doc/getting-started.md): installation, commands, keyboard shortcuts.
-* [Examples](./doc/examples.md), with their screenshots.
-* [Configuration](./doc/configuration.md), [widgets and display options](./doc/widgets.md), [dates](./doc/dates.md).
-* The services: [Monitor](./doc/services/monitor.md), [Host](./doc/services/host.md), [Github](./doc/services/github.md), [Google Analytics 4](./doc/services/google-analytics.md), [Google Search Console](./doc/services/google-search-console.md), [Feedly](./doc/services/feedly.md), [Git](./doc/services/git.md), [Display](./doc/services/display.md), [JSON](./doc/services/json.md).
-* [Upgrading from the original DevDash](./doc/upgrading.md).
+Everything is in [`doc/`](./doc/README.md): [getting started](./doc/getting-started.md), [examples](./doc/examples.md), [configuration](./doc/configuration.md), and one page per service.
 
-## Contributing
+## Credits
 
-Bug reports, ideas and pull requests are welcome: see [CONTRIBUTING.md](./CONTRIBUTING.md). Please report vulnerabilities privately, see [SECURITY.md](./SECURITY.md). The [changelog](./CHANGELOG.md) lists the changes of each version.
-
-## Acknowledgements
-
-DevDash was created by [Matthieu Cneude](https://github.com/Phantas0s). The gopher of the logo comes from the [free gophers pack](https://github.com/MariaLetta/free-gophers-pack) of MariaLetta. DevDash was inspired by [wtf](https://github.com/wtfutil/wtf) and [tdash](https://github.com/jessfraz/tdash).
-
-## Licence
-
-[Apache Licence 2.0](./LICENCE)
+Created by [Matthieu Cneude](https://github.com/Phantas0s). Gopher from MariaLetta's [free gophers pack](https://github.com/MariaLetta/free-gophers-pack). Licensed under [Apache 2.0](./LICENCE).
