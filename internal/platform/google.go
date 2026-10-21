@@ -79,5 +79,5 @@ func googleError(err error) error {
 		msg = http.StatusText(gerr.Code)
 	}
 
-	return fmt.Errorf("Google API error %d: %s", gerr.Code, strings.TrimSpace(msg))
+	return fmt.Errorf("error %d of the Google API: %s", gerr.Code, strings.TrimSpace(msg))
 }

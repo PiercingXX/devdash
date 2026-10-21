@@ -27,7 +27,6 @@ var stackedBarOptions = []string{
 }
 
 var (
-	dates         = []string{optionStartDate, optionEndDate}
 	gaBarOptions  = []string{optionStartDate, optionEndDate, optionGlobal, optionTimePeriod}
 	gaTableOpts   = []string{optionStartDate, optionEndDate, optionGlobal, optionMetrics, optionOrder, optionFilters, optionRowLimit, optionCharLimit}
 	gscTableOpts  = []string{optionStartDate, optionEndDate, optionMetrics, optionFilters, optionRowLimit, optionCharLimit}

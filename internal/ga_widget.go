@@ -189,7 +189,7 @@ func (g *gaWidget) barPages(widget Widget) (f func() error, err error) {
 	widget.Options[optionMetric] = "page_views"
 
 	if _, ok := widget.Options[optionFilters]; !ok {
-		return nil, errors.New("The widget ga.bar_pages require a filter (relative url of your page, i.e '/my-super-page/')")
+		return nil, errors.New("the widget ga.bar_pages requires a filter: the path of your page, like /my-super-page/")
 	}
 
 	if _, ok := widget.Options[optionTitle]; !ok {

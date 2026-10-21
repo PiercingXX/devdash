@@ -334,7 +334,7 @@ func (g *Github) CountStars(repository string, startDate, endDate time.Time) (di
 
 func formatCountStars(stargazers []*github.Stargazer, timeLayout string, startDate, endDate time.Time, addMissingDays bool) (dim []string, val []int) {
 	sort.SliceStable(stargazers, func(i, j int) bool {
-		return stargazers[i].StarredAt.Time.Before(stargazers[j].StarredAt.Time)
+		return stargazers[i].StarredAt.Before(stargazers[j].StarredAt.Time)
 	})
 	d, va := aggregateStarResults(stargazers)
 	if addMissingDays {
@@ -363,8 +363,8 @@ func aggregateStarResults(stargazers []*github.Stargazer) (dim []time.Time, val 
 			return
 		}
 
-		processingDate := v.StarredAt.Time.Format("2006-01-02")
-		nextDate := stargazers[k+1].StarredAt.Time.Format("2006-01-02")
+		processingDate := v.StarredAt.Format("2006-01-02")
+		nextDate := stargazers[k+1].StarredAt.Format("2006-01-02")
 
 		if processingDate != nextDate {
 			dim = append(dim, v.StarredAt.Time)
@@ -401,7 +401,7 @@ func (g *Github) fetchStars(repository string, since time.Time) (s []*github.Sta
 		})
 		var gerr *github.ErrorResponse
 		if errors.As(err, &gerr) && (gerr.Response.StatusCode == http.StatusUnauthorized || gerr.Response.StatusCode == http.StatusNotFound) {
-			return nil, fmt.Errorf("Github only gives the stars over time of your own repositories, with a token: can't get the stars of %s/%s", g.owner, repo)
+			return nil, fmt.Errorf("can't get the stars of %s/%s: Github only gives the stars over time of your own repositories, with a token", g.owner, repo)
 		}
 		if err != nil {
 			return nil, fmt.Errorf("can't find the stars of the repo %s of owner %s: %w", repo, g.owner, err)

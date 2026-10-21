@@ -17,12 +17,12 @@ func Test_googleError(t *testing.T) {
 		{
 			"message of the API",
 			&googleapi.Error{Code: 403, Message: "User does not have sufficient permissions for this property."},
-			"Google API error 403: User does not have sufficient permissions for this property.",
+			"error 403 of the Google API: User does not have sufficient permissions for this property.",
 		},
 		{
 			"HTML body without message",
 			fmt.Errorf("wrapped: %w", &googleapi.Error{Code: 404, Body: "<!DOCTYPE html><html>...</html>"}),
-			"Google API error 404: Not Found",
+			"error 404 of the Google API: Not Found",
 		},
 		{"other error", errors.New("timeout"), "timeout"},
 	}

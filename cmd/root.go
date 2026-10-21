@@ -196,7 +196,7 @@ func stopReload(stopAutoReload chan<- bool) {
 
 // showError alone on the dashboard.
 func showError(tui *internal.Tui, err error) {
-	internal.DisplayError(tui, err)()
+	_ = internal.DisplayError(tui, err)()
 	_ = tui.AddCol("12")
 	tui.AddRow()
 	tui.Render()
@@ -221,7 +221,7 @@ func build(path string, tui *internal.Tui) {
 				err = errors.New("google_analytics: property_id is required (view_id was used by Universal Analytics, which Google shut down; use the ID of your GA4 property instead)")
 			}
 			if err != nil {
-				internal.DisplayError(tui, err)()
+				_ = internal.DisplayError(tui, err)()
 			} else {
 				project.WithGa(gaWidget)
 			}
@@ -231,7 +231,7 @@ func build(path string, tui *internal.Tui) {
 		if !gscService.empty() {
 			gscWidget, err := internal.NewGscWidget(gscService.Keyfile, gscService.Address)
 			if err != nil {
-				internal.DisplayError(tui, err)()
+				_ = internal.DisplayError(tui, err)()
 			} else {
 				project.WithGoogleSearchConsole(gscWidget)
 			}
@@ -241,7 +241,7 @@ func build(path string, tui *internal.Tui) {
 		if !monService.empty() {
 			monWidget, err := internal.NewMonitorWidget(monService.Address)
 			if err != nil {
-				internal.DisplayError(tui, err)()
+				_ = internal.DisplayError(tui, err)()
 			} else {
 				project.WithMonitor(monWidget)
 			}
@@ -255,7 +255,7 @@ func build(path string, tui *internal.Tui) {
 				githubService.Repository,
 			)
 			if err != nil {
-				internal.DisplayError(tui, err)()
+				_ = internal.DisplayError(tui, err)()
 			} else {
 				project.WithGithub(githubWidget)
 			}
@@ -281,7 +281,7 @@ func build(path string, tui *internal.Tui) {
 				remoteHostService.KnownHosts,
 			)
 			if err != nil {
-				internal.DisplayError(tui, err)()
+				_ = internal.DisplayError(tui, err)()
 			} else {
 				project.WithRemoteHost(remoteHostWidget)
 			}
@@ -289,7 +289,7 @@ func build(path string, tui *internal.Tui) {
 
 		localhost, err := internal.NewHostWidget("localhost", "localhost", "")
 		if err != nil {
-			internal.DisplayError(tui, err)()
+			_ = internal.DisplayError(tui, err)()
 		}
 		project.WithLocalhost(localhost)
 

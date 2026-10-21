@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/PiercingXX/devdash/internal"
@@ -109,20 +111,14 @@ func askKeyfile() string {
 	fmt.Fprintln(os.Stdout, "")
 	fmt.Fprint(os.Stdout, "Enter the keyfile path for Google Analytics and Google Search Console: ")
 
-	var keyfile string
-	fmt.Scanf("%s", &keyfile)
-
-	return keyfile
+	return readLine()
 }
 
 func askSiteAddress() string {
 	fmt.Fprintln(os.Stdout, "")
 	fmt.Fprint(os.Stdout, "Enter the address of your blog (beginning with http or https): ")
 
-	var address string
-	fmt.Scanf("%s", &address)
-
-	return address
+	return readLine()
 }
 
 func askPropertyID() string {
@@ -132,10 +128,7 @@ func askPropertyID() string {
 	fmt.Fprintln(os.Stdout, "")
 	fmt.Fprint(os.Stdout, "Enter the property ID for Google Analytics: ")
 
-	var propertyID string
-	fmt.Scanf("%s", &propertyID)
-
-	return propertyID
+	return readLine()
 }
 
 func askGitHubToken() string {
@@ -145,28 +138,27 @@ func askGitHubToken() string {
 	fmt.Fprintln(os.Stdout, "")
 	fmt.Fprint(os.Stdout, "Enter the GitHub token: ")
 
-	var token string
-	fmt.Scanf("%s", &token)
-
-	return token
+	return readLine()
 }
 
 func askGitHubOwner() string {
 	fmt.Fprintln(os.Stdout, "")
 	fmt.Fprint(os.Stdout, "Enter your GitHub username: ")
 
-	var owner string
-	fmt.Scanf("%s", &owner)
-
-	return owner
+	return readLine()
 }
 
 func askGitHubRepo() string {
 	fmt.Fprintln(os.Stdout, "")
 	fmt.Fprint(os.Stdout, "Enter the name of the GitHub repo: ")
 
-	var repo string
-	fmt.Scanf("%s", &repo)
+	return readLine()
+}
 
-	return repo
+var stdin = bufio.NewReader(os.Stdin)
+
+// readLine typed by the user, without the spaces around it.
+func readLine() string {
+	line, _ := stdin.ReadString('\n')
+	return strings.TrimSpace(line)
 }

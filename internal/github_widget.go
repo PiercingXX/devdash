@@ -347,7 +347,7 @@ func (g *githubWidget) barCommits(widget Widget) (f func() error, err error) {
 	}
 
 	if !strings.Contains(sd, "weeks_ago") || !strings.Contains(ed, "weeks_ago") {
-		return nil, errors.New("The widget github.bar_commits require you to indicate a week range, ie startDate: 5_weeks_ago, endDate: 1_weeks_ago ")
+		return nil, errors.New("the widget github.bar_commits needs a range of weeks, like start_date: 5_weeks_ago and end_date: 1_weeks_ago")
 	}
 
 	sw, err := platform.ExtractCountPeriod(sd)

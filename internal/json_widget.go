@@ -24,17 +24,13 @@ const (
 )
 
 // jsonWidget displays values of the JSON returned by any URL. It doesn't need any service configuration.
-type jsonWidget struct {
-	tui *Tui
-}
+type jsonWidget struct{}
 
 func NewJSONWidget() *jsonWidget {
 	return &jsonWidget{}
 }
 
 func (j jsonWidget) CreateWidgets(widget Widget, tui *Tui) (f func() error, err error) {
-	j.tui = tui
-
 	switch widget.Name {
 	case jsonBox, jsonGauge, jsonBar, jsonTable:
 	default:

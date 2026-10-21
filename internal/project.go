@@ -124,7 +124,7 @@ func (p *project) mapServiceID(serviceID string) (service, error) {
 		return services[serviceID], nil
 	}
 
-	return nil, fmt.Errorf("Impossible to find the service with ID %s", serviceID)
+	return nil, fmt.Errorf("can't find the service with ID %s", serviceID)
 }
 
 func mapServiceName(serviceID string) (string, error) {
@@ -145,7 +145,7 @@ func mapServiceName(serviceID string) (string, error) {
 		return services[serviceID], nil
 	}
 
-	return "", fmt.Errorf("Impossible to find the service with ID %s", serviceID)
+	return "", fmt.Errorf("can't find the service with ID %s", serviceID)
 }
 
 // Create all the widgets and populate them with data.
@@ -154,7 +154,7 @@ func (p *project) CreateWidgets() [][][]func() error {
 	err := p.addTitle(p.tui)
 	if err != nil {
 		err = fmt.Errorf("can't add project title %s: %w", p.name, err)
-		DisplayError(p.tui, err)()
+		_ = DisplayError(p.tui, err)()
 	}
 
 	chs := make([][][]chan func() error, len(p.widgets))
@@ -208,7 +208,7 @@ func (p *project) CreateWidgets() [][][]func() error {
 // One channel per widget to keep the order of widget in a slice.
 func getRenderers(s service, name string, w Widget, tui *Tui, c chan<- func() error) {
 	if s == nil {
-		c <- DisplayError(tui, fmt.Errorf("can't use widget %s without service %s.", w.Name, name))
+		c <- DisplayError(tui, fmt.Errorf("can't use the widget %s without the service %s in the project", w.Name, name))
 	} else {
 		f, err := s.CreateWidgets(w, tui)
 		if err != nil {
@@ -226,12 +226,12 @@ func (p *project) Render(funcs [][][]func() error) {
 			for _, f := range funcs[r][c] {
 				err := f()
 				if err != nil {
-					DisplayError(p.tui, err)()
+					_ = DisplayError(p.tui, err)()
 				}
 			}
 			if len(col) > 0 {
 				if err := p.tui.AddCol(p.sizes[r][c]); err != nil {
-					DisplayError(p.tui, err)()
+					_ = DisplayError(p.tui, err)()
 				}
 			}
 		}
