@@ -1,0 +1,58 @@
+---
+# Github data of a public repository. No token needed, but Github limits the requests without one.
+general:
+  refresh: 3600
+
+projects:
+  - name: gdamore/tcell
+    name_options:
+      color: green
+    services:
+      github:
+        # token: or the environment variable DEVDASH_GITHUB_TOKEN
+        owner: gdamore
+        repository: tcell
+    themes:
+      table:
+        color: yellow
+        row_limit: 5
+    widgets:
+      - row:
+          - col:
+              size: 8
+              elements:
+                - name: github.bar_commits
+                  options:
+                    title: " Commits per week (everybody) "
+                    start_date: 15_weeks_ago
+                    end_date: 0_weeks_ago
+                    scope: all
+                    bar_width: 5
+                    bar_gap: 1
+                    color: green
+          - col:
+              size: 4
+              elements:
+                - name: github.box_stars
+                  options:
+                    title: " Stars "
+                    color: yellow
+                - name: github.box_open_issues
+                  options:
+                    title: " Open issues and pull requests "
+                    color: red
+                - name: github.box_last_run
+                  options:
+                    title: " Last run on main "
+                    branch: main
+                    multiline: true
+                    color: green
+      - row:
+          - col:
+              size: 6
+              elements:
+                - name: github.table_workflow_runs
+          - col:
+              size: 6
+              elements:
+                - name: github.table_pull_requests

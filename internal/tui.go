@@ -2,11 +2,10 @@
 package internal
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -32,14 +31,13 @@ const (
 
 	optionBold = "bold"
 
-	optionMultiline = "false"
+	optionMultiline = "multiline"
 
 	optionFirstColor  = "first_color"
 	optionSecondColor = "second_color"
 	optionThirdColor  = "third_color"
 	optionFourthColor = "fourth_color"
 	optionFifthColor  = "fifth_color"
-	optionSixthColor  = "sixth_color"
 
 	optionHeight = "height"
 
@@ -165,6 +163,7 @@ type keyManager interface {
 		key string,
 		editDashboard func(),
 	)
+	KAction(key string, action func())
 }
 
 type looper interface {
@@ -175,17 +174,12 @@ type reloader interface {
 	HotReload()
 }
 
-type aligner interface {
-	Align()
-}
-
 type manager interface {
 	keyManager
 	renderer
 	drawer
 	looper
 	reloader
-	aligner
 }
 
 type coloredElements struct {
@@ -308,7 +302,7 @@ func (t *Tui) AddProjectTitle(title string, options map[string]string) (err erro
 	if _, ok := options[optionBold]; ok {
 		bold, err = strconv.ParseBool(options[optionBold])
 		if err != nil {
-			return errors.Wrapf(err, "can't convert %s to bool - please verify your configuration (correct values: true or false)", options[optionBold])
+			return fmt.Errorf("can't convert %s to bool - please verify your configuration (correct values: true or false): %w", options[optionBold], err)
 		}
 	}
 
@@ -351,10 +345,7 @@ func (t *Tui) AddTextBox(
 	if _, ok := options[optionMultiline]; ok {
 		multiline, err = strconv.ParseBool(options[optionMultiline])
 		if err != nil {
-			return errors.Wrapf(
-				err, "can't convert %s to bool - please verify your configuration (correct values: 'true' or 'false')",
-				options[optionMultiline],
-			)
+			return fmt.Errorf("can't convert %s to bool - please verify your configuration (correct values: 'true' or 'false'): %w", options[optionMultiline], err)
 		}
 	}
 
@@ -362,7 +353,7 @@ func (t *Tui) AddTextBox(
 	if _, ok := options[optionBold]; ok {
 		bold, err = strconv.ParseBool(options[optionBold])
 		if err != nil {
-			return errors.Wrapf(err, "can't convert %s to bool - please verify your configuration (correct values: true or false)", options[optionBold])
+			return fmt.Errorf("can't convert %s to bool - please verify your configuration (correct values: true or false): %w", options[optionBold], err)
 		}
 	}
 
@@ -536,13 +527,14 @@ func (t *Tui) AddKEdit(
 	t.instance.KEdit(key, editDashboard)
 }
 
+// AddKAction runs an action when the key is pressed.
+func (t *Tui) AddKAction(key string, action func()) {
+	t.instance.KAction(key, action)
+}
+
 // Loop the TUI to receive events.
 func (t *Tui) Loop() {
 	t.instance.Loop()
-}
-
-func (t *Tui) Align() {
-	t.instance.Align()
 }
 
 // Clean and reinitialize the TUI.

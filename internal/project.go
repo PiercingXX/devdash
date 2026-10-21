@@ -1,14 +1,8 @@
 package internal
 
-// Dispatch the different widgets from the config to their widget managers and get back the render functions.
+import "fmt"
 
-// TODO it's a mess in there between concurrent / non concurrent ways of getting widget render functions.
-// TODO Initially it was made to go around the limitation of concurrent connection for Google Analytics.
-// TODO I feel the absence of generics here...  To refactor somehow (using reflection?).
-
-import (
-	"github.com/pkg/errors"
-)
+// Dispatch the different widgets from the config to their services, and get back the render functions.
 
 type service interface {
 	CreateWidgets(widget Widget, tui *Tui) (f func() error, err error)
@@ -26,7 +20,6 @@ type project struct {
 	monitorWidget    service
 	gscWidget        service
 	githubWidget     service
-	travisCIWidget   service
 	feedlyWidget     service
 	gitWidget        service
 	remoteHostWidget service
@@ -67,10 +60,6 @@ func (p *project) WithGoogleSearchConsole(gsc *gscWidget) {
 
 func (p *project) WithGithub(github *githubWidget) {
 	p.githubWidget = github
-}
-
-func (p *project) WithTravisCI(travisCI *travisCIWidget) {
-	p.travisCIWidget = travisCI
 }
 
 func (p *project) WithFeedly(feedly *feedlyWidget) {
@@ -120,11 +109,11 @@ func (p *project) addDefaultTheme(w Widget) Widget {
 func (p *project) mapServiceID(serviceID string) (service, error) {
 	services := map[string]service{
 		"display": NewDisplayWidget(),
+		"json":    NewJSONWidget(),
 		"ga":      p.gaWidget,
 		"mon":     p.monitorWidget,
 		"gsc":     p.gscWidget,
 		"github":  p.githubWidget,
-		"travis":  p.travisCIWidget,
 		"feedly":  p.feedlyWidget,
 		"git":     p.gitWidget,
 		"rh":      p.remoteHostWidget,
@@ -135,17 +124,17 @@ func (p *project) mapServiceID(serviceID string) (service, error) {
 		return services[serviceID], nil
 	}
 
-	return nil, errors.Errorf("Impossible to find the service with ID %s", serviceID)
+	return nil, fmt.Errorf("can't find the service with ID %s", serviceID)
 }
 
 func mapServiceName(serviceID string) (string, error) {
 	services := map[string]string{
 		"display": "Display",
+		"json":    "JSON",
 		"ga":      "Google Analytics",
 		"mon":     "Monitor",
 		"gsc":     "Google Search Console",
 		"github":  "Github",
-		"travis":  "Travis",
 		"feedly":  "Feedly",
 		"git":     "Git",
 		"rh":      "Remote Host",
@@ -156,17 +145,16 @@ func mapServiceName(serviceID string) (string, error) {
 		return services[serviceID], nil
 	}
 
-	return "", errors.Errorf("Impossible to find the service with ID %s", serviceID)
+	return "", fmt.Errorf("can't find the service with ID %s", serviceID)
 }
 
 // Create all the widgets and populate them with data.
 // Return channels with render functions
 func (p *project) CreateWidgets() [][][]func() error {
-	// TODO: use display.box instead of this shortcut
 	err := p.addTitle(p.tui)
 	if err != nil {
-		err = errors.Wrapf(err, "can't add project title %s", p.name)
-		DisplayError(p.tui, err)()
+		err = fmt.Errorf("can't add project title %s: %w", p.name, err)
+		_ = DisplayError(p.tui, err)()
 	}
 
 	chs := make([][][]chan func() error, len(p.widgets))
@@ -201,8 +189,8 @@ func (p *project) CreateWidgets() [][][]func() error {
 	}
 
 	funcs := make([][][]func() error, len(chs))
-	for r, _ := range chs {
-		for c, _ := range chs[r] {
+	for r := range chs {
+		for c := range chs[r] {
 			funcs[r] = append(funcs[r], []func() error{})
 			for _, chann := range chs[r][c] {
 				f, ok := <-chann
@@ -220,11 +208,11 @@ func (p *project) CreateWidgets() [][][]func() error {
 // One channel per widget to keep the order of widget in a slice.
 func getRenderers(s service, name string, w Widget, tui *Tui, c chan<- func() error) {
 	if s == nil {
-		c <- DisplayError(tui, errors.Errorf("can't use widget %s without service %s.", w.Name, name))
+		c <- DisplayError(tui, fmt.Errorf("can't use the widget %s without the service %s in the project", w.Name, name))
 	} else {
 		f, err := s.CreateWidgets(w, tui)
 		if err != nil {
-			c <- DisplayError(tui, errors.Errorf("%s / %s: %s", name, w.Name, err.Error()))
+			c <- DisplayError(tui, fmt.Errorf("%s / %s: %s", name, w.Name, err.Error()))
 		} else {
 			c <- f
 		}
@@ -238,16 +226,21 @@ func (p *project) Render(funcs [][][]func() error) {
 			for _, f := range funcs[r][c] {
 				err := f()
 				if err != nil {
-					DisplayError(p.tui, err)()
+					_ = DisplayError(p.tui, err)()
 				}
 			}
 			if len(col) > 0 {
 				if err := p.tui.AddCol(p.sizes[r][c]); err != nil {
-					DisplayError(p.tui, err)()
+					_ = DisplayError(p.tui, err)()
 				}
 			}
 		}
 		p.tui.AddRow()
+		p.tui.Render()
+	}
+
+	// A project without widgets still displays its title.
+	if len(p.widgets) == 0 {
 		p.tui.Render()
 	}
 }

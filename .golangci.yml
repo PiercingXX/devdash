@@ -1,0 +1,7 @@
+version: "2"
+
+linters:
+  exclusions:
+    # Unchecked errors of Close, the prints and the environment variables.
+    presets:
+      - std-error-handling

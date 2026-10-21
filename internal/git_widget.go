@@ -1,8 +1,9 @@
 package internal
 
 import (
-	"github.com/Phantas0s/devdash/internal/platform"
-	"github.com/pkg/errors"
+	"fmt"
+
+	"github.com/PiercingXX/devdash/internal/platform"
 )
 
 const (
@@ -28,7 +29,7 @@ func (g gitWidget) CreateWidgets(widget Widget, tui *Tui) (f func() error, err e
 	case gitBranches:
 		f, err = g.branches(widget)
 	default:
-		return nil, errors.Errorf("can't find the widget %s for service Git", widget.Name)
+		return nil, fmt.Errorf("can't find the widget %s for service Git", widget.Name)
 	}
 
 	return

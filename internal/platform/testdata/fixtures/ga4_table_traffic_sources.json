@@ -1,0 +1,92 @@
+{
+  "dimensionHeaders": [
+    {
+      "name": "sessionSource"
+    }
+  ],
+  "metricHeaders": [
+    {
+      "name": "sessions",
+      "type": "TYPE_INTEGER"
+    },
+    {
+      "name": "screenPageViews",
+      "type": "TYPE_INTEGER"
+    },
+    {
+      "name": "engagedSessions",
+      "type": "TYPE_INTEGER"
+    },
+    {
+      "name": "activeUsers",
+      "type": "TYPE_INTEGER"
+    }
+  ],
+  "rows": [
+    {
+      "dimensionValues": [
+        {
+          "value": "google"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "453"
+        },
+        {
+          "value": "485"
+        },
+        {
+          "value": "453"
+        },
+        {
+          "value": "462"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "(direct)"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "132"
+        },
+        {
+          "value": "180"
+        },
+        {
+          "value": "132"
+        },
+        {
+          "value": "155"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "indiehackers.com"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "15"
+        },
+        {
+          "value": "29"
+        },
+        {
+          "value": "15"
+        },
+        {
+          "value": "27"
+        }
+      ]
+    }
+  ],
+  "rowCount": 3,
+  "kind": "analyticsData#runReport"
+}

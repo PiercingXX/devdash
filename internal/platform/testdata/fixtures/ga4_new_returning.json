@@ -1,0 +1,110 @@
+{
+  "dimensionHeaders": [
+    {
+      "name": "yearMonth"
+    },
+    {
+      "name": "newVsReturning"
+    }
+  ],
+  "metricHeaders": [
+    {
+      "name": "totalUsers",
+      "type": "TYPE_INTEGER"
+    }
+  ],
+  "rows": [
+    {
+      "dimensionValues": [
+        {
+          "value": "201904"
+        },
+        {
+          "value": "new"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "11245"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "201905"
+        },
+        {
+          "value": "new"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "13966"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "201906"
+        },
+        {
+          "value": "new"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "13804"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "201904"
+        },
+        {
+          "value": "returning"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "1386"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "201905"
+        },
+        {
+          "value": "returning"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "1472"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "201906"
+        },
+        {
+          "value": "returning"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "1633"
+        }
+      ]
+    }
+  ],
+  "rowCount": 6,
+  "kind": "analyticsData#runReport"
+}

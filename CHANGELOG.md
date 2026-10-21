@@ -4,6 +4,95 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.6.0] - 2026-10-20
+
+First release of the maintained fork of [Phantas0s/devdash](https://github.com/Phantas0s/devdash), archived upstream in 2023.
+
+### ADDED
+
+* Google Analytics 4 support, with the Google Analytics Data API. The service `google_analytics` needs a `property_id` instead of a `view_id`.
+* New metric aliases for Google Analytics: `engaged_sessions`, `new_users`, `active_users`, `engagement_rate`. New dimension aliases: `landing_page`, `referrer`.
+* Install with `go install github.com/PiercingXX/devdash@latest`.
+* Release binaries for arm64.
+* The complete documentation in the `doc` directory, including a guide to upgrade from upstream DevDash.
+* The Google Analytics `filters` beginning with `-` exclude their value, like for Google Search Console.
+* `devdash edit` without argument edits the default dashboard.
+* New example dashboards and screenshots: localhost, Github, Google Analytics, Search Console and a blog.
+* `devdash check` reports the problems of a dashboard: unknown options, widgets and services with suggestions, invalid values, missing services.
+* A JSON schema of the dashboards for the completion of editors, printed by `devdash schema`.
+* Switch to the next or previous dashboard with `CTRL+n` and `CTRL+p` (keys `next` and `previous`).
+* The service `json`: the widgets `json.box`, `json.gauge`, `json.bar` and `json.table` display values of any JSON API.
+* The Github Actions widgets `github.table_workflow_runs` and `github.box_last_run`.
+* The option `rate` of `box_net_io` and `box_disk_io`: the throughput per second.
+* The option `known_hosts` of the service `remote_host`.
+* Packages for Homebrew and the AUR, built by the release workflow.
+
+### UPDATED
+
+* Replace the unmaintained termui/termbox with tcell. The size option of the project title is now honored.
+* The terminal is given to the editor while editing a dashboard with `CTRL+e`.
+* Port Google Search Console to the Search Console API, and Github to a current API client.
+* The monitor widget pings on every refresh instead of once at startup, and displays ping errors.
+* Several Google Analytics filters are now combined with OR instead of only using the first one.
+* Upgrade Go and every dependency. CI now runs on GitHub Actions.
+* The box option to wrap the text is now `multiline` (it was `false`), and the option of `github.bar_commits` to count every commit is now `scope` (it was `owner`), as documented.
+* The default title of `mon.box_ping` is ` Ping `. The columns of `git.table_branches` describe the last commit of each branch.
+* The default dashboard checks github.com and, on Linux, displays the metrics of the computer.
+* The text of the boxes is wrapped between words.
+* Bar charts too narrow for their bars display the last (most recent) ones, instead of the first ones.
+* The widest columns of a table too wide for its widget are shortened.
+* The numbers on a colored bar or gauge are black by default.
+* `github.table_pull_requests` displays the author, and the state `merged`, instead of the `merged` and `commits` columns, which were always `unknown`.
+* `rh.box_disk_io` only counts the physical disks: the I/O of a disk was counted again for each of its partitions and virtual devices.
+* The key of the remote hosts is verified with the known hosts, and the SSH connections are reused between the refreshes.
+* The local commands run with the shell of the system, like the remote ones.
+* The requests and the commands time out after 30 seconds.
+* The CPU widgets display the current usage instead of the average since the boot.
+* The network I/O doesn't count the loopback, container, VM and VPN interfaces.
+* The Google Analytics rates are displayed in percent, and the errors of the Google APIs are shortened.
+* `github.bar_stars` only fetches the stars of the period, and explains that Github only lists the stargazers of your own repositories.
+* An invalid dashboard displays an error, at startup or after a reload, instead of crashing DevDash.
+* Replace the archived github.com/pkg/errors with the standard library.
+
+### REMOVED
+
+* The Travis CI service (travis-ci.org was shut down).
+* The Google Analytics metrics `entrances` and `unique_page_views`, which don't exist in GA4.
+* The GitHub funding link to the original author.
+* The references to the original author's websites, in the default dashboard, the examples and the tests.
+* Dead code: unused functions, options and configuration fields.
+
+### FIXED
+
+* `ga.bar_returning` displayed every user instead of the returning ones.
+* Stacked bars changed colors on every refresh, and could crash with more than 5 values.
+* The config generator swapped the address and the Google Analytics ID.
+* The blog template generated invalid YAML and an ignored `reload` key.
+* Google Search Console crashed on empty filters.
+* The Linux install command didn't install anything.
+* `gsc.table_pages` displayed queries instead of pages.
+* `ga.bar_bounces` added " Bounces " to the title of the widget.
+* `ga.table` without `dimension` had an empty header.
+* On Sundays, the weeks began on Saturday.
+* `end_date: this_year` and `end_date: x_years_ago` were the first day of the year instead of the last one.
+* `rh.box_disk_io` and `lh.box_disk_io` displayed values 1024 times too big.
+* The example dashboards used options that don't exist.
+* `devdash version` displayed "gocket".
+* A widget name without a dot crashed DevDash.
+* The network I/O displayed the number of packets instead of the bytes.
+* The SSH connections were never closed.
+* `devdash generate` mixed the answers when one was left blank, and escaped the values like HTML.
+* The Github template of `devdash generate` had bar options on a table.
+* The output of a command ending with a new line showed `…` in a box.
+* A dashboard without widgets wasn't displayed.
+* `devdash list` ignored the JSON and TOML dashboards and the names with a dot, and `devdash edit` couldn't open the dashboards of the current directory.
+* The `unit` option converted wrongly to a smaller unit, and uppercase units were considered as exabytes.
+* `gsc.table_pages` removed the leading `/` of the pages, and displayed the home page as an empty line.
+* The tables could cut a character in the middle with `character_limit`.
+* The blog template of `devdash generate` used the unknown option `title_options` instead of `name_options`.
+
 ## [0.5.0] - 2021-04-25
 
 ### ADDED

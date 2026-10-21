@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Phantas0s/devdash/internal/platform"
-	"github.com/pkg/errors"
+	"errors"
+
+	"github.com/PiercingXX/devdash/internal/platform"
 )
 
 const (
@@ -21,6 +22,8 @@ const (
 	githubBarViews          = "github.bar_views"
 	githubBarCommits        = "github.bar_commits"
 	githubBarStars          = "github.bar_stars"
+	githubTableWorkflowRuns = "github.table_workflow_runs"
+	githubBoxLastRun        = "github.box_last_run"
 )
 
 type githubWidget struct {
@@ -64,8 +67,12 @@ func (g *githubWidget) CreateWidgets(widget Widget, tui *Tui) (f func() error, e
 		f, err = g.barCommits(widget)
 	case githubBarStars:
 		f, err = g.barStars(widget)
+	case githubTableWorkflowRuns:
+		f, err = g.tableWorkflowRuns(widget)
+	case githubBoxLastRun:
+		f, err = g.boxLastRun(widget)
 	default:
-		return nil, errors.Errorf("can't find the widget %s for service github", widget.Name)
+		return nil, fmt.Errorf("can't find the widget %s for service github", widget.Name)
 	}
 
 	return
@@ -168,7 +175,7 @@ func (g *githubWidget) tableRepo(widget Widget) (f func() error, err error) {
 	if _, ok := widget.Options[optionRowLimit]; ok {
 		limit, err = strconv.ParseInt(widget.Options[optionRowLimit], 10, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%s must be a number", widget.Options[optionRowLimit])
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionRowLimit], err)
 		}
 	}
 
@@ -211,7 +218,7 @@ func (g *githubWidget) tableBranches(widget Widget) (f func() error, err error) 
 	if _, ok := widget.Options[optionRowLimit]; ok {
 		limit, err = strconv.ParseInt(widget.Options[optionRowLimit], 10, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%s must be a number", widget.Options[optionRowLimit])
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionRowLimit], err)
 		}
 	}
 
@@ -227,7 +234,6 @@ func (g *githubWidget) tableBranches(widget Widget) (f func() error, err error) 
 	return
 }
 
-// TODO can filter by open or close issue?
 func (g *githubWidget) tableIssues(widget Widget) (f func() error, err error) {
 	var repo string
 	if _, ok := widget.Options[optionRepository]; ok {
@@ -243,7 +249,7 @@ func (g *githubWidget) tableIssues(widget Widget) (f func() error, err error) {
 	if _, ok := widget.Options[optionRowLimit]; ok {
 		limit, err = strconv.ParseInt(widget.Options[optionRowLimit], 10, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%s must be a number", widget.Options[optionRowLimit])
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionRowLimit], err)
 		}
 	}
 
@@ -274,7 +280,7 @@ func (g *githubWidget) tablePullRequests(widget Widget) (f func() error, err err
 	if _, ok := widget.Options[optionRowLimit]; ok {
 		limit, err = strconv.ParseInt(widget.Options[optionRowLimit], 10, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%s must be a number", widget.Options[optionRowLimit])
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionRowLimit], err)
 		}
 	}
 
@@ -313,7 +319,7 @@ func (g *githubWidget) barViews(widget Widget) (f func() error, err error) {
 	return
 }
 
-// TODO to refactor - transforming any date statement (weeks_ago, month_ago) into days weeks_ago in platform.date, and plugt it in.
+// barCommits per week. The participation API only gives the last 52 weeks, so the dates need to be "x_weeks_ago".
 func (g *githubWidget) barCommits(widget Widget) (f func() error, err error) {
 	var repo string
 	if _, ok := widget.Options[optionRepository]; ok {
@@ -341,7 +347,7 @@ func (g *githubWidget) barCommits(widget Widget) (f func() error, err error) {
 	}
 
 	if !strings.Contains(sd, "weeks_ago") || !strings.Contains(ed, "weeks_ago") {
-		return nil, errors.New("The widget github.bar_commits require you to indicate a week range, ie startDate: 5_weeks_ago, endDate: 1_weeks_ago ")
+		return nil, errors.New("the widget github.bar_commits needs a range of weeks, like start_date: 5_weeks_ago and end_date: 1_weeks_ago")
 	}
 
 	sw, err := platform.ExtractCountPeriod(sd)
@@ -399,6 +405,50 @@ func (g *githubWidget) barStars(widget Widget) (f func() error, err error) {
 
 	f = func() error {
 		return g.tui.AddBarChart(counts, dim, title, widget.Options)
+	}
+
+	return
+}
+
+func (g *githubWidget) tableWorkflowRuns(widget Widget) (f func() error, err error) {
+	title := " Github Actions "
+	if _, ok := widget.Options[optionTitle]; ok {
+		title = widget.Options[optionTitle]
+	}
+
+	var limit int64 = 5
+	if _, ok := widget.Options[optionRowLimit]; ok {
+		limit, err = strconv.ParseInt(widget.Options[optionRowLimit], 10, 0)
+		if err != nil {
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionRowLimit], err)
+		}
+	}
+
+	runs, err := g.client.WorkflowRuns(widget.Options[optionRepository], widget.Options[optionBranch], int(limit))
+	if err != nil {
+		return nil, err
+	}
+
+	f = func() error {
+		return g.tui.AddTable(runs, title, widget.Options)
+	}
+
+	return
+}
+
+func (g *githubWidget) boxLastRun(widget Widget) (f func() error, err error) {
+	title := " Last Github Actions run "
+	if _, ok := widget.Options[optionTitle]; ok {
+		title = widget.Options[optionTitle]
+	}
+
+	run, err := g.client.LastWorkflowRun(widget.Options[optionRepository], widget.Options[optionBranch])
+	if err != nil {
+		return nil, err
+	}
+
+	f = func() error {
+		return g.tui.AddTextBox(run, title, widget.Options)
 	}
 
 	return

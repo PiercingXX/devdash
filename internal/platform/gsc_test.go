@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	sc "google.golang.org/api/webmasters/v3"
+	sc "google.golang.org/api/searchconsole/v1"
 )
 
 func Test_filtersFromString(t *testing.T) {

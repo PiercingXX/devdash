@@ -2,10 +2,10 @@ package platform
 
 import (
 	"bytes"
+	"context"
+	"fmt"
 	"os/exec"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 const git = "git"
@@ -21,7 +21,11 @@ func NewGit(path string) *Git {
 }
 
 func (g *Git) Branches() ([][]string, error) {
-	cmd := exec.Command(
+	ctx, cancel := context.WithTimeout(context.Background(), RequestTimeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(
+		ctx,
 		git,
 		"for-each-ref",
 		"--sort=committerdate",
@@ -35,7 +39,7 @@ func (g *Git) Branches() ([][]string, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't run %v", git+" "+strings.Join(cmd.Args, " "))
+		return nil, fmt.Errorf("can't run %v: %w", git+" "+strings.Join(cmd.Args, " "), err)
 	}
 
 	output := cmdOutput.Bytes()
@@ -43,9 +47,9 @@ func (g *Git) Branches() ([][]string, error) {
 }
 
 func formatBranches(data string) [][]string {
-	data = strings.Replace(data, "<", "", -1)
-	data = strings.Replace(data, ">", "", -1)
-	result := [][]string{{"Branch", "Last Commit By", "Creator email", "Creation date"}}
+	data = strings.ReplaceAll(data, "<", "")
+	data = strings.ReplaceAll(data, ">", "")
+	result := [][]string{{"Branch", "Last commit by", "Email", "Last commit date"}}
 	d := strings.Split(data, "\n")
 	for i := 0; i < len(d)-1; i++ {
 		result = append(result, strings.Split(d[i], ","))

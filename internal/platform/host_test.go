@@ -1,10 +1,12 @@
 package platform
 
 import (
+	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
-	"github.com/pkg/errors"
+	"errors"
 )
 
 func Test_formatToTable(t *testing.T) {
@@ -247,7 +249,7 @@ func Test_HostMemory(t *testing.T) {
 		{
 			name: "runner return wrong result",
 			runner: func(cmd string) (string, error) {
-				return string(ReadFixtureFile("./testdata/fixtures/ga_users.json", t)), errors.New("Error")
+				return string(ReadFixtureFile("./testdata/fixtures/ga4_users.json", t)), errors.New("Error")
 			},
 			metrics: []string{"MemTotal", "MemFree", "MemAvailable"},
 			unit:    "kb",
@@ -303,7 +305,7 @@ func Test_HostMemoryRate(t *testing.T) {
 		{
 			name: "runner return wrong result",
 			runner: func(cmd string) (string, error) {
-				return string(ReadFixtureFile("./testdata/fixtures/ga_users.json", t)), errors.New("Error")
+				return string(ReadFixtureFile("./testdata/fixtures/ga4_users.json", t)), errors.New("Error")
 			},
 			wantErr: true,
 		},
@@ -357,7 +359,7 @@ func Test_HostSwapRate(t *testing.T) {
 		{
 			name: "runner return wrong result",
 			runner: func(cmd string) (string, error) {
-				return string(ReadFixtureFile("./testdata/fixtures/ga_users.json", t)), errors.New("Error")
+				return string(ReadFixtureFile("./testdata/fixtures/ga4_users.json", t)), errors.New("Error")
 			},
 			wantErr: true,
 		},
@@ -387,7 +389,7 @@ func Test_HostCPURate(t *testing.T) {
 	}{
 		{
 			name:     "happy case",
-			expected: 11.969999999999999,
+			expected: 11.91,
 			runner: func(cmd string) (string, error) {
 				return string(ReadFixtureFile("./testdata/fixtures/host_cpu", t)), nil
 			},
@@ -410,7 +412,7 @@ func Test_HostCPURate(t *testing.T) {
 		{
 			name: "runner return wrong result",
 			runner: func(cmd string) (string, error) {
-				return string(ReadFixtureFile("./testdata/fixtures/ga_users.json", t)), errors.New("Error")
+				return string(ReadFixtureFile("./testdata/fixtures/ga4_users.json", t)), errors.New("Error")
 			},
 			wantErr: true,
 		},
@@ -441,7 +443,7 @@ func Test_HostNetIO(t *testing.T) {
 	}{
 		{
 			name:     "happy case",
-			expected: "322.29 / 146.11",
+			expected: "361006.41 / 18992.37",
 			unit:     "kb",
 			runner: func(cmd string) (string, error) {
 				return string(ReadFixtureFile("./testdata/fixtures/host_net", t)), nil
@@ -469,7 +471,7 @@ func Test_HostNetIO(t *testing.T) {
 			name: "runner return wrong result",
 			unit: "kb",
 			runner: func(cmd string) (string, error) {
-				return string(ReadFixtureFile("./testdata/fixtures/ga_users.json", t)), errors.New("Error")
+				return string(ReadFixtureFile("./testdata/fixtures/ga4_users.json", t)), errors.New("Error")
 			},
 			wantErr: true,
 		},
@@ -477,7 +479,7 @@ func Test_HostNetIO(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actual, err := HostNetIO(tc.runner, tc.unit)
+			actual, err := HostNetIO(tc.runner, tc.unit, false)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("Error '%v' even if wantErr is %t", err, tc.wantErr)
 				return
@@ -569,7 +571,7 @@ func Test_HostDiskIO(t *testing.T) {
 	}{
 		{
 			name:     "happy case",
-			expected: "4170343424.00 / 5843349504.00",
+			expected: "2036903.00 / 2853198.00",
 			unit:     "kb",
 			runner: func(cmd string) (string, error) {
 				return string(ReadFixtureFile("./testdata/fixtures/host_disk_io", t)), nil
@@ -598,7 +600,7 @@ func Test_HostDiskIO(t *testing.T) {
 			unit:     "kb",
 			expected: "0.00 / 0.00",
 			runner: func(cmd string) (string, error) {
-				return string(ReadFixtureFile("./testdata/fixtures/ga_users.json", t)), nil
+				return string(ReadFixtureFile("./testdata/fixtures/ga4_users.json", t)), nil
 			},
 			wantErr: false,
 		},
@@ -606,7 +608,7 @@ func Test_HostDiskIO(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actual, err := HostDiskIO(tc.runner, tc.unit)
+			actual, err := HostDiskIO(tc.runner, tc.unit, false)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("Error '%v' even if wantErr is %t", err, tc.wantErr)
 				return
@@ -627,6 +629,14 @@ func Test_HostBox(t *testing.T) {
 		command  string
 		wantErr  bool
 	}{
+		{
+			name:     "trailing new line",
+			expected: "hello\nworld",
+			runner: func(cmd string) (string, error) {
+				return "hello\nworld\n\n", nil
+			},
+			wantErr: false,
+		},
 		{
 			name:     "happy case",
 			expected: "hello",
@@ -787,5 +797,80 @@ func Test_HostBar(t *testing.T) {
 				t.Errorf("Expected %v, actual %v", tc.expected, actual)
 			}
 		})
+	}
+}
+
+func Test_isPhysicalDisk(t *testing.T) {
+	devices := []string{"sda", "sda1", "nvme0n1", "nvme0n1p2", "dm-0", "zram0", "loop3", "mmcblk0", "mmcblk0p1", "vdb"}
+	expected := map[string]bool{
+		"sda": true, "sda1": false, "nvme0n1": true, "nvme0n1p2": false, "dm-0": false,
+		"zram0": false, "loop3": false, "mmcblk0": true, "mmcblk0p1": false, "vdb": true,
+	}
+	for _, d := range devices {
+		if actual := isPhysicalDisk(d, devices); actual != expected[d] {
+			t.Errorf("isPhysicalDisk(%q): expected %t, actual %t", d, expected[d], actual)
+		}
+	}
+}
+
+func Test_runLocalhost(t *testing.T) {
+	testCases := []struct {
+		name     string
+		command  string
+		expected string
+		wantErr  bool
+	}{
+		{"pipes and quotes", `printf 'a b\nc d\n' | tail -n 1`, "c d\n", false},
+		{"variables", `x=42; echo "$x"`, "42\n", false},
+		{"error output", "echo oops >&2", "", true},
+		{"failure", "exit 3", "", true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, err := runLocalhost(tc.command)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("Error '%v' even if wantErr is %t", err, tc.wantErr)
+			}
+			if actual != tc.expected {
+				t.Errorf("Expected %q, actual %q", tc.expected, actual)
+			}
+		})
+	}
+}
+
+func Test_HostCPURateSampled(t *testing.T) {
+	// 100 more jiffies, 25 of them idle or waiting for I/O: 75% busy.
+	runner := func(cmd string) (string, error) {
+		if !strings.Contains(cmd, "sleep") {
+			t.Errorf("expected a sampled command, actual %q", cmd)
+		}
+		return "cpu  100 0 100 700 100 0 0 0 0 0\nintr 1\n" + sampleSeparator + "\ncpu  150 0 125 720 105 0 0 0 0 0\n", nil
+	}
+
+	actual, err := HostCPURate(runner)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if actual != 75 {
+		t.Errorf("Expected 75, actual %v", actual)
+	}
+}
+
+func Test_HostNetIORate(t *testing.T) {
+	netDev := func(rx, tx int) string {
+		return fmt.Sprintf("  eth0: %d 1 0 0 0 0 0 0 %d 1 0 0 0 0 0 0\nveth1: 999 1 0 0 0 0 0 0 999 1 0 0 0 0 0 0\n", rx, tx)
+	}
+	runner := func(cmd string) (string, error) {
+		return netDev(1000, 2000) + sampleSeparator + netDev(1512, 2256), nil
+	}
+
+	// 512 and 256 bytes in half a second.
+	actual, err := HostNetIO(runner, "b", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if actual != "1024.00 / 512.00" {
+		t.Errorf("Expected 1024.00 / 512.00, actual %v", actual)
 	}
 }

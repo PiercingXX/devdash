@@ -1,15 +1,14 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-
+	"runtime"
+	"slices"
 	"strings"
 
-	"github.com/Phantas0s/devdash/internal"
+	"github.com/PiercingXX/devdash/internal"
 	"github.com/adrg/xdg"
 	"github.com/spf13/viper"
 )
@@ -19,6 +18,8 @@ const (
 	kQuit      = "C-c"
 	kHotReload = "C-r"
 	kEdit      = "C-e"
+	kNext      = "C-n"
+	kPrevious  = "C-p"
 )
 
 type config struct {
@@ -49,12 +50,12 @@ type Project struct {
 	Widgets     []Row                        `mapstructure:"widgets"`
 }
 
-// Row is constitued of columns
+// Row is constituted of columns
 type Row struct {
 	Row []Column `mapstructure:"row"`
 }
 
-// Col is constitued of widgets
+// Column is constituted of widgets
 type Column struct {
 	Col []Widgets `mapstructure:"col"`
 }
@@ -69,16 +70,16 @@ type Services struct {
 	GoogleSearchConsole SearchConsole   `mapstructure:"google_search_console"`
 	Monitor             Monitor         `mapstructure:"monitor"`
 	Github              Github          `mapstructure:"github"`
-	TravisCI            TravisCI        `mapstructure:"travis"`
 	Feedly              Feedly          `mapstructure:"feedly"`
 	Git                 Git             `mapstructure:"git"`
 	RemoteHost          RemoteHost      `mapstructure:"remote_host"`
-	Localhost           RemoteHost      `mapstructure:"local_host"`
 }
 
 type GoogleAnalytics struct {
-	Keyfile string `mapstructure:"keyfile"`
-	ViewID  string `mapstructure:"view_id"`
+	Keyfile    string `mapstructure:"keyfile"`
+	PropertyID string `mapstructure:"property_id"`
+	// ViewID was used by Universal Analytics, shut down by Google in favor of GA4.
+	ViewID string `mapstructure:"view_id"`
 }
 
 type SearchConsole struct {
@@ -96,17 +97,14 @@ type Github struct {
 	Repository string `mapstructure:"repository"`
 }
 
-type TravisCI struct {
-	Token string `mapstructure:"token"`
-}
-
 type Feedly struct {
 	Address string `mapstructure:"address"`
 }
 
 type RemoteHost struct {
-	Username string `mapstructure:"username"`
-	Address  string `mapstructure:"address"`
+	Username   string `mapstructure:"username"`
+	Address    string `mapstructure:"address"`
+	KnownHosts string `mapstructure:"known_hosts"`
 }
 
 type Git struct {
@@ -126,10 +124,6 @@ func (s SearchConsole) empty() bool {
 
 func (g Github) empty() bool {
 	return g == Github{}
-}
-
-func (t TravisCI) empty() bool {
-	return t == TravisCI{}
 }
 
 func (f Feedly) empty() bool {
@@ -171,30 +165,53 @@ func dashPath() string {
 	return filepath.Join(xdg.ConfigHome, "devdash")
 }
 
-// Map config and return it with the config path
-func mapConfig(cfgFile string) (config, string) {
-	if cfgFile == "" {
-		cfgFile = "default.yml"
-		createConfig(dashPath(), cfgFile, defaultConfig(dashPath()))
+// findDashboard returns the path of a dashboard: a path to a file, or a name with or without extension,
+// searched in the config directory then in the current directory.
+// Without a name, the default dashboard is created if it doesn't exist.
+func findDashboard(name string) (string, error) {
+	if name == "" {
+		return createConfig(dashPath(), "default.yml", defaultConfig(dashPath()))
 	}
 
-	// viper.AddConfigPath(home)
-	viper.AddConfigPath(dashPath())
-	viper.AddConfigPath(".")
+	if fileExists(name) {
+		return name, nil
+	}
 
-	viper.SetConfigName(removeExt(cfgFile))
-	err := viper.ReadInConfig()
-	if err != nil {
-		tryReadFile(cfgFile)
+	for _, dir := range []string{dashPath(), "."} {
+		candidates := []string{filepath.Join(dir, name)}
+		for _, ext := range dashboardExts {
+			candidates = append(candidates, filepath.Join(dir, name+ext))
+		}
+
+		for _, c := range candidates {
+			if fileExists(c) {
+				return c, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("can't find the dashboard %s in %s or in the current directory", name, dashPath())
+}
+
+// loadConfig of a dashboard file.
+func loadConfig(path string) (config, error) {
+	v := viper.New()
+	v.SetConfigFile(path)
+	if ext := strings.TrimPrefix(filepath.Ext(path), "."); ext == "yml" {
+		v.SetConfigType("yaml")
 	}
 
 	var cfg config
-	if err := viper.Unmarshal(&cfg); err != nil {
-		panic(err)
+	if err := v.ReadInConfig(); err != nil {
+		return cfg, fmt.Errorf("can't read the dashboard %s: %w", path, err)
+	}
+
+	if err := v.Unmarshal(&cfg); err != nil {
+		return cfg, fmt.Errorf("invalid dashboard %s: %w", path, err)
 	}
 
 	prefix := "DEVDASH"
-	for k, _ := range cfg.Projects {
+	for k := range cfg.Projects {
 		if cfg.Projects[k].Services.GoogleAnalytics.Keyfile == "" {
 			cfg.Projects[k].Services.GoogleAnalytics.Keyfile = os.Getenv(prefix + "_GA_KEYFILE")
 		}
@@ -208,54 +225,35 @@ func mapConfig(cfgFile string) (config, string) {
 		}
 	}
 
-	return cfg, viper.ConfigFileUsed()
+	return cfg, nil
 }
 
-func removeExt(filepath string) string {
-	ext := []string{".json", ".yml", ".yaml", ".toml"}
-	for _, v := range ext {
-		filepath = strings.Replace(filepath, v, "", -1)
+// removeExt of a dashboard's file name.
+func removeExt(file string) string {
+	if slices.Contains(dashboardExts, filepath.Ext(file)) {
+		return strings.TrimSuffix(file, filepath.Ext(file))
 	}
 
-	return filepath
+	return file
 }
 
-func createConfig(path string, filename string, template string) string {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		os.MkdirAll(path, 0755)
+func fileExists(path string) bool {
+	f, err := os.Stat(path)
+	return err == nil && !f.IsDir()
+}
+
+// createConfig with a template if it doesn't exist, and return its path.
+func createConfig(path string, filename string, template string) (string, error) {
+	if err := os.MkdirAll(path, 0o755); err != nil {
+		return "", err
 	}
 
 	f := filepath.Join(path, filename)
-	if _, err := os.Stat(f); os.IsNotExist(err) {
-		file, _ := os.Create(f)
-		defer file.Close()
-
-		if file != nil {
-			_, err := file.Write([]byte(template))
-			if err != nil {
-				panic(err)
-			}
-		}
+	if _, err := os.Stat(f); err == nil {
+		return f, nil
 	}
 
-	return f
-}
-
-func tryReadFile(cfgFile string) {
-	if _, err := os.Stat(cfgFile); os.IsNotExist(err) {
-		panic(fmt.Errorf("config %s doesnt exists", cfgFile))
-	}
-
-	f, err := ioutil.ReadFile(cfgFile)
-	if err != nil {
-		panic(fmt.Errorf("could not read file %s", cfgFile))
-	}
-
-	viper.SetConfigType(strings.Trim(filepath.Ext(cfgFile), "."))
-	err = viper.ReadConfig(bytes.NewBuffer(f))
-	if err != nil {
-		panic(fmt.Errorf("could not read config %s data", string(f)))
-	}
+	return f, os.WriteFile(f, []byte(template), 0o644)
 }
 
 // Keyboard events
@@ -283,27 +281,79 @@ func (c config) KEdit() string {
 	return kEdit
 }
 
+func (c config) KNext() string {
+	if k := c.General.Keys["next"]; k != "" {
+		return k
+	}
+
+	return kNext
+}
+
+func (c config) KPrevious() string {
+	if k := c.General.Keys["previous"]; k != "" {
+		return k
+	}
+
+	return kPrevious
+}
+
+// defaultConfig is the dashboard created on the first run. The host widgets need Linux.
 func defaultConfig(dashPath string) string {
+	host := ""
+	if runtime.GOOS == "linux" {
+		host = `
+          - col:
+              size: 4
+              elements:
+                - name: lh.gauge_cpu_rate
+                  options:
+                    bar_color: green
+                - name: lh.gauge_memory_rate
+                  options:
+                    bar_color: yellow
+                - name: lh.gauge_swap_rate
+                  options:
+                    bar_color: red
+          - col:
+              size: 4
+              elements:
+                - name: lh.box_uptime
+                - name: lh.box_load
+                - name: lh.box_processes
+      - row:
+          - col:
+              size: 12
+              elements:
+                - name: lh.table_disk`
+	}
+
 	return fmt.Sprintf(`---
 general:
   refresh: 600
   keys:
     quit: "C-c"
     hot_reload: "C-r"
-
+    edit: "C-e"
 
 projects:
-  - name: Default dashboard located at %s
+  - name: Default dashboard - %s
     services:
       monitor:
-        address: "https://thevaluable.dev"
+        address: "https://github.com"
     widgets:
       - row:
           - col:
-              size: "M"
+              size: 4
               elements:
+                - name: display.box
+                  options:
+                    title: " Welcome to DevDash "
+                    content: "CTRL+e edits this dashboard, CTRL+r reloads it, CTRL+c quits.\n\nDocumentation and examples:\ngithub.com/PiercingXX/devdash"
+                    multiline: true
+                    color: cyan
                 - name: mon.box_availability
                   options:
-                    title: " thevaluable.dev status "
-                    color: yellow`, filepath.Join(dashPath, "default.yml"))
+                    title: " github.com "
+                    color: green%s
+`, filepath.Join(dashPath, "default.yml"), host)
 }

@@ -1,0 +1,79 @@
+---
+# The metrics of your computer, and the output of your own commands. Needs Linux.
+general:
+  refresh: 60
+
+projects:
+  - name: Localhost
+    name_options:
+      color: blue
+    themes:
+      gauge:
+        height: 3
+    widgets:
+      - row:
+          - col:
+              size: 8
+              elements:
+                - name: lh.bar_memory
+                  options:
+                    unit: "mb"
+                    metrics: "MemTotal,MemFree,MemAvailable,Cached,SwapTotal,SwapFree"
+                    headers: "Total,Free,Available,Cached,Swap,SwapFree"
+                    color: yellow
+                    bar_gap: 2
+                    bar_width: 10
+                    height: 13
+                - name: lh.table_disk
+                  options:
+                    color: magenta
+                - name: lh.box_disk_io
+                  options:
+                    unit: "mb"
+                    rate: true
+                    color: magenta
+          - col:
+              size: 4
+              elements:
+                - name: lh.gauge_cpu_rate
+                  options:
+                    bar_color: green
+                - name: lh.gauge_memory_rate
+                  options:
+                    bar_color: yellow
+                - name: lh.gauge_swap_rate
+                  options:
+                    bar_color: red
+                - name: lh.box_uptime
+                  options:
+                    color: cyan
+                - name: lh.box_load
+                  options:
+                    color: cyan
+                - name: lh.box_processes
+                  options:
+                    color: cyan
+                - name: lh.box_net_io
+                  options:
+                    unit: "kb"
+                    rate: true
+                    color: green
+      - row:
+          - col:
+              size: 6
+              elements:
+                - name: lh.table
+                  options:
+                    title: " uname -srmo "
+                    command: "uname -srmo"
+                    headers: "kernel,release,machine,os"
+          - col:
+              size: 6
+              elements:
+                - name: lh.bar
+                  options:
+                    title: " Output of a command "
+                    command: "echo 3 7 5 9 4"
+                    headers: "mon,tue,wed,thu,fri"
+                    bar_color: blue
+                    bar_gap: 1

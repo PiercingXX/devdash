@@ -1,0 +1,111 @@
+---
+# A blog: Google Analytics 4, Google Search Console, and the availability of the website.
+general:
+  refresh: 600
+
+projects:
+  - name: example.com - Blog
+    name_options:
+      color: cyan
+    services:
+      google_analytics:
+        keyfile: my-keyfile.json
+        property_id: 123456789
+      google_search_console:
+        keyfile: my-keyfile.json
+        address: https://example.com/
+      monitor:
+        address: https://example.com
+    themes:
+      bar:
+        num_color: black
+        bar_gap: 1
+      table:
+        title_color: blue
+        border_color: magenta
+    widgets:
+      - row:
+          - col:
+              size: 5
+              elements:
+                - name: ga.bar_users
+                  options:
+                    title: " Users - last 10 days "
+                    start_date: 9_days_ago
+                    bar_width: 5
+                    bar_color: yellow
+                    border_color: yellow
+                    title_color: yellow
+                - name: ga.bar_pages
+                  options:
+                    title: " Views of /blog/ - last 10 days "
+                    start_date: 9_days_ago
+                    filters: "/blog/"
+                    bar_width: 5
+                    bar_color: red
+                    border_color: red
+                    title_color: red
+          - col:
+              size: 5
+              elements:
+                - name: ga.bar_devices
+                  options:
+                    title: " Sessions per device - last 6 months "
+                    start_date: 5_months_ago
+                    end_date: this_month
+                    time_period: month
+                    bar_width: 7
+                    bar_gap: 2
+                    height: 20
+          - col:
+              size: 2
+              elements:
+                - name: ga.box_real_time
+                  options:
+                    color: red
+                - name: mon.box_availability
+                  options:
+                    color: green
+                - name: ga.box_total
+                  options:
+                    title: " Sessions / user "
+                    metric: sessionsPerUser
+                    color: blue
+                - name: ga.box_total
+                  options:
+                    title: " Bounce rate "
+                    metric: bounce_rate
+                    color: magenta
+      - row:
+          - col:
+              size: 4
+              elements:
+                - name: gsc.table_queries
+                  options:
+                    title: " Queries - last week "
+                    start_date: last_week
+                    end_date: last_week
+                    character_limit: 25
+                    metrics: clicks,impressions
+                    row_limit: 6
+          - col:
+              size: 4
+              elements:
+                - name: ga.table_pages
+                  options:
+                    title: " Pages - yesterday "
+                    start_date: yesterday
+                    end_date: yesterday
+                    metrics: page_views,users
+                    character_limit: 25
+                    row_limit: 6
+          - col:
+              size: 4
+              elements:
+                - name: ga.table_traffic_sources
+                  options:
+                    title: " Traffic sources - today "
+                    start_date: today
+                    end_date: today
+                    metrics: sessions
+                    row_limit: 6

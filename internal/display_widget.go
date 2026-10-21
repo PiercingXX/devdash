@@ -1,6 +1,6 @@
 package internal
 
-import "github.com/pkg/errors"
+import "fmt"
 
 type displayWidget struct {
 	tui *Tui
@@ -19,7 +19,7 @@ func (d displayWidget) CreateWidgets(widget Widget, tui *Tui) (f func() error, e
 	case displayBox:
 		f, err = d.box(widget)
 	default:
-		return nil, errors.Errorf("can't find the widget %s for service display", widget.Name)
+		return nil, fmt.Errorf("can't find the widget %s for service display", widget.Name)
 	}
 
 	return

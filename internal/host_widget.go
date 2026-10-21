@@ -6,8 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Phantas0s/devdash/internal/platform"
-	"github.com/pkg/errors"
+	"github.com/PiercingXX/devdash/internal/platform"
 )
 
 const (
@@ -36,8 +35,8 @@ type HostWidget struct {
 	service *platform.Host
 }
 
-func NewHostWidget(username, addr string) (*HostWidget, error) {
-	service, err := platform.NewHost(username, addr)
+func NewHostWidget(username, addr, knownHosts string) (*HostWidget, error) {
+	service, err := platform.NewHost(username, addr, knownHosts)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +90,7 @@ func (ms *HostWidget) CreateWidgets(widget Widget, tui *Tui) (f func() error, er
 	case rhBar:
 		f, err = ms.bar(widget)
 	default:
-		return nil, errors.Errorf("can't find the widget %s", widget.Name)
+		return nil, fmt.Errorf("can't find the widget %s", widget.Name)
 	}
 	return
 }
@@ -323,12 +322,20 @@ func (ms *HostWidget) boxNetIO(widget Widget) (f func() error, err error) {
 		unit = widget.Options[optionUnit]
 	}
 
+	rate, err := boolOption(widget.Options, optionRate)
+	if err != nil {
+		return nil, err
+	}
+
 	title := fmt.Sprintf(" Net I/O (%s) ", strings.ToUpper(unit))
+	if rate {
+		title = fmt.Sprintf(" Net I/O (%s/s) ", strings.ToUpper(unit))
+	}
 	if _, ok := widget.Options[optionTitle]; ok {
 		title = widget.Options[optionTitle]
 	}
 
-	netIO, err := platform.HostNetIO(ms.service.Runner, unit)
+	netIO, err := platform.HostNetIO(ms.service.Runner, unit, rate)
 	if err != nil {
 		return nil, err
 	}
@@ -346,12 +353,20 @@ func (ms *HostWidget) boxDiskIO(widget Widget) (f func() error, err error) {
 		unit = widget.Options[optionUnit]
 	}
 
+	rate, err := boolOption(widget.Options, optionRate)
+	if err != nil {
+		return nil, err
+	}
+
 	title := fmt.Sprintf(" Disk I/O (%s) ", strings.ToUpper(unit))
+	if rate {
+		title = fmt.Sprintf(" Disk I/O (%s/s) ", strings.ToUpper(unit))
+	}
 	if _, ok := widget.Options[optionTitle]; ok {
 		title = widget.Options[optionTitle]
 	}
 
-	diskIO, err := platform.HostDiskIO(ms.service.Runner, unit)
+	diskIO, err := platform.HostDiskIO(ms.service.Runner, unit, rate)
 	if err != nil {
 		return nil, err
 	}
@@ -406,7 +421,7 @@ func (ms *HostWidget) tableDisk(widget Widget) (f func() error, err error) {
 		unit = widget.Options[optionUnit]
 	}
 
-	title := fmt.Sprintf(" Disks ")
+	title := " Disks "
 	if _, ok := widget.Options[optionTitle]; ok {
 		title = widget.Options[optionTitle]
 	}
@@ -431,7 +446,7 @@ func (ms *HostWidget) tableDisk(widget Widget) (f func() error, err error) {
 }
 
 func (ms *HostWidget) table(widget Widget) (f func() error, err error) {
-	title := fmt.Sprintf(" Table ")
+	title := " Table "
 	if _, ok := widget.Options[optionTitle]; ok {
 		title = widget.Options[optionTitle]
 	}
@@ -463,7 +478,7 @@ func (ms *HostWidget) table(widget Widget) (f func() error, err error) {
 }
 
 func (ms *HostWidget) box(widget Widget) (f func() error, err error) {
-	title := fmt.Sprintf(" Box ")
+	title := " Box "
 	if _, ok := widget.Options[optionTitle]; ok {
 		title = widget.Options[optionTitle]
 	}
@@ -486,7 +501,7 @@ func (ms *HostWidget) box(widget Widget) (f func() error, err error) {
 }
 
 func (ms *HostWidget) gauge(widget Widget) (f func() error, err error) {
-	title := fmt.Sprintf(" Gauge ")
+	title := " Gauge "
 	if _, ok := widget.Options[optionTitle]; ok {
 		title = widget.Options[optionTitle]
 	}

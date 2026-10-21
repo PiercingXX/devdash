@@ -6,8 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Phantas0s/devdash/internal/platform"
-	"github.com/pkg/errors"
+	"github.com/PiercingXX/devdash/internal/platform"
 )
 
 const (
@@ -55,7 +54,7 @@ func (s *gscWidget) CreateWidgets(widget Widget, tui *Tui) (f func() error, err 
 	case gscTable:
 		f, err = s.table(widget)
 	default:
-		return nil, errors.Errorf("can't find the widget %s", widget.Name)
+		return nil, fmt.Errorf("can't find the widget %s", widget.Name)
 	}
 
 	return
@@ -66,7 +65,7 @@ func (s *gscWidget) pages(widget Widget) (f func() error, err error) {
 		widget.Options = map[string]string{}
 	}
 
-	widget.Options[optionMetric] = "page"
+	widget.Options[optionDimension] = "page"
 
 	return s.table(widget)
 }
@@ -93,7 +92,7 @@ func (s *gscWidget) table(widget Widget) (f func() error, err error) {
 	if _, ok := widget.Options[optionRowLimit]; ok {
 		rowLimit, err = strconv.ParseInt(widget.Options[optionRowLimit], 0, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%s must be a number", widget.Options[optionRowLimit])
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionRowLimit], err)
 		}
 	}
 
@@ -101,7 +100,7 @@ func (s *gscWidget) table(widget Widget) (f func() error, err error) {
 	if _, ok := widget.Options[optionCharLimit]; ok {
 		c, err := strconv.ParseInt(widget.Options[optionCharLimit], 0, 0)
 		if err != nil {
-			return nil, errors.Wrapf(err, "%s must be a number", widget.Options[optionCharLimit])
+			return nil, fmt.Errorf("%s must be a number: %w", widget.Options[optionCharLimit], err)
 		}
 		charLimit = int(c)
 	}
@@ -156,8 +155,13 @@ func (s *gscWidget) table(widget Widget) (f func() error, err error) {
 }
 
 func formatNumerics(results []platform.SearchConsoleResponse, dimension string, metrics []string) [][]string {
+	header, ok := mappingGscHeader[dimension]
+	if !ok {
+		header = titleize(dimension)
+	}
+
 	table := make([][]string, len(results)+1)
-	table[0] = []string{mappingGscHeader[dimension]}
+	table[0] = []string{header}
 	table[0] = append(table[0], metrics...)
 
 	for k, v := range results {
@@ -181,16 +185,20 @@ func formatNumerics(results []platform.SearchConsoleResponse, dimension string, 
 	return table
 }
 
-func formatText(table [][]string, charLimit int, trimPrefix string) [][]string {
+// formatText removes the address of the website from the pages, and truncates the first column.
+func formatText(table [][]string, charLimit int, address string) [][]string {
+	address = strings.TrimSuffix(address, "/")
 	// Begins the loop to 1 not to shorten the headers.
 	for i := 1; i < len(table); i++ {
-		text := strings.TrimPrefix(table[i][0], trimPrefix)
-
-		if charLimit < len(text) {
-			text = text[:charLimit]
+		text := table[i][0]
+		if address != "" && strings.HasPrefix(text, address) {
+			text = strings.TrimPrefix(text, address)
+			if text == "" {
+				text = "/"
+			}
 		}
 
-		table[i][0] = text
+		table[i][0] = truncate(text, charLimit)
 	}
 
 	return table

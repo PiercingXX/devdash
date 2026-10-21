@@ -1,0 +1,35 @@
+name: Bug report
+description: Something doesn't work as documented
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead. Add a screenshot if it helps.
+    validations:
+      required: true
+  - type: textarea
+    id: dashboard
+    attributes:
+      label: Dashboard
+      description: The dashboard, or the part of it which reproduces the problem. Remove the tokens, keyfiles and private addresses.
+      render: yaml
+  - type: textarea
+    id: check
+    attributes:
+      label: Output of devdash check
+      description: The output of `devdash check <your dashboard>`.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The output of `devdash version`.
+    validations:
+      required: true
+  - type: input
+    id: terminal
+    attributes:
+      label: Terminal
+      description: Your terminal emulator, and tmux or screen if you use them.

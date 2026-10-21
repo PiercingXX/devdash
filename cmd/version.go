@@ -16,7 +16,7 @@ var (
 func versionCmd() *cobra.Command {
 	versionCmd := &cobra.Command{
 		Use:   "version",
-		Short: "Display gocket version",
+		Short: "Display the version of DevDash",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Fprintln(os.Stdout, version())
 		},
@@ -26,7 +26,7 @@ func versionCmd() *cobra.Command {
 }
 
 func version() string {
-	program := "gocket"
+	program := "devdash"
 
 	osArch := runtime.GOOS + "/" + runtime.GOARCH
 

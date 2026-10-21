@@ -1,4 +1,7 @@
-vendor
-goanalytics-*
-devdash
+# Binaries
+/devdash
+/dist/
+
+# Dashboards and credentials used locally
 .devdash*
+*-keyfile.json

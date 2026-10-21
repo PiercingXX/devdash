@@ -15,6 +15,13 @@ func Test_typeID(t *testing.T) {
 				Name: "ga.bar_chart",
 			},
 		},
+		{
+			name:     "name without service",
+			expected: "",
+			widget: Widget{
+				Name: "foo",
+			},
+		},
 	}
 
 	for _, tc := range testCases {

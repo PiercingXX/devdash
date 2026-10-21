@@ -1,20 +1,18 @@
-// To get fixtures in order to write tests
-// j, _ := json.Marshal(is)
-// fmt.Println(string(j))
-
 package platform
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"slices"
 	"sort"
 	"strconv"
-	"sync"
+	"strings"
 	"time"
 
-	"github.com/google/go-github/v28/github"
-	"github.com/pkg/errors"
-	"golang.org/x/oauth2"
-	"golang.org/x/sync/errgroup"
+	"errors"
+
+	"github.com/google/go-github/v80/github"
 )
 
 const (
@@ -32,21 +30,13 @@ const (
 // Github structure connects to the Github API.
 type Github struct {
 	client   *github.Client
-	repo     *github.Repository
 	repoName string
 	owner    string
 }
 
 // GithubClient to fetch Github related data.
 func NewGithubClient(token string, owner string, repoName string) (*Github, error) {
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-
-	// get go-github client
-	client := github.NewClient(tc)
+	client := github.NewClient(NewHTTPClient()).WithAuthToken(token)
 
 	return &Github{
 		client:   client,
@@ -226,47 +216,19 @@ func formatListPullRequests(is []*github.PullRequest, limit int) [][]string {
 		limit = len(is)
 	}
 
-	headers := []string{"title", "state", "created at", "merged", "commits"}
-
-	defaultHeader := "unknown"
-	prs := make([][]string, limit+1)
-	prs[0] = headers
-	for k, v := range is {
-		n := defaultHeader
-		if v.Title != nil {
-			n = *v.Title
+	prs := [][]string{{"title", "state", "author", "created at"}}
+	for _, v := range is[:limit] {
+		state := v.GetState()
+		if v.MergedAt != nil {
+			state = "merged"
 		}
 
-		state := defaultHeader
-		if v.State != nil {
-			state = *v.State
-		}
-
-		createdAt := defaultHeader
+		createdAt := "unknown"
 		if v.CreatedAt != nil {
-			t := *v.CreatedAt
-			createdAt = t.String()
+			createdAt = v.CreatedAt.Format("2006-01-02")
 		}
 
-		merged := defaultHeader
-		if v.Merged != nil {
-			m := *v.Merged
-			merged = strconv.FormatBool(m)
-		}
-
-		commits := defaultHeader
-		if v.Commits != nil {
-			c := *v.Commits
-			commits = strconv.FormatInt(int64(c), 10)
-		}
-
-		if k < limit {
-			prs[k+1] = append(prs[k+1], n)
-			prs[k+1] = append(prs[k+1], state)
-			prs[k+1] = append(prs[k+1], createdAt)
-			prs[k+1] = append(prs[k+1], merged)
-			prs[k+1] = append(prs[k+1], commits)
-		}
+		prs = append(prs, []string{v.GetTitle(), state, v.GetUser().GetLogin(), createdAt})
 	}
 
 	return prs
@@ -327,13 +289,10 @@ func formatCountCommits(
 		c[i], c[opp] = c[opp], c[i]
 	}
 
-	counts := []int{}
-	for _, v := range c {
-		counts = append(counts, v)
-	}
+	counts := append([]int{}, c...)
 
 	dimension := []string{}
-	for k, _ := range c {
+	for k := range c {
 		startWeekDay := int(startDate.Weekday())
 		beginningOfWeek := -(startWeekDay)
 		weekBefore := (7 * k)
@@ -364,19 +323,18 @@ func formatCountCommits(
 // CountStars of a repository overtime.
 // Only on a daily basis for now.
 func (g *Github) CountStars(repository string, startDate, endDate time.Time) (dim []string, val []int, err error) {
-	se, err := g.fetchStars(repository)
+	se, err := g.fetchStars(repository, startDate)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// TODO do something with the missing day (day with 0 as value) algorithm? Make that available via config?
 	dim, val = formatCountStars(se, "01-02", startDate, endDate, false)
 	return dim, val, nil
 }
 
 func formatCountStars(stargazers []*github.Stargazer, timeLayout string, startDate, endDate time.Time, addMissingDays bool) (dim []string, val []int) {
 	sort.SliceStable(stargazers, func(i, j int) bool {
-		return stargazers[i].StarredAt.Time.Before(stargazers[j].StarredAt.Time)
+		return stargazers[i].StarredAt.Before(stargazers[j].StarredAt.Time)
 	})
 	d, va := aggregateStarResults(stargazers)
 	if addMissingDays {
@@ -405,8 +363,8 @@ func aggregateStarResults(stargazers []*github.Stargazer) (dim []time.Time, val 
 			return
 		}
 
-		processingDate := v.StarredAt.Time.Format("2006-01-02")
-		nextDate := stargazers[k+1].StarredAt.Time.Format("2006-01-02")
+		processingDate := v.StarredAt.Format("2006-01-02")
+		nextDate := stargazers[k+1].StarredAt.Format("2006-01-02")
 
 		if processingDate != nextDate {
 			dim = append(dim, v.StarredAt.Time)
@@ -418,9 +376,9 @@ func aggregateStarResults(stargazers []*github.Stargazer) (dim []time.Time, val 
 	return
 }
 
-// fetchStars from the Github API. Every stars are fetched.
-// Unfortunatelly, perPage is limited to 100, so we need multiple requests.
-func (g *Github) fetchStars(repository string) (s []*github.Stargazer, err error) {
+// fetchStars given since a date. The stargazers are listed from the oldest, so the pages are fetched from the last
+// one, until the beginning of the period.
+func (g *Github) fetchStars(repository string, since time.Time) (s []*github.Stargazer, err error) {
 	repo := g.repoName
 	if repository != "" {
 		repo = repository
@@ -435,49 +393,30 @@ func (g *Github) fetchStars(repository string) (s []*github.Stargazer, err error
 		return nil, err
 	}
 
-	pages := (*r.StargazersCount / githubMaxPerPage)
-	if *r.StargazersCount%100 != 0 {
-		pages += 1
-	}
-
-	var lock sync.Mutex
-	var eg errgroup.Group
-	sem := make(chan bool, 4)
-
-	// TODO See if it can be improved
-	for i := 1; i <= pages; i++ {
-		sem <- true
-		page := i
-		eg.Go(func() error {
-			defer func() { <-sem }()
-			e, _, err := g.client.Activity.ListStargazers(context.Background(), g.owner, repo, &github.ListOptions{
-				Page:    page,
-				PerPage: githubMaxPerPage,
-			})
-			if err != nil {
-				return errors.Wrapf(err, "can't find repo %s of owner %s", repo, g.owner)
-			}
-
-			lock.Lock()
-			defer lock.Unlock()
-			s = append(s, e...)
-			return nil
+	pages := (r.GetStargazersCount() + githubMaxPerPage - 1) / githubMaxPerPage
+	for page := pages; page >= 1; page-- {
+		e, _, err := g.client.Activity.ListStargazers(context.Background(), g.owner, repo, &github.ListOptions{
+			Page:    page,
+			PerPage: githubMaxPerPage,
 		})
-	}
-	err = eg.Wait()
-	if err != nil {
-		return nil, err
+		var gerr *github.ErrorResponse
+		if errors.As(err, &gerr) && (gerr.Response.StatusCode == http.StatusUnauthorized || gerr.Response.StatusCode == http.StatusNotFound) {
+			return nil, fmt.Errorf("can't get the stars of %s/%s: Github only gives the stars over time of your own repositories, with a token", g.owner, repo)
+		}
+		if err != nil {
+			return nil, fmt.Errorf("can't find the stars of the repo %s of owner %s: %w", repo, g.owner, err)
+		}
+
+		s = append(e, s...)
+		if len(e) > 0 && e[0].GetStarredAt().Before(since) {
+			break
+		}
 	}
 
 	return s, nil
 }
 
 func (g *Github) fetchRepo(repository string) (*github.Repository, error) {
-	// TODO add a TTL
-	if g.repo != nil {
-		return g.repo, nil
-	}
-
 	repo := g.repoName
 	if repository != "" {
 		repo = repository
@@ -489,14 +428,13 @@ func (g *Github) fetchRepo(repository string) (*github.Repository, error) {
 
 	r, _, err := g.client.Repositories.Get(context.Background(), g.owner, repo)
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find repo %s of owner %s", repo, g.owner)
+		return nil, fmt.Errorf("can't find repo %s of owner %s: %w", repo, g.owner, err)
 	}
 
 	return r, nil
 
 }
 
-// TODO possibility to filter by ALL or OWNER
 func (g *Github) fetchCommitCount(repository string) (*github.RepositoryParticipation, error) {
 	repo := g.repoName
 	if repository != "" {
@@ -509,7 +447,7 @@ func (g *Github) fetchCommitCount(repository string) (*github.RepositoryParticip
 
 	p, _, err := g.client.Repositories.ListParticipation(context.Background(), g.owner, repo)
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find repo %s of owner %s", repo, g.owner)
+		return nil, fmt.Errorf("can't find repo %s of owner %s: %w", repo, g.owner, err)
 	}
 
 	return p, nil
@@ -527,7 +465,7 @@ func (g *Github) fetchViews(repository string) (*github.TrafficViews, error) {
 
 	t, _, err := g.client.Repositories.ListTrafficViews(context.Background(), g.owner, repo, nil)
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find repo %s of owner %s", repo, g.owner)
+		return nil, fmt.Errorf("can't find repo %s of owner %s: %w", repo, g.owner, err)
 	}
 
 	return t, nil
@@ -543,10 +481,10 @@ func (g *Github) fetchBranches(repository string, limit int) ([]*github.Branch, 
 		return nil, errors.New("you need to specify a repository in the github service or in the widget")
 	}
 
-	opt := github.ListOptions{PerPage: limit}
+	opt := github.BranchListOptions{ListOptions: github.ListOptions{PerPage: limit}}
 	bs, _, err := g.client.Repositories.ListBranches(context.Background(), g.owner, repo, &opt)
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find branches of owner %s for repo %s", g.owner, repo)
+		return nil, fmt.Errorf("can't find branches of owner %s for repo %s: %w", g.owner, repo, err)
 	}
 
 	return bs, nil
@@ -569,13 +507,12 @@ func (g *Github) fetchIssues(repository string, limit int) ([]*github.Issue, err
 	}
 	is, _, err := g.client.Issues.ListByRepo(context.Background(), g.owner, repo, &opt)
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find branches of owner %s for repo %s", g.owner, repo)
+		return nil, fmt.Errorf("can't find the issues of owner %s for repo %s: %w", g.owner, repo, err)
 	}
 
 	return is, nil
 }
 
-// TODO add sorting
 func (g *Github) fetchPullRequests(repository string, limit int) ([]*github.PullRequest, error) {
 	ctx := context.Background()
 	repo := g.repoName
@@ -583,37 +520,34 @@ func (g *Github) fetchPullRequests(repository string, limit int) ([]*github.Pull
 		repo = repository
 	}
 
+	if repo == "" {
+		return nil, errors.New("you need to specify a repository in the github service or in the widget")
+	}
+
 	prs, _, err := g.client.PullRequests.List(ctx, g.owner, repo, &github.PullRequestListOptions{
 		State:       "all",
 		ListOptions: github.ListOptions{PerPage: limit},
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find all repo of owner %s", g.owner)
+		return nil, fmt.Errorf("can't find the pull requests of owner %s for repo %s: %w", g.owner, repo, err)
 	}
 
 	return prs, nil
 }
 
-// TODO possibility to add filters / ordering
 func (g *Github) fetchAllRepo(order string) ([]*github.Repository, error) {
 	ctx := context.Background()
 
-	r, _, err := g.client.Repositories.List(ctx, g.owner, &github.RepositoryListOptions{Sort: order})
+	r, _, err := g.client.Repositories.ListByUser(ctx, g.owner, &github.RepositoryListByUserOptions{Sort: order})
 	if err != nil {
-		return nil, errors.Wrapf(err, "can't find all repo of owner %s", g.owner)
+		return nil, fmt.Errorf("can't find all repo of owner %s: %w", g.owner, err)
 	}
 
 	return r, nil
 }
 
 func contains(slice []string, value string) bool {
-	for _, v := range slice {
-		if v == value {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(slice, value)
 }
 
 // fillMissingDays add the missing dates between two dates and add 0 values
@@ -630,11 +564,87 @@ func fillMissingDays(dates []time.Time, values []int) ([]time.Time, []int) {
 
 		nextDate := dates[k+1]
 		mg := missingDays(v, nextDate)
-		for _, _ = range mg {
+		for range mg {
 			val = append(val, 0)
 		}
 		d = append(d, mg...)
 	}
 
 	return d, val
+}
+
+// WorkflowRuns of the Github Actions of a repository, from the most recent, with a header.
+func (g *Github) WorkflowRuns(repository string, branch string, limit int) ([][]string, error) {
+	runs, err := g.fetchWorkflowRuns(repository, branch, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return formatWorkflowRuns(runs, limit), nil
+}
+
+// LastWorkflowRun of the Github Actions of a repository, like "success - CI #12 on main".
+func (g *Github) LastWorkflowRun(repository string, branch string) (string, error) {
+	runs, err := g.fetchWorkflowRuns(repository, branch, 1)
+	if err != nil {
+		return "", err
+	}
+
+	if len(runs) == 0 {
+		return "No workflow run", nil
+	}
+
+	r := runs[0]
+	return fmt.Sprintf("%s - %s #%d on %s", runState(r), r.GetName(), r.GetRunNumber(), r.GetHeadBranch()), nil
+}
+
+func formatWorkflowRuns(runs []*github.WorkflowRun, limit int) [][]string {
+	table := [][]string{{"workflow", "branch", "state", "event", "date"}}
+	for _, r := range runs[:min(limit, len(runs))] {
+		date := ""
+		if r.CreatedAt != nil {
+			date = r.CreatedAt.Format("2006-01-02 15:04")
+		}
+
+		table = append(table, []string{
+			fmt.Sprintf("%s #%d", r.GetName(), r.GetRunNumber()),
+			r.GetHeadBranch(),
+			runState(r),
+			r.GetEvent(),
+			date,
+		})
+	}
+
+	return table
+}
+
+// runState is the conclusion of a finished run, its status otherwise.
+func runState(r *github.WorkflowRun) string {
+	state := r.GetConclusion()
+	if r.GetStatus() != "completed" {
+		state = r.GetStatus()
+	}
+
+	return strings.ReplaceAll(state, "_", " ")
+}
+
+func (g *Github) fetchWorkflowRuns(repository string, branch string, limit int) ([]*github.WorkflowRun, error) {
+	repo := g.repoName
+	if repository != "" {
+		repo = repository
+	}
+
+	if repo == "" {
+		return nil, errors.New("you need to specify a repository in the github service or in the widget")
+	}
+
+	runs, _, err := g.client.Actions.ListRepositoryWorkflowRuns(context.Background(), g.owner, repo, &github.ListWorkflowRunsOptions{
+		Branch:      branch,
+		ListOptions: github.ListOptions{PerPage: limit},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("can't find the workflow runs of owner %s for repo %s: %w", g.owner, repo, err)
+	}
+
+	return runs.WorkflowRuns, nil
 }

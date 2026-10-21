@@ -7,80 +7,103 @@ package platform
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
+	"os/exec"
 	"regexp"
+	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Phantas0s/devdash/gokit"
-	"github.com/pkg/errors"
-	"golang.org/x/crypto/ssh"
+	"errors"
+
+	"github.com/PiercingXX/devdash/internal/gokit"
 )
 
-const (
-	sshAgentEnv = "SSH_AUTH_SOCK"
-)
-
+// Host runs the commands of the widgets, on the local host or through SSH.
 type Host struct {
-	sshClient *ssh.Client
-	localhost bool
+	username, addr, knownHosts string
+	localhost                  bool
 }
 
 // syntactic sugar
 type runnerFunc func(cmd string) (string, error)
 
-func NewHost(username, addr string) (*Host, error) {
+// NewHost connects to a remote host through SSH. The username and address "localhost" are the local host.
+func NewHost(username, addr, knownHosts string) (*Host, error) {
 	if username == "localhost" && addr == "localhost" {
-		return &Host{
-			sshClient: nil,
-			localhost: true,
-		}, nil
+		return &Host{localhost: true}, nil
 	}
 
-	sshClient, err := sshAgentAuth(username, addr)
-	if err != nil {
+	h := &Host{username: username, addr: addr, knownHosts: knownHosts}
+	if _, err := sshClient(username, addr, knownHosts); err != nil {
 		return nil, err
 	}
-	return &Host{
-		sshClient: sshClient,
-		localhost: false,
-	}, nil
+
+	return h, nil
 }
 
-// Run a command on remote server via SSH or on localhost
+// Runner runs a command on the remote server through SSH, or on the local host.
 func (s *Host) Runner(command string) (string, error) {
 	if s.localhost {
 		return runLocalhost(command)
 	}
 
-	session, err := s.sshClient.NewSession()
+	client, err := sshClient(s.username, s.addr, s.knownHosts)
 	if err != nil {
-		return "", errors.Wrapf(err, "can't create session with SSH client for command %s", command)
+		return "", err
+	}
+
+	session, err := client.NewSession()
+	if err != nil {
+		return "", fmt.Errorf("can't create session with SSH client for command %s: %w", command, err)
 	}
 	defer session.Close()
 
 	var buf bytes.Buffer
 	session.Stdout = &buf
-	err = session.Run(command)
-	if err != nil {
-		return "", errors.Wrapf(err, "can't run command %s on remote server", command)
+
+	done := make(chan error, 1)
+	go func() { done <- session.Run(command) }()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			return "", fmt.Errorf("can't run command %s on remote server: %w", command, err)
+		}
+	case <-time.After(sshCommandTimeout):
+		return "", fmt.Errorf("the command %s on the remote server didn't finish after %s", command, sshCommandTimeout)
 	}
 
-	return string(buf.Bytes()), nil
+	return buf.String(), nil
 }
 
+// runLocalhost runs a command with the shell of the system.
 func runLocalhost(command string) (string, error) {
-	out, errs, err := gokit.ExecCmd(command)
+	ctx, cancel := context.WithTimeout(context.Background(), sshCommandTimeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "sh", "-c", command)
+	if runtime.GOOS == "windows" {
+		cmd = exec.CommandContext(ctx, "cmd", "/C", command)
+	}
+
+	var out, errs bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &errs
+	err := cmd.Run()
+	if ctx.Err() != nil {
+		return "", fmt.Errorf("the command %s didn't finish after %s", command, sshCommandTimeout)
+	}
+	if errs.Len() > 0 {
+		return "", errors.New(strings.TrimSpace(errs.String()))
+	}
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("the command %s failed: %w", command, err)
 	}
 
-	if string(errs) != "" {
-		return "", errors.New(string(errs))
-	}
-
-	return string(out), nil
+	return out.String(), nil
 }
 
 func HostUptime(runner runnerFunc) (int64, error) {
@@ -92,7 +115,7 @@ func HostUptime(runner runnerFunc) (int64, error) {
 
 	d := strings.Fields(uptime)
 	if len(d) < 1 {
-		return 0, errors.Errorf("command %s return nothing", command)
+		return 0, fmt.Errorf("command %s return nothing", command)
 	}
 
 	var secs float64
@@ -112,7 +135,7 @@ func HostLoad(runner runnerFunc) (string, error) {
 	}
 	res := strings.Fields(lines)
 	if len(res) < 3 {
-		return "", errors.Errorf(
+		return "", fmt.Errorf(
 			"command %s return unexpected %v, needs to have 3 parts separated with whitespaces",
 			command,
 			res,
@@ -131,7 +154,7 @@ func HostProcesses(runner runnerFunc) (string, error) {
 
 	res := strings.Fields(lines)
 	if len(res) < 5 {
-		return "", errors.Errorf(
+		return "", fmt.Errorf(
 			"command %s return unexpected %v, needs to have 5 parts separated with whitespaces",
 			command,
 			res,
@@ -158,7 +181,7 @@ func HostMemory(runner runnerFunc, metrics []string, unit string) (val []int, er
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(lines))
-	var data string
+	var data strings.Builder
 	for scanner.Scan() {
 		line := scanner.Text()
 		parts := strings.Fields(line)
@@ -174,12 +197,12 @@ func HostMemory(runner runnerFunc, metrics []string, unit string) (val []int, er
 
 		for _, v := range metrics {
 			if strings.Trim(parts[0], ":") == v {
-				data += strconv.FormatUint(val, 10) + ","
+				data.WriteString(strconv.FormatUint(val, 10) + ",")
 			}
 		}
 	}
 
-	values := formatToBar(data)
+	values := formatToBar(data.String())
 	result := []int{}
 	for _, v := range values {
 		result = append(result, int(gokit.ConvertBinUnit(float64(v), "kb", unit)))
@@ -230,7 +253,6 @@ func HostMemoryRate(runner runnerFunc) (float64, error) {
 	return gokit.Round(float64(memUsed)*100/float64(memTotal), 2), nil
 }
 
-// TODO to refactor - DRY
 func HostSwapRate(runner runnerFunc) (float64, error) {
 	lines, err := runner("/bin/cat /proc/meminfo")
 	if err != nil {
@@ -274,94 +296,144 @@ func HostSwapRate(runner runnerFunc) (float64, error) {
 }
 
 // See https://www.idnt.net/en-US/kb/941772
+// cpuSampleInterval between the two measures of the CPU, network or disk usage.
+const cpuSampleInterval = "0.5"
+
+// sampleSeparator between the two outputs of a sampled command.
+const sampleSeparator = "==== devdash ===="
+
+// sampled command: the output of the command, then its output after the interval.
+func sampled(command string) string {
+	return command + " && sleep " + cpuSampleInterval + " && echo '" + sampleSeparator + "' && " + command
+}
+
+// samples of the output of a sampled command. An output without separator is one sample.
+func samples(output string) []string {
+	return strings.Split(output, sampleSeparator)
+}
+
+// cpuTimes of the first line of /proc/stat: the idle time (with the I/O wait), and the total time.
+func cpuTimes(stat string) (idle uint64, total uint64, err error) {
+	line, _, _ := strings.Cut(strings.TrimSpace(stat), "\n")
+	cpu := strings.Fields(line)
+	if len(cpu) < 5 || cpu[0] != "cpu" {
+		return 0, 0, fmt.Errorf("needs 5 fields for cpu: header, user, nice, system, idle. Instead, having %s", cpu)
+	}
+
+	for k, v := range cpu[1:] {
+		n, _ := strconv.ParseUint(v, 10, 64)
+		total += n
+		// idle and iowait
+		if k == 3 || k == 4 {
+			idle += n
+		}
+	}
+
+	return idle, total, nil
+}
+
+// HostCPURate is the CPU usage, in percent, during half a second. It's the average since the boot if the command
+// doesn't give two samples.
 func HostCPURate(runner runnerFunc) (float64, error) {
-	raw, err := runner("/bin/cat /proc/stat")
+	raw, err := runner(sampled("/bin/cat /proc/stat"))
 	if err != nil {
 		return 0, err
 	}
 
-	lines := strings.Split(string(raw), "\n")
-
-	// aggregate of all other cpus
-	cpu := strings.Fields(lines[0])
-
-	if len(cpu) < 5 {
-		return 0, errors.Errorf("needs 5 fields for cpu: header, user, nice, system, idle. Instead, having %s", cpu)
+	s := samples(raw)
+	idle, total, err := cpuTimes(s[0])
+	if err != nil {
+		return 0, err
 	}
 
-	user, _ := strconv.ParseUint(cpu[1], 10, strconv.IntSize)
-	nice, _ := strconv.ParseUint(cpu[2], 10, strconv.IntSize)
-	system, _ := strconv.ParseUint(cpu[3], 10, strconv.IntSize)
-	idle, _ := strconv.ParseUint(cpu[4], 10, strconv.IntSize)
-
-	var IOWait uint64 = 0
-	var IRQ uint64 = 0
-	var softIRQs uint64 = 0
-	var steal uint64 = 0
-	var guest uint64 = 0
-	var guestNice uint64 = 0
-	if len(cpu) > 5 {
-		IOWait, _ = strconv.ParseUint(cpu[5], 10, strconv.IntSize)
+	if len(s) > 1 {
+		idle2, total2, err := cpuTimes(s[1])
+		if err != nil {
+			return 0, err
+		}
+		if total2 > total {
+			idle, total = idle2-idle, total2-total
+		}
 	}
-	if len(cpu) > 6 {
-		IRQ, _ = strconv.ParseUint(cpu[6], 10, strconv.IntSize)
-	}
-	if len(cpu) > 7 {
-		softIRQs, _ = strconv.ParseUint(cpu[7], 10, strconv.IntSize)
-	}
-	if len(cpu) > 8 {
-		steal, _ = strconv.ParseUint(cpu[8], 10, strconv.IntSize)
-	}
-	if len(cpu) > 9 {
-		guest, _ = strconv.ParseUint(cpu[9], 10, strconv.IntSize)
-	}
-	if len(cpu) > 10 {
-		guestNice, _ = strconv.ParseUint(cpu[10], 10, strconv.IntSize)
-	}
-
-	total := user + nice + system + idle + IOWait + IRQ + softIRQs + steal + guest + guestNice
 
 	if total == 0 {
 		return 0, nil
 	}
 
 	// Percentage of not idle (busy)
-	return 100 - gokit.Round(float64(idle)*100/float64(total), 2), nil
+	return gokit.Round(100-float64(idle)*100/float64(total), 2), nil
 }
 
-// GetNetStat returns net stat
-func HostNetIO(runner runnerFunc, unit string) (string, error) {
-	lines, err := runner("/bin/cat /proc/net/dev")
+// virtualInterfaces don't count in the network I/O: their traffic goes through a physical interface too.
+// They're the loopback, the bridges and interfaces of containers and virtual machines, and the VPN tunnels.
+var virtualInterfaces = []string{
+	"lo", "docker", "veth", "br-", "virbr", "vnet", "cni", "flannel", "cali", "podman",
+	"tailscale", "tun", "tap", "wg", "zt",
+}
+
+// netTotals received and transmitted by the network interfaces, in bytes.
+func netTotals(netDev string) (rx uint64, tx uint64) {
+	scanner := bufio.NewScanner(strings.NewReader(netDev))
+	for scanner.Scan() {
+		// The interface, then the received bytes, packets... and the transmitted bytes, packets...
+		device, values, ok := strings.Cut(scanner.Text(), ":")
+		parts := strings.Fields(values)
+		if !ok || len(parts) < 9 {
+			continue
+		}
+
+		device = strings.TrimSpace(device)
+		if slices.ContainsFunc(virtualInterfaces, func(v string) bool { return strings.HasPrefix(device, v) }) {
+			continue
+		}
+
+		r, _ := strconv.ParseUint(parts[0], 10, 64)
+		t, _ := strconv.ParseUint(parts[8], 10, 64)
+		rx += r
+		tx += t
+	}
+
+	return rx, tx
+}
+
+// HostNetIO received / transmitted since the boot, or per second with rate.
+func HostNetIO(runner runnerFunc, unit string, rate bool) (string, error) {
+	command := "/bin/cat /proc/net/dev"
+	if rate {
+		command = sampled(command)
+	}
+
+	lines, err := runner(command)
 	if err != nil {
 		return "", err
 	}
 
-	scanner := bufio.NewScanner(strings.NewReader(lines))
-	var receiveBytes uint64 = 0
-	var transmitBytes uint64 = 0
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.Fields(line)
-
-		if len(parts) < 10 {
-			continue
-		}
-
-		device := strings.TrimSpace(strings.Trim(parts[0], ":"))
-
-		if device != "lo" {
-			rb, _ := strconv.ParseUint(parts[2], 10, strconv.IntSize)
-			tb, _ := strconv.ParseUint(parts[10], 10, strconv.IntSize)
-
-			receiveBytes += rb
-			transmitBytes += tb
-		}
+	s := samples(lines)
+	rx, tx := netTotals(s[0])
+	if rate && len(s) > 1 {
+		rx2, tx2 := netTotals(s[1])
+		rx, tx = perSecond(rx, rx2), perSecond(tx, tx2)
 	}
 
-	rx := strconv.FormatFloat(gokit.ConvertBinUnit(float64(receiveBytes), "b", unit), 'f', 2, strconv.IntSize)
-	tx := strconv.FormatFloat(gokit.ConvertBinUnit(float64(transmitBytes), "b", unit), 'f', 2, strconv.IntSize)
+	return formatIO(rx, tx, unit), nil
+}
 
-	return rx + " / " + tx, nil
+// perSecond between two samples.
+func perSecond(before uint64, after uint64) uint64 {
+	interval, _ := strconv.ParseFloat(cpuSampleInterval, 64)
+	if after < before {
+		return 0
+	}
+
+	return uint64(float64(after-before) / interval)
+}
+
+// formatIO of two values in bytes.
+func formatIO(in uint64, out uint64, unit string) string {
+	fi := gokit.ConvertBinUnit(float64(in), "b", unit)
+	fo := gokit.ConvertBinUnit(float64(out), "b", unit)
+
+	return strconv.FormatFloat(fi, 'f', 2, 64) + " / " + strconv.FormatFloat(fo, 'f', 2, 64)
 }
 
 func HostDisk(runner runnerFunc, headers []string, unit string) ([][]string, error) {
@@ -374,12 +446,6 @@ func HostDisk(runner runnerFunc, headers []string, unit string) ([][]string, err
 	scanner := bufio.NewScanner(strings.NewReader(lines))
 	data := ""
 	count := 0
-
-	regex, err := regexp.Compile("\n\n")
-	if err != nil {
-		return nil, nil
-	}
-	lines = regex.ReplaceAllString(lines, "\n")
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -417,40 +483,80 @@ func HostDisk(runner runnerFunc, headers []string, unit string) ([][]string, err
 
 	return c, nil
 }
-func HostDiskIO(runner runnerFunc, unit string) (string, error) {
-	// GetIOStat returns io stat
-	lines, err := runner("/bin/cat /proc/diskstats")
+
+// diskTotals read and written on the physical disks, in bytes.
+func diskTotals(diskstats string) (read uint64, write uint64) {
+	type stat struct {
+		name        string
+		read, write uint64
+	}
+	stats := []stat{}
+	names := []string{}
+	scanner := bufio.NewScanner(strings.NewReader(diskstats))
+	for scanner.Scan() {
+		parts := strings.Fields(scanner.Text())
+		if len(parts) < 10 || parts[3] == "0" {
+			continue
+		}
+
+		// The sectors are always 512 bytes.
+		r, _ := strconv.ParseUint(parts[5], 10, 64)
+		w, _ := strconv.ParseUint(parts[9], 10, 64)
+		stats = append(stats, stat{name: parts[2], read: r * 512, write: w * 512})
+		names = append(names, parts[2])
+	}
+
+	for _, s := range stats {
+		if isPhysicalDisk(s.name, names) {
+			read += s.read
+			write += s.write
+		}
+	}
+
+	return read, write
+}
+
+// HostDiskIO read / written on the physical disks since the boot, or per second with rate.
+func HostDiskIO(runner runnerFunc, unit string, rate bool) (string, error) {
+	command := "/bin/cat /proc/diskstats"
+	if rate {
+		command = sampled(command)
+	}
+
+	lines, err := runner(command)
 	if err != nil {
 		return "", err
 	}
 
-	scanner := bufio.NewScanner(strings.NewReader(lines))
-	var read uint64 = 0
-	var write uint64 = 0
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.Fields(line)
-
-		if len(parts) < 9 {
-			continue
-		}
-
-		if parts[3] == "0" {
-			continue
-		}
-
-		r, _ := strconv.ParseUint(parts[5], 10, strconv.IntSize)
-		w, _ := strconv.ParseUint(parts[9], 10, strconv.IntSize)
-
-		read += r * 512
-		write += w * 512
+	s := samples(lines)
+	read, write := diskTotals(s[0])
+	if rate && len(s) > 1 {
+		read2, write2 := diskTotals(s[1])
+		read, write = perSecond(read, read2), perSecond(write, write2)
 	}
 
-	fr := gokit.ConvertBinUnit(float64(read), "kb", unit)
-	fw := gokit.ConvertBinUnit(float64(write), "kb", unit)
+	return formatIO(read, write, unit), nil
+}
 
-	return strconv.FormatFloat(fr, 'f', 2, strconv.IntSize) + " / " + strconv.FormatFloat(fw, 'f', 2, strconv.IntSize), nil
+// partitionSuffix of a partition's name after its disk's name, like "1" for sda1 or "p2" for nvme0n1p2.
+var partitionSuffix = regexp.MustCompile(`^p?[0-9]+$`)
+
+// isPhysicalDisk excludes the partitions, which would count the I/O of their disk twice,
+// and the virtual devices (device mapper, RAID, loop, RAM disks...) which count the I/O of other disks, or none.
+func isPhysicalDisk(name string, devices []string) bool {
+	for _, prefix := range []string{"loop", "ram", "zram", "dm-", "md", "sr", "fd", "nbd"} {
+		if strings.HasPrefix(name, prefix) {
+			return false
+		}
+	}
+
+	for _, d := range devices {
+		if d != name && strings.HasPrefix(name, d) && partitionSuffix.MatchString(strings.TrimPrefix(name, d)) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func HostBar(runner runnerFunc, command string) (data []int, err error) {
@@ -461,18 +567,18 @@ func HostBar(runner runnerFunc, command string) (data []int, err error) {
 
 	scanner := bufio.NewScanner(strings.NewReader(lines))
 	lineNumber := 0
-	str := ""
+	var str strings.Builder
 	for scanner.Scan() {
 		line := scanner.Text()
-		parts := strings.Fields(line)
+		parts := strings.FieldsSeq(line)
 
-		for _, v := range parts {
-			str += v + ","
+		for v := range parts {
+			str.WriteString(v + ",")
 		}
 		lineNumber++
 	}
 
-	f := formatToBar(str)
+	f := formatToBar(str.String())
 	result := []int{}
 	for _, f := range f {
 		result = append(result, int(f))
@@ -486,7 +592,8 @@ func HostBox(runner runnerFunc, command string) (string, error) {
 		return "", err
 	}
 
-	return lines, nil
+	// The last new line of the output would be an empty line in the box.
+	return strings.TrimRight(lines, "\n"), nil
 }
 
 func HostGauge(runner runnerFunc, command string) (float64, error) {
@@ -548,11 +655,7 @@ func formatToBar(data string) (val []uint64) {
 	return
 }
 
-// formatToTable display.
-// The string needs to have this:
-// Info needs to be splitted with comma
-// Depending on number of columns (headers)
-// TODO improve this comment :D
+// formatToTable splits comma separated values into rows of col cells. An incomplete last row is dropped.
 func formatToTable(col int, data string) (cells [][]string) {
 	c := strings.Split(data, ",")
 	lenCells := len(c)

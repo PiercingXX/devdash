@@ -1,0 +1,4 @@
+# The localhost screenshots are taken in a container, not to display the disks and processes of your computer.
+FROM docker.io/library/debian:stable-slim
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*

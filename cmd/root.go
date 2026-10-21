@@ -1,28 +1,27 @@
 package cmd
 
-// TODO see gocket to make the command right (with possibility to use env variables)
-
 import (
+	"errors"
 	"fmt"
-	"log"
 	"os"
+	"path/filepath"
+	"sync"
 	"time"
 
-	"github.com/Phantas0s/devdash/internal"
-	"github.com/Phantas0s/devdash/internal/platform"
+	"github.com/PiercingXX/devdash/internal"
+	"github.com/PiercingXX/devdash/internal/platform"
 	"github.com/spf13/cobra"
 )
 
 var (
 	// Used for flags
 	cfgName string
-	logpath string
 	debug   bool
 
 	rootCmd = &cobra.Command{
 		Use:   "devdash",
 		Short: "DevDash is a highly configurable terminal dashboard for developers and creators",
-		Long:  `DevDash is a highly flexible terminal dashboard for developers and creators, which allows you to gather and refresh the data you really need from Google Analytics, Google Search Console, Github, TravisCI, and more.`,
+		Long:  `DevDash is a highly flexible terminal dashboard for developers and creators, which allows you to gather and refresh the data you really need from Google Analytics, Google Search Console, Github, and more.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			run()
 		},
@@ -31,13 +30,13 @@ var (
 
 func init() {
 	rootCmd.Flags().StringVarP(&cfgName, "config", "c", "", "A valid dashboard configuration")
-	// TODO logger
-	// rootCmd.Flags().StringVarP(&logpath, "logpath", "l", "", "Path for logging")
-	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Debug Mode - doesn't display graph")
+	rootCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Debug mode: fetch the data without displaying the widgets")
 	rootCmd.AddCommand(listCmd())
 	rootCmd.AddCommand(versionCmd())
 	rootCmd.AddCommand(editCmd())
 	rootCmd.AddCommand(generateCmd())
+	rootCmd.AddCommand(checkCmd())
+	rootCmd.AddCommand(schemaCmd())
 }
 
 func Execute() {
@@ -49,57 +48,65 @@ func Execute() {
 
 // run the dashboard.
 func run() {
-	termui, err := platform.NewTermUI(debug)
+	path, err := findDashboard(cfgName)
 	if err != nil {
-		fmt.Println(err)
+		fail(err)
 	}
 
-	// Create the TUI.
-	tui := internal.NewTUI(termui)
+	cfg, err := loadConfig(path)
+	if err != nil {
+		fail(err)
+	}
+
+	if debug {
+		fmt.Printf("Config file used: %s\n", path)
+	}
+
+	terminal, err := platform.NewTerminal()
+	if err != nil {
+		fail(err)
+	}
+
+	tui := internal.NewTUI(terminal)
 	defer tui.Close()
 
-	// Map dashboard config to a struct Config.
-	cfg, cfgFile := mapConfig(cfgName)
-	if debug {
-		fmt.Fprintf(os.Stdout, "Config file used: %s", cfgFile)
-	}
+	d := &dashboard{path: path}
 
 	// Passing a time.Time to this channel reload the entire dashboard.
 	hotReload := make(chan time.Time)
 
-	// Add keystrokes to reload and quit
 	tui.AddKHotReload(cfg.KHotReload(), hotReload)
 	tui.AddKQuit(cfg.KQuit())
+	tui.AddKAction(cfg.KNext(), func() {
+		d.move(1)
+		hotReload <- time.Now()
+	})
+	tui.AddKAction(cfg.KPrevious(), func() {
+		d.move(-1)
+		hotReload <- time.Now()
+	})
 
 	// Passing a bool to this channel stop the automatic reload of the dashboard.
 	stopAutoReload := make(chan bool)
 	autoReload(cfg.RefreshTime(), stopAutoReload, hotReload)
 
-	editor := os.Getenv("EDITOR")
-	if cfg.General.Editor != "" {
-		editor = cfg.General.Editor
-	}
-
-	// Add keystroke (managed by TUI) to edit the configuration in a CLI editor.
-	// Wrap edit config in lambda to defer the execution.
+	// The editor is given the terminal until it exits.
 	tui.AddKEdit(
 		cfg.KEdit(),
 		func() {
 			stopReload(stopAutoReload)
-			editDashboard(editor, cfgFile)
+			editDashboard(d.editor(), d.current())
 			hotReload <- time.Now()
 			autoReload(cfg.RefreshTime(), stopAutoReload, hotReload)
 		},
 	)
 
-	// First display.
-	build(cfgName, tui)
+	build(d.current(), tui)
 
-	// Automatic reload
 	go func() {
 		for hr := range hotReload {
 			tui.HotReload()
-			build(cfgName, tui)
+			build(d.current(), tui)
 			if debug {
 				fmt.Println("Last reload: " + hr.Format("2006-01-02 15:04:05"))
 			}
@@ -107,6 +114,65 @@ func run() {
 	}()
 
 	tui.Loop()
+}
+
+// fail displays the error and exits.
+func fail(err error) {
+	fmt.Fprintln(os.Stderr, "Error:", err)
+	os.Exit(1)
+}
+
+// dashboard currently displayed.
+type dashboard struct {
+	mu   sync.Mutex
+	path string
+}
+
+func (d *dashboard) current() string {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	return d.path
+}
+
+// move to the next dashboard of the list (step 1), or the previous one (step -1).
+func (d *dashboard) move(step int) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.path = nextDashboard(dashboards(), d.path, step)
+}
+
+// editor of the current dashboard: the general editor option, or $EDITOR.
+func (d *dashboard) editor() string {
+	if cfg, err := loadConfig(d.current()); err == nil && cfg.General.Editor != "" {
+		return cfg.General.Editor
+	}
+
+	return os.Getenv("EDITOR")
+}
+
+// nextDashboard in the list, after moving from the current one. The current dashboard is kept if the list is empty.
+func nextDashboard(list []string, current string, step int) string {
+	if len(list) == 0 {
+		return current
+	}
+
+	abs := func(p string) string {
+		a, err := filepath.Abs(p)
+		if err != nil {
+			return p
+		}
+		return a
+	}
+
+	for i, p := range list {
+		if abs(p) == abs(current) {
+			return list[((i+step)%len(list)+len(list))%len(list)]
+		}
+	}
+
+	return list[0]
 }
 
 func autoReload(refresh int64, stopAutoReload <-chan bool, hotReload chan<- time.Time) {
@@ -128,18 +194,34 @@ func stopReload(stopAutoReload chan<- bool) {
 	stopAutoReload <- true
 }
 
+// showError alone on the dashboard.
+func showError(tui *internal.Tui, err error) {
+	_ = internal.DisplayError(tui, err)()
+	_ = tui.AddCol("12")
+	tui.AddRow()
+	tui.Render()
+}
+
 // build every services present in the configuration
-func build(file string, tui *internal.Tui) {
-	cfg, _ := mapConfig(file)
+func build(path string, tui *internal.Tui) {
+	cfg, err := loadConfig(path)
+	if err != nil {
+		showError(tui, err)
+		return
+	}
+
 	for _, p := range cfg.Projects {
 		rows, sizes := p.OrderWidgets()
 		project := internal.NewProject(p.Name, p.NameOptions, rows, sizes, p.Themes, tui)
 
 		gaService := p.Services.GoogleAnalytics
 		if !gaService.empty() {
-			gaWidget, err := internal.NewGaWidget(gaService.Keyfile, gaService.ViewID)
+			gaWidget, err := internal.NewGaWidget(gaService.Keyfile, gaService.PropertyID)
+			if gaService.PropertyID == "" {
+				err = errors.New("google_analytics: property_id is required (view_id was used by Universal Analytics, which Google shut down; use the ID of your GA4 property instead)")
+			}
 			if err != nil {
-				internal.DisplayError(tui, err)()
+				_ = internal.DisplayError(tui, err)()
 			} else {
 				project.WithGa(gaWidget)
 			}
@@ -149,7 +231,7 @@ func build(file string, tui *internal.Tui) {
 		if !gscService.empty() {
 			gscWidget, err := internal.NewGscWidget(gscService.Keyfile, gscService.Address)
 			if err != nil {
-				internal.DisplayError(tui, err)()
+				_ = internal.DisplayError(tui, err)()
 			} else {
 				project.WithGoogleSearchConsole(gscWidget)
 			}
@@ -159,7 +241,7 @@ func build(file string, tui *internal.Tui) {
 		if !monService.empty() {
 			monWidget, err := internal.NewMonitorWidget(monService.Address)
 			if err != nil {
-				internal.DisplayError(tui, err)()
+				_ = internal.DisplayError(tui, err)()
 			} else {
 				project.WithMonitor(monWidget)
 			}
@@ -173,16 +255,10 @@ func build(file string, tui *internal.Tui) {
 				githubService.Repository,
 			)
 			if err != nil {
-				internal.DisplayError(tui, err)()
+				_ = internal.DisplayError(tui, err)()
 			} else {
 				project.WithGithub(githubWidget)
 			}
-		}
-
-		travisService := p.Services.TravisCI
-		if !travisService.empty() {
-			travisWidget := internal.NewTravisCIWidget(travisService.Token)
-			project.WithTravisCI(travisWidget)
 		}
 
 		feedlyService := p.Services.Feedly
@@ -202,19 +278,18 @@ func build(file string, tui *internal.Tui) {
 			remoteHostWidget, err := internal.NewHostWidget(
 				remoteHostService.Username,
 				remoteHostService.Address,
+				remoteHostService.KnownHosts,
 			)
 			if err != nil {
-				fmt.Println(err)
-				internal.DisplayError(tui, err)()
+				_ = internal.DisplayError(tui, err)()
 			} else {
 				project.WithRemoteHost(remoteHostWidget)
 			}
 		}
 
-		localhost, err := internal.NewHostWidget("localhost", "localhost")
+		localhost, err := internal.NewHostWidget("localhost", "localhost", "")
 		if err != nil {
-			fmt.Println(err)
-			internal.DisplayError(tui, err)()
+			_ = internal.DisplayError(tui, err)()
 		}
 		project.WithLocalhost(localhost)
 
@@ -223,18 +298,4 @@ func build(file string, tui *internal.Tui) {
 			project.Render(renderFuncs)
 		}
 	}
-}
-
-// TODO - Wrap logger. If logger nil, drop the message
-func InitLoggerFile(logpath string) *log.Logger {
-	if logpath == "" {
-		return nil
-	}
-
-	file, err := os.OpenFile(logpath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return log.New(file, "", 0)
 }

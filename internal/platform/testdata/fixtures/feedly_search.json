@@ -1,7 +1,7 @@
 {
     "results": [
         {
-            "feedId": "feed/http://web-techno.net/index.xml",
+            "feedId": "feed/https://example.com/index.xml",
             "score": 851.8368,
             "lastUpdated": 1569575640000,
             "coverage": 0.0,
@@ -16,7 +16,7 @@
             "totalTagCount": 44,
             "websiteTitle": "The Valuable Dev",
             "scheme": "u:b:o",
-            "id": "feed/http://web-techno.net/index.xml",
+            "id": "feed/https://example.com/index.xml",
             "title": "The Valuable Dev",
             "updated": 1569575640000,
             "velocity": 0.5,
@@ -27,7 +27,7 @@
                 "web design"
             ],
             "subscribers": 100,
-            "website": "https://thevaluable.dev/",
+            "website": "https://example.com/",
             "partial": false,
             "coverUrl": "https://storage.googleapis.com/site-assets/290llJCm-5XRatYO1_RpSe6-WtBVqaDcdAY-808i8L8_cover-16c46f1b021",
             "iconUrl": "https://storage.googleapis.com/site-assets/290llJCm-5XRatYO1_RpSe6-WtBVqaDcdAY-808i8L8_icon-16c46f1b021",

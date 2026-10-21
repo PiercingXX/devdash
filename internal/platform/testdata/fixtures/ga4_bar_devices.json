@@ -1,0 +1,155 @@
+{
+  "dimensionHeaders": [
+    {
+      "name": "yearMonth"
+    },
+    {
+      "name": "deviceCategory"
+    }
+  ],
+  "metricHeaders": [
+    {
+      "name": "sessions",
+      "type": "TYPE_INTEGER"
+    }
+  ],
+  "rows": [
+    {
+      "dimensionValues": [
+        {
+          "value": "202002"
+        },
+        {
+          "value": "desktop"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "11309"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "202003"
+        },
+        {
+          "value": "desktop"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "10239"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "202004"
+        },
+        {
+          "value": "desktop"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "1454"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "202002"
+        },
+        {
+          "value": "mobile"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "6916"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "202003"
+        },
+        {
+          "value": "mobile"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "3050"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "202004"
+        },
+        {
+          "value": "mobile"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "359"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "202002"
+        },
+        {
+          "value": "tablet"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "210"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "202003"
+        },
+        {
+          "value": "tablet"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "92"
+        }
+      ]
+    },
+    {
+      "dimensionValues": [
+        {
+          "value": "202004"
+        },
+        {
+          "value": "tablet"
+        }
+      ],
+      "metricValues": [
+        {
+          "value": "16"
+        }
+      ]
+    }
+  ],
+  "rowCount": 9,
+  "kind": "analyticsData#runReport"
+}
